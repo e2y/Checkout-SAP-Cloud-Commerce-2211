@@ -21,7 +21,6 @@ Install checkout.com spartacus connector:
 ```
   yarn install @checkout.com/checkout-spartacus-connector
 ```
-
 Install checkout.com spartacus transaltions:
 ```
   yarn install @checkout.com/checkout-spartacus-translations
