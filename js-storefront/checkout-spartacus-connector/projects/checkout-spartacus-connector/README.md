@@ -8,7 +8,7 @@ This library is tailored to the [Spartacus](https://sap.github.io/spartacus-docs
 
 This release is compatible with:
 * Spartacus: version 4.2
-* Node module `checkout-spartacus-translations` v4.2.5
+* Node module `checkout-spartacus-translations` v4.2.6
 * SAP Commerce Cloud: version 2011/2105/2205/2211
 * Angular CLI: Version 12.0.5 or later, < 13.
 * Node.js: Version 14.15 is required. Version 12.x reached end-of-life on April 30, 2022, and is no longer supported by Spartacus. It is strongly recommended that you migrate any existing Spartacus storefronts to Node.js 14 as soon as possible. If there are any issues with Spartacus and Node.js 14, please upgrade to the latest releases. If you continue to experience issues with Node.js 14, create a support ticket with SAP.
@@ -22,7 +22,7 @@ Install checkout.com spartacus connector:
   yarn install @checkout.com/checkout-spartacus-connector
 ```
 
-Install checkout.com spartacus connector:
+Install checkout.com spartacus transaltions:
 ```
   yarn install @checkout.com/checkout-spartacus-translations
 ```
@@ -95,7 +95,7 @@ If you don't want to fork, you can `extend` components, copy the template and th
 
 ## Release notes
 
-### Release 4.2.5
+### Release 4.2.6
 * Included support for SAP CX 2211
 * Fixed dependencies issues.
   *  "ng2-tooltip-directive": "^2.10.3",
