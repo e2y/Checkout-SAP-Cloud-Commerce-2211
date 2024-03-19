@@ -6,8 +6,8 @@ import org.apache.commons.lang.StringUtils
 import spock.lang.Unroll
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.*
-import static groovyx.net.http.ContentType.JSON
-import static groovyx.net.http.ContentType.XML
+import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.JSON
+import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.XML
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST
 import static org.apache.http.HttpStatus.SC_CREATED
 
@@ -51,8 +51,8 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         XML    | BANCONTACT | EUR_CURRENCY_CODE | 'Belgium'      | DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON | BELGIUM_BILLING_ADDRESS_JSON  | 'checkoutocctests.checkout.bancontact.sandbox'
         JSON   | KNET       | KWD_CURRENCY_CODE | 'Kuwait'       | DEFAULT_CHECKOUT_KNET_PAYMENT_JSON       | KW_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.knet.sandbox'
         XML    | KNET       | KWD_CURRENCY_CODE | 'Kuwait'       | DEFAULT_CHECKOUT_KNET_PAYMENT_JSON       | KW_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.knet.sandbox'
-        JSON   | POLI       | AUD_CURRENCY_CODE | 'Australia'    | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | AU_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.poli.sandbox'
-        XML    | POLI       | AUD_CURRENCY_CODE | 'Australia'    | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | AU_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.poli.sandbox'
+        JSON   | POLI       | NZD_CURRENCY_CODE | 'New Zealand'  | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | NZ_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.poli.nz.sandbox'
+        XML    | POLI       | NZD_CURRENCY_CODE | 'New Zealand'  | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | NZ_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.poli.nz.sandbox'
         JSON   | QPAY       | QAR_CURRENCY_CODE | 'Qatar'        | DEFAULT_CHECKOUT_QPAY_PAYMENT_JSON       | QATAR_BILLING_ADDRESS_JSON    | 'checkoutocctests.checkout.qpay.sandbox'
         XML    | QPAY       | QAR_CURRENCY_CODE | 'Qatar'        | DEFAULT_CHECKOUT_QPAY_PAYMENT_JSON       | QATAR_BILLING_ADDRESS_JSON    | 'checkoutocctests.checkout.qpay.sandbox'
         JSON   | ALIPAY     | USD_CURRENCY_CODE | 'USA'          | DEFAULT_CHECKOUT_ALIPAY_PAYMENT_JSON     | US_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.alipay.sandbox'
@@ -218,8 +218,8 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         XML    | KNET       | EUR_CURRENCY_CODE | 'Kuwait'       | DEFAULT_CHECKOUT_KNET_PAYMENT_JSON       | KW_BILLING_ADDRESS_JSON
         JSON   | BENEFITPAY | EGP_CURRENCY_CODE | 'Bahrain'      | DEFAULT_CHECKOUT_BENEFIT_PAYMENT_JSON    | BH_BILLING_ADDRESS_JSON
         XML    | BENEFITPAY | EGP_CURRENCY_CODE | 'Bahrain'      | DEFAULT_CHECKOUT_BENEFIT_PAYMENT_JSON    | BH_BILLING_ADDRESS_JSON
-        JSON   | POLI       | EUR_CURRENCY_CODE | 'Australia'    | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | AU_BILLING_ADDRESS_JSON
-        XML    | POLI       | EUR_CURRENCY_CODE | 'Australia'    | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | AU_BILLING_ADDRESS_JSON
+        JSON   | POLI       | EUR_CURRENCY_CODE | 'New Zealand'  | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | NZ_BILLING_ADDRESS_JSON
+        XML    | POLI       | EUR_CURRENCY_CODE | 'New Zealand'  | DEFAULT_CHECKOUT_POLI_PAYMENT_JSON       | NZ_BILLING_ADDRESS_JSON
         JSON   | ALIPAY     | EUR_CURRENCY_CODE | 'China'        | DEFAULT_CHECKOUT_ALIPAY_PAYMENT_JSON     | CN_BILLING_ADDRESS_JSON
         XML    | ALIPAY     | EUR_CURRENCY_CODE | 'China'        | DEFAULT_CHECKOUT_ALIPAY_PAYMENT_JSON     | CN_BILLING_ADDRESS_JSON
         JSON   | SEPA       | USD_CURRENCY_CODE | 'Austria'      | DEFAULT_CHECKOUT_SEPA_PAYMENT_JSON       | AT_BILLING_ADDRESS_JSON

@@ -4,8 +4,8 @@ import com.checkout.hybris.occtests.test.groovy.v2.spock.paymentdetails.Abstract
 import de.hybris.bootstrap.annotations.ManualTest
 import spock.lang.Unroll
 
-import static groovyx.net.http.ContentType.JSON
-import static groovyx.net.http.ContentType.XML
+import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.JSON
+import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.XML
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST
 import static org.apache.http.HttpStatus.SC_CREATED
 

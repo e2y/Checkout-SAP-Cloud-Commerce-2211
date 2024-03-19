@@ -120,6 +120,7 @@ def pl = platform {
         extName 'integrationbackoffice'
         extName 'integrationmonitoringbackoffice'
         extName 'outboundsyncbackoffice'
+        extName 'swaggerintegration'
 
         /* merchandising */
         extName 'merchandisingaddon'

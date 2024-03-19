@@ -3,7 +3,7 @@ package com.checkout.hybris.occtests.test.groovy.v2.spock.paymentdetails
 import de.hybris.bootstrap.annotations.ManualTest
 import spock.lang.Unroll
 
-import static groovyx.net.http.ContentType.*
+import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.*
 import static org.apache.http.HttpStatus.*
 
 @ManualTest
