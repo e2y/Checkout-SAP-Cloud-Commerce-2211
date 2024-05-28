@@ -1,6 +1,6 @@
 {
   "name": "checkout-spartacus-connector",
-  "version": "4.2.6",
+  "version": "4.2.7",
   "repository": "https://github.com/checkout/Checkout-SAP-Cloud-Commerce-2211",
   "scripts": {
     "ng": "ng",

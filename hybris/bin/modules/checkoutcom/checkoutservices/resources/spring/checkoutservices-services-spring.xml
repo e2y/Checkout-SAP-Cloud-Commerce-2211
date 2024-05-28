@@ -198,7 +198,7 @@
     <bean id="idealAPMConfigurationSetting"
           class="com.checkout.hybris.core.apm.configuration.CheckoutComAPMConfigurationSettings">
         <property name="isApmRedirect" value="true"/>
-        <property name="isApmUserDataRequired" value="true"/>
+        <property name="isApmUserDataRequired" value="false"/>
     </bean>
 
     <bean id="klarnaAPMConfigurationSetting"

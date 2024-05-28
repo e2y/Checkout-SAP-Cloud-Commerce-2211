@@ -6,7 +6,6 @@ import de.hybris.platform.servicelayer.model.ModelService
 import de.hybris.platform.site.BaseSiteService
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import groovyx.net.http.RESTClient
 import org.junit.Ignore
 
 import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.JSON
@@ -92,12 +91,8 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
     protected static final String DEFAULT_CHECKOUT_QPAY_PAYMENT_JSON = "{\"type\" : \"QPAY\"}"
     protected static final String DEFAULT_CHECKOUT_QPAY_PAYMENT_XML = "<paymentDetails><type>QPAY</type></paymentDetails>"
 
-    protected static final String DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON = "{\"bic\" : \"INGBNL2A\", \"type\" : \"IDEAL\"}"
-    protected static final String DEFAULT_CHECKOUT_IDEAL_PAYMENT_XML = "<paymentDetails><bic>ORD50234E89</bic><type>IDEAL</type></paymentDetails>"
-    protected static final String BAD_CHECKOUT_IDEAL_PAYMENT_JSON = "{\"type\" : \"IDEAL\"}"
-    protected static final String BAD_CHECKOUT_IDEAL_PAYMENT_XML = "<paymentDetails><type>IDEAL</type></paymentDetails>"
-    protected static final String WRONG_BIC_CHECKOUT_IDEAL_PAYMENT_JSON = "{\"bic\" : \"ORD50/E89\", \"type\" : \"IDEAL\"}"
-    protected static final String WRONG_BIC_CHECKOUT_IDEAL_PAYMENT_XML = "<paymentDetails><bic>ORD50/E89</bic><type>IDEAL</type></paymentDetails>"
+    protected static final String DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON = "{\"type\" : \"IDEAL\"}"
+    protected static final String DEFAULT_CHECKOUT_IDEAL_PAYMENT_XML = "<paymentDetails><type>IDEAL</type></paymentDetails>"
 
     protected static final String DEFAULT_CHECKOUT_KLARNA_PAYMENT_JSON = "{\"authorizationToken\" : \"ORD50234E89\", \"type\" : \"KLARNA\"}"
     protected static final String DEFAULT_CHECKOUT_KLARNA_PAYMENT_XML = "<paymentDetails><authorizationToken>ORD50234E89</authorizationToken><type>KLARNA</type></paymentDetails>"
@@ -181,7 +176,7 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
      * @param paymentTokenInfo Request data to retrieve the payment token
      * @return payment info
      */
-    protected createPaymentInfo(RESTClient client, customer, cartId, paymentInfo = DEFAULT_CHECKOUT_CC_PAYMENT_JSON, paymentTokenInfo = DEFAULT_GET_CC_TOKEN_JSON) {
+    protected createPaymentInfo(GroovyObject client, customer, cartId, paymentInfo = DEFAULT_CHECKOUT_CC_PAYMENT_JSON, paymentTokenInfo = DEFAULT_GET_CC_TOKEN_JSON) {
         def paymentToken = getPaymentToken(paymentTokenInfo)
         def paymentInfoRequest = replaceTokenForPaymentInfoRequest(paymentInfo, paymentToken)
         def response = client.post(
@@ -203,7 +198,7 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
      * @param paymentInfoRequest Request data with the payment info to save
      * @return payment info
      */
-    protected createAPMPaymentInfo(RESTClient client, customer, cartId, paymentInfoRequest) {
+    protected createAPMPaymentInfo(GroovyObject client, customer, cartId, paymentInfoRequest) {
         def response = client.post(
                 path: getBasePathWithSite() + '/users/' + customer.id + '/carts/' + cartId + '/checkoutcomapmpaymentdetails',
                 body: paymentInfoRequest,
@@ -233,7 +228,7 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
      * @param format format to be used
      * @return created customer and payment info, customer at position [0], info at position [1], cart at position [2]
      */
-    protected createCustomerWithPaymentInfo(RESTClient client, format = JSON) {
+    protected createCustomerWithPaymentInfo(GroovyObject client, format = JSON) {
         def customer = registerAndAuthorizeCustomer(client, format)
         def cart = createCart(client, customer, format)
         createBillingAddress(customer.id, cart.code)
@@ -399,7 +394,7 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
         return guestUid;
     }
 
-    protected prepareCartForGuestOrder(RESTClient client, userGuid, format) {
+    protected prepareCartForGuestOrder(GroovyObject client, userGuid, format) {
         authorizeClient(client)
         def anonymous = ANONYMOUS_USER
         def cart = createAnonymousCart(client, format)
