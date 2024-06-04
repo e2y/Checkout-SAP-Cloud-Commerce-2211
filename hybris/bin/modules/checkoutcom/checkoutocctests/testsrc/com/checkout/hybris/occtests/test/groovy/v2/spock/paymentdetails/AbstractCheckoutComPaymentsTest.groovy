@@ -6,15 +6,11 @@ import de.hybris.platform.servicelayer.model.ModelService
 import de.hybris.platform.site.BaseSiteService
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.RESTClient
 import org.junit.Ignore
 
-import static groovyx.net.http.ContentType.JSON
-import static groovyx.net.http.ContentType.URLENC
-import static groovyx.net.http.ContentType.XML
-import static groovyx.net.http.ContentType.XML
-import static groovyx.net.http.ContentType.XML
+import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.JSON
+import static de.hybris.platform.commercewebservicestests.test.groovy.webservicetests.http.ContentType.URLENC
 import static org.apache.http.HttpStatus.SC_CREATED
 
 @Ignore
@@ -34,6 +30,7 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
     protected static final AT_BILLING_ADDRESS_JSON = "{\"titleCode\": \"${CUSTOMER_TITLE_CODE}\", \"town\": \"${CUSTOMER_ADDRESS_TOWN}\", \"line1\": \"${CUSTOMER_ADDRESS_LINE1}\", \"postalCode\": \"${CUSTOMER_ADDRESS_POSTAL_CODE}\", \"country\": { \"isocode\": \"AT\" }, \"firstName\": \"${CUSTOMER_FIRST_NAME}\", \"lastName\": \"${CUSTOMER_LAST_NAME}\"}"
     protected static final NL_BILLING_ADDRESS_JSON = "{\"titleCode\": \"${CUSTOMER_TITLE_CODE}\", \"town\": \"${CUSTOMER_ADDRESS_TOWN}\", \"line1\": \"${CUSTOMER_ADDRESS_LINE1}\", \"postalCode\": \"${CUSTOMER_ADDRESS_POSTAL_CODE}\", \"country\": { \"isocode\": \"NL\" }, \"firstName\": \"${CUSTOMER_FIRST_NAME}\", \"lastName\": \"${CUSTOMER_LAST_NAME}\"}"
     protected static final MX_BILLING_ADDRESS_JSON = "{\"titleCode\": \"${CUSTOMER_TITLE_CODE}\", \"town\": \"${CUSTOMER_ADDRESS_TOWN}\", \"line1\": \"${CUSTOMER_ADDRESS_LINE1}\", \"postalCode\": \"${CUSTOMER_ADDRESS_POSTAL_CODE}\", \"country\": { \"isocode\": \"MX\" }, \"firstName\": \"${CUSTOMER_FIRST_NAME}\", \"lastName\": \"${CUSTOMER_LAST_NAME}\"}"
+    protected static final NZ_BILLING_ADDRESS_JSON = "{\"titleCode\": \"${CUSTOMER_TITLE_CODE}\", \"town\": \"${CUSTOMER_ADDRESS_TOWN}\", \"line1\": \"${CUSTOMER_ADDRESS_LINE1}\", \"postalCode\": \"${CUSTOMER_ADDRESS_POSTAL_CODE}\", \"country\": { \"isocode\": \"NZ\" }, \"firstName\": \"${CUSTOMER_FIRST_NAME}\", \"lastName\": \"${CUSTOMER_LAST_NAME}\"}"
     protected static final INVALID_ADDRESS_JSON = "{\"titleCode\": \"${CUSTOMER_TITLE_CODE}\", \"town\": \"${CUSTOMER_ADDRESS_TOWN}\", \"line1\": \"${CUSTOMER_ADDRESS_LINE1}\", \"postalCode\": \"${CUSTOMER_ADDRESS_POSTAL_CODE}\",  \"firstName\": \"${CUSTOMER_FIRST_NAME}\", \"lastName\": \"${CUSTOMER_LAST_NAME}\"}"
     protected static final INVALID_ADDRESS_XML = "<address><titleCode>${CUSTOMER_TITLE_CODE}</titleCode><town>${CUSTOMER_ADDRESS_TOWN}</town><line1>${CUSTOMER_ADDRESS_LINE1}</line1><postalCode>${CUSTOMER_ADDRESS_POSTAL_CODE}</postalCode><firstName>${CUSTOMER_FIRST_NAME}</firstName><lastName>${CUSTOMER_LAST_NAME}</lastName></address>"
 
@@ -153,6 +150,7 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
     protected static final String AUD_CURRENCY_CODE = 'AUD'
     protected static final String USD_CURRENCY_CODE = 'USD'
     protected static final String MXN_CURRENCY_CODE = 'MXN'
+    protected static final String NZD_CURRENCY_CODE = 'NZD'
 
     protected static final String INVALID_ADDRESS_ID = '9999999999999'
 
@@ -248,7 +246,7 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
      * @return the payment token
      */
     def getPaymentToken(paymentInfo = DEFAULT_GET_CC_TOKEN_JSON) {
-        def client = new RESTClient(getConfigurationProperty('checkoutocctests.checkout.sandbox.url'))
+        def client = createRestClient(getConfigurationProperty('checkoutocctests.checkout.sandbox.url'))
         def response = client.post(
                 path: getConfigurationProperty('checkoutocctests.checkout.sandbox.tokens.path'),
                 body: paymentInfo,
