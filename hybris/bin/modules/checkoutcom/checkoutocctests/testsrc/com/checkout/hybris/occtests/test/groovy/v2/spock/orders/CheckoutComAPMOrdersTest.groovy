@@ -20,7 +20,7 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         def customerWithCart = createAndAuthorizeCustomerWithCart(restClient, format)
         def customer = customerWithCart[0]
         def cart = customerWithCart[1]
-        def address = createAddress(restClient, customer)
+        def address = createAddressWithOptions(restClient, customer)
         setDeliveryAddressForCart(restClient, customer, cart.code, address.id, format)
         addProductToCartOnline(restClient, customer, cart.code, PRODUCT_POWER_SHOT_A480)
         setDeliveryModeForCart(restClient, customer, cart.code, DELIVERY_STANDARD, format)
@@ -61,8 +61,6 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         XML    | ALIPAY     | USD_CURRENCY_CODE | 'China'        | DEFAULT_CHECKOUT_ALIPAY_PAYMENT_JSON     | CN_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.alipay.sandbox'
         JSON   | P24        | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON   | 'checkoutocctests.checkout.p24.sandbox'
         XML    | P24        | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON   | 'checkoutocctests.checkout.p24.sandbox'
-        JSON   | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.ideal.sandbox'
-        XML    | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.ideal.sandbox'
         JSON   | EPS        | EUR_CURRENCY_CODE | 'Austria'      | DEFAULT_CHECKOUT_EPS_PAYMENT_JSON        | AT_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.eps.sandbox'
         XML    | EPS        | EUR_CURRENCY_CODE | 'Austria'      | DEFAULT_CHECKOUT_EPS_PAYMENT_JSON        | AT_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.eps.sandbox'
         //JSON   | OXXO       | MXN_CURRENCY_CODE | 'Mexico'       | DEFAULT_CHECKOUT_OXXO_PAYMENT_JSON       | MX_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.oxxo.sandbox'
@@ -74,7 +72,7 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         def customerWithCart = createAndAuthorizeCustomerWithCart(restClient, format)
         def customer = customerWithCart[0]
         def cart = customerWithCart[1]
-        def address = createAddress(restClient, customer)
+        def address = createAddressWithOptions(restClient, customer)
         setDeliveryAddressForCart(restClient, customer, cart.code, address.id, format)
         addProductToCartOnline(restClient, customer, cart.code, PRODUCT_POWER_SHOT_A480)
         setDeliveryModeForCart(restClient, customer, cart.code, DELIVERY_STANDARD, format)
@@ -116,7 +114,7 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         def customerWithCart = createAndAuthorizeCustomerWithCart(restClient, format)
         def customer = customerWithCart[0]
         def cart = customerWithCart[1]
-        def address = createAddress(restClient, customer)
+        def address = createAddressWithOptions(restClient, customer)
         setDeliveryAddressForCart(restClient, customer, cart.code, address.id, format)
         addProductToCartOnline(restClient, customer, cart.code, PRODUCT_POWER_SHOT_A480)
         setDeliveryModeForCart(restClient, customer, cart.code, DELIVERY_STANDARD, format)
@@ -153,7 +151,7 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         def customerWithCart = createAndAuthorizeCustomerWithCart(restClient, format)
         def customer = customerWithCart[0]
         def cart = customerWithCart[1]
-        def address = createAddress(restClient, customer)
+        def address = createAddressWithOptions(restClient, customer)
         setDeliveryAddressForCart(restClient, customer, cart.code, address.id, format)
         addProductToCartOnline(restClient, customer, cart.code, PRODUCT_POWER_SHOT_A480)
         setDeliveryModeForCart(restClient, customer, cart.code, DELIVERY_STANDARD, format)
@@ -186,7 +184,7 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         def customerWithCart = createAndAuthorizeCustomerWithCart(restClient, format)
         def customer = customerWithCart[0]
         def cart = customerWithCart[1]
-        def address = createAddress(restClient, customer)
+        def address = createAddressWithOptions(restClient, customer)
         setDeliveryAddressForCart(restClient, customer, cart.code, address.id, format)
         addProductToCartOnline(restClient, customer, cart.code, PRODUCT_POWER_SHOT_A480)
         setDeliveryModeForCart(restClient, customer, cart.code, DELIVERY_STANDARD, format)

@@ -1,11 +1,11 @@
 #Ant properties
-#Mon Mar 18 17:07:31 GMT 2024
+#Tue May 28 13:21:41 GMT 2024
 version.api=2211
 vendor=hybris
 group.id=de.hybris.platform
 name=checkoutservices
 description=checkoutservices
-builddate=20240318 1707
+builddate=20240528 1321
 releasedate=20240307 1540
 version=2211.20
 module.name=platform-module

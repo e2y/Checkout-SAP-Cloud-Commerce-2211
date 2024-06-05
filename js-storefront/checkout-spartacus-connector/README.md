@@ -48,6 +48,15 @@ If you need to extend components, you can fork the repository so you are able to
 If you don't want to fork, you can `extend` components, copy the template and the Angular Component into your project. This will mean that you have to be vigilant when a new release of the library is integrated.
 
 ## Release notes
+### Release 4.2.7
+* Removed BIC from iDeal APM form
+
+### Release 4.2.6
+* Included support for SAP CX 2211
+* Fixed dependencies issues.
+  *  "ng2-tooltip-directive": "^2.10.3",
+  *  "ngx-plaid-link": "1.0.3",
+  *  "@techiediaries/ngx-qrcode": "^9.1.0"
 
 ### Release 4.2.5
 * Included support for SAP CX 2211

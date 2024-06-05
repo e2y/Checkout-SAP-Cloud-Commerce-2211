@@ -1,7 +1,6 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
-import com.checkout.hybris.core.model.CheckoutComIdealPaymentInfoModel;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
@@ -21,7 +20,6 @@ import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParamete
  */
 public class CheckoutComIdealPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
 
-    protected static final String BIC_KEY = "bic";
     protected static final String DESCRIPTION_KEY = "description";
 
     public CheckoutComIdealPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
@@ -52,24 +50,8 @@ public class CheckoutComIdealPaymentRequestStrategy extends CheckoutComAbstractA
         validateParameterNotNull(cart, "Cart model cannot be null");
         checkArgument(StringUtils.isNotBlank(cart.getCheckoutComPaymentReference()), "Payment reference can not be blank or null");
 
-        final CheckoutComIdealPaymentInfoModel idealPaymentInfo = (CheckoutComIdealPaymentInfoModel) cart.getPaymentInfo();
-        source.put(DESCRIPTION_KEY, formatAndValidatePaymentReference(cart.getCheckoutComPaymentReference()));
-        source.put(BIC_KEY, idealPaymentInfo.getBic());
+        source.put(DESCRIPTION_KEY, cart.getCheckoutComPaymentReference());
 
         return paymentRequest;
-    }
-
-    /**
-     * Formats and validates the payment reference for ideal payment request
-     * Gets rid of the special characters and verifies that the length is less than 35 characters
-     *
-     * @param paymentReference to format
-     * @return formatted payment reference with valid length
-     */
-    protected String formatAndValidatePaymentReference(final String paymentReference) {
-        final String formattedPaymentReference = paymentReference.replaceAll("[^a-zA-Z0-9]", "");
-
-        checkArgument(formattedPaymentReference.length() <= 35, "Formatted Payment reference can not be more than 35 characters");
-        return formattedPaymentReference;
     }
 }

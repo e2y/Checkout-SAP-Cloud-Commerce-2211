@@ -268,6 +268,13 @@
           class="com.checkout.hybris.core.payment.details.strategies.impl.CheckoutComMadaUpdatePaymentInfoStrategy"
           parent="checkoutComCardPaymentInfoStrategy"/>
 
+    <alias name="defaultCheckoutComIdealPaymentInfoStrategy" alias="checkoutComIdealPaymentInfoStrategy"/>
+    <bean id="defaultCheckoutComIdealPaymentInfoStrategy"
+          class="com.checkout.hybris.core.payment.details.strategies.impl.CheckoutComIdealUpdatePaymentInfoStrategy"
+          parent="checkoutComCardPaymentInfoStrategy">
+        <constructor-arg ref="modelService"/>
+    </bean>
+
     <alias name="defaultCheckoutComKlarnaDiscountAmountStrategy" alias="checkoutComKlarnaDiscountAmountStrategy"/>
     <bean id="defaultCheckoutComKlarnaDiscountAmountStrategy"
           class="com.checkout.hybris.core.payment.klarna.request.strategies.impl.DefaultCheckoutComKlarnaDiscountAmountStrategy">
