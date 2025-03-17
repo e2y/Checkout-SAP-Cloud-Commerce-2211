@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CheckoutComApmGooglepayComponent } from './checkout-com-apm-googlepay.component';
-import { CheckoutComBillingAddressModule } from '../../checkout-com-billing-address/checkout-com-billing-address.module';
+import { CheckoutComBillingAddressFormModule } from '@checkout-components/checkout-com-billing-address-form/checkout-com-billing-address-form.module';
 
 @NgModule({
   declarations: [CheckoutComApmGooglepayComponent],
@@ -10,7 +10,7 @@ import { CheckoutComBillingAddressModule } from '../../checkout-com-billing-addr
   ],
   imports: [
     CommonModule,
-    CheckoutComBillingAddressModule,
+    CheckoutComBillingAddressFormModule,
   ]
 })
 export class CheckoutComApmGooglepayModule { }

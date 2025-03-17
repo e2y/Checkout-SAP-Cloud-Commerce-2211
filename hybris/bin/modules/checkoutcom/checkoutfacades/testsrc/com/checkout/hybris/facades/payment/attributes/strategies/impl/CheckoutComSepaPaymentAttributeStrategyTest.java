@@ -1,7 +1,6 @@
 package com.checkout.hybris.facades.payment.attributes.strategies.impl;
 
 import com.checkout.hybris.core.enums.SepaPaymentType;
-import com.google.common.collect.ImmutableList;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.enumeration.EnumerationMetaTypeModel;
 import de.hybris.platform.core.model.enumeration.EnumerationValueModel;
@@ -11,10 +10,11 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.ui.Model;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.SEPA;
 import static org.junit.Assert.assertEquals;
@@ -64,7 +64,7 @@ public class CheckoutComSepaPaymentAttributeStrategyTest {
     @Test
     public void getSepaPaymentTypes_ShouldReturnTheMapWithTheValues() {
         when(typeServiceMock.getEnumerationTypeForCode(SepaPaymentType._TYPECODE)).thenReturn(enumerationMetaTypeMock);
-        when(enumerationMetaTypeMock.getValues()).thenReturn(ImmutableList.of(enumerationValue1Mock, enumerationValue2Mock));
+        when(enumerationMetaTypeMock.getValues()).thenReturn(List.of(enumerationValue1Mock, enumerationValue2Mock));
         when(enumerationValue1Mock.getCode()).thenReturn(RECURRING_PAYMENT_KEY);
         when(enumerationValue1Mock.getName()).thenReturn(RECURRING_PAYMENT_VALUE);
         when(enumerationValue2Mock.getCode()).thenReturn(SINGLE_PAYMENT_KEY);

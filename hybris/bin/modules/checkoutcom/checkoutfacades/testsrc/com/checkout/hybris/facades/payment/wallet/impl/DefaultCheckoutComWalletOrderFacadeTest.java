@@ -19,16 +19,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.MessageSource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import org.springframework.context.MessageSource;
 
 import static com.checkout.hybris.facades.enums.PlaceWalletOrderStatus.FAILURE;
 import static com.checkout.hybris.facades.enums.PlaceWalletOrderStatus.SUCCESS;
 import static com.checkout.hybris.facades.enums.WalletPaymentType.GOOGLEPAY;
-import static java.util.Locale.ENGLISH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 

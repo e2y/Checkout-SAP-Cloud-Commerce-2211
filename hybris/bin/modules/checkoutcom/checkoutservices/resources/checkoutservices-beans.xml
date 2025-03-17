@@ -9,7 +9,6 @@
     <enum class="com.checkout.hybris.core.payment.enums.CheckoutComPaymentType">
         <value>CARD</value>
         <value>MADA</value>
-        <value>SOFORT</value>
         <value>PAYPAL</value>
         <value>POLI</value>
         <value>IDEAL</value>
@@ -17,7 +16,6 @@
         <value>ALIPAY</value>
         <value>BENEFITPAY</value>
         <value>BANCONTACT</value>
-        <value>GIROPAY</value>
         <value>EPS</value>
         <value>KNET</value>
         <value>QPAY</value>

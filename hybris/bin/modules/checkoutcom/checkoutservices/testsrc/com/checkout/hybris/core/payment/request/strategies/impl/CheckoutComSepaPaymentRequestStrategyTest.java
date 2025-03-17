@@ -1,12 +1,12 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
-import com.checkout.sdk.common.Address;
 import com.checkout.hybris.core.currency.services.CheckoutComCurrencyService;
 import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.merchantconfiguration.BillingDescriptor;
 import com.checkout.hybris.core.model.CheckoutComSepaPaymentInfoModel;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationService;
+import com.checkout.sdk.common.Address;
 import com.checkout.sdk.payments.AlternativePaymentSource;
 import com.checkout.sdk.payments.PaymentRequest;
 import com.checkout.sdk.payments.RequestSource;
@@ -22,15 +22,14 @@ import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.checkout.hybris.core.enums.SepaPaymentType.RECURRING;
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.SEPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @UnitTest
@@ -45,10 +44,9 @@ public class CheckoutComSepaPaymentRequestStrategyTest {
     private static final String PAYMENT_ID = "PAYMENT_ID";
     private static final String CUSTOMER_ID = "customerId";
     private static final String GBP = "GBP";
-    private static final double TOTAL_PRICE = 100D;
     private static final String FIRST_NAME_KEY = "first_name";
     private static final String LAST_NAME_KEY = "last_name";
-    private static final String BILLING_DESCRIPTOR__KEY = "billing_descriptor";
+    private static final String BILLING_DESCRIPTOR_KEY = "billing_descriptor";
     private static final String ACCOUNT_IBAN_KEY = "account_iban";
     private static final String MANDATE_TYPE_KEY = "mandate_type";
 
@@ -93,7 +91,7 @@ public class CheckoutComSepaPaymentRequestStrategyTest {
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "checkoutComMerchantConfigurationService", checkoutComMerchantConfigurationServiceMock);
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "checkoutComPaymentIntegrationService", checkoutComPaymentIntegrationServiceMock);
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "checkoutComCurrencyService", checkoutComCurrencyServiceMock);
-        doNothing().when(testObj).populatePaymentRequest(anyObject(), anyObject());
+        doNothing().when(testObj).populatePaymentRequest(any(), any());
         when(cartMock.getCurrency().getIsocode()).thenReturn(CURRENCY_ISO_CODE);
         when(cartMock.getPaymentInfo()).thenReturn(sepaPaymentInfoModelMock);
         when(cartMock.getCheckoutComPaymentReference()).thenReturn(CART_REFERENCE);
@@ -182,7 +180,7 @@ public class CheckoutComSepaPaymentRequestStrategyTest {
         assertEquals("last name", result.get(LAST_NAME_KEY));
         assertEquals("iban code", result.get(ACCOUNT_IBAN_KEY));
         assertEquals("recurring", result.get(MANDATE_TYPE_KEY));
-        assertEquals(BILLING_DESCRIPTOR_NAME, result.get(BILLING_DESCRIPTOR__KEY));
+        assertEquals(BILLING_DESCRIPTOR_NAME, result.get(BILLING_DESCRIPTOR_KEY));
     }
 
     @Test

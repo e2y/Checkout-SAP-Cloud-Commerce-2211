@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { NgModule } from '@angular/core';
 import { CmsConfig, I18nConfig, provideConfig } from '@spartacus/core';
 import { userAccountTranslationChunksConfig, userAccountTranslations } from '@spartacus/user/account/assets';
-import { UserAccountRootModule } from '@spartacus/user/account/root';
+import { USER_ACCOUNT_FEATURE, UserAccountRootModule } from '@spartacus/user/account/root';
 import { userProfileTranslationChunksConfig, userProfileTranslations } from '@spartacus/user/profile/assets';
-import { UserProfileRootModule } from '@spartacus/user/profile/root';
+import { USER_PROFILE_FEATURE, UserProfileRootModule } from '@spartacus/user/profile/root';
 
 @NgModule({
   declarations: [],
@@ -11,34 +12,36 @@ import { UserProfileRootModule } from '@spartacus/user/profile/root';
     UserAccountRootModule,
     UserProfileRootModule
   ],
-  providers: [provideConfig({
+  providers: [provideConfig(<CmsConfig>{
     featureModules: {
-      userAccount: {
+      [USER_ACCOUNT_FEATURE]: {
         module: () =>
+          // eslint-disable-next-line @typescript-eslint/typedef
           import('@spartacus/user/account').then((m) => m.UserAccountModule),
       },
     }
-  } as CmsConfig),
-  provideConfig({
+  }),
+  provideConfig(<I18nConfig>{
     i18n: {
       resources: userAccountTranslations,
       chunks: userAccountTranslationChunksConfig,
     },
-  } as I18nConfig),
-  provideConfig({
+  }),
+  provideConfig(<CmsConfig>{
     featureModules: {
-      userProfile: {
+      [USER_PROFILE_FEATURE]: {
         module: () =>
+          // eslint-disable-next-line @typescript-eslint/typedef
           import('@spartacus/user/profile').then((m) => m.UserProfileModule),
       },
     }
-  } as CmsConfig),
-  provideConfig({
+  }),
+  provideConfig(<I18nConfig>{
     i18n: {
       resources: userProfileTranslations,
       chunks: userProfileTranslationChunksConfig,
     },
-  } as I18nConfig)
+  })
   ]
 })
 export class UserFeatureModule { }

@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActiveCartService, Cart } from '@spartacus/core';
-
+import { ActiveCartFacade, Cart } from '@spartacus/cart/base/root';
 import LogRocket from 'logrocket';
 import { filter } from 'rxjs/operators';
 
@@ -9,22 +8,28 @@ import { filter } from 'rxjs/operators';
 })
 export class LogrocketService {
 
-  constructor(public activeCartService: ActiveCartService) {
+  constructor(public activeCartFacade: ActiveCartFacade) {
   }
 
   identify(): void {
-    this.activeCartService.getActive()
+    this.activeCartFacade.getActive()
       .pipe(
-        filter(c => !!c && Object.keys(c).length > 0)
-      ).subscribe(({guid, user}) => {
-      try {
-        LogRocket.identify(user.uid, {
-          cart: guid,
-          name: user.name,
-        });
-      } catch (err) {
-        console.log('Failed to identify logrocket error tracking', err);
-      }
-    }, err => console.log('getActive with errors', {err}));
+        filter((c: Cart): boolean => !!c && Object.keys(c).length > 0)
+      ).subscribe({
+        next: ({
+          guid,
+          user
+        }: Cart): void => {
+          try {
+            LogRocket.identify(user.uid, {
+              cart: guid,
+              name: user.name,
+            });
+          } catch (error) {
+            console.error('Failed to identify logrocket error tracking', error);
+          }
+        },
+        error: (error: unknown): void => console.error('getActive with errors', { error })
+      });
   }
 }

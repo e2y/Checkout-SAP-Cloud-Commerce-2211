@@ -1,12 +1,10 @@
 package com.checkout.hybris.core.payment.services.impl;
 
-import com.checkout.hybris.core.klarna.session.response.KlarnaPartnerMetadataResponseDto;
-import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.CheckoutApi;
 import com.checkout.hybris.core.enums.EnvironmentType;
 import com.checkout.hybris.core.klarna.capture.request.KlarnaCaptureRequestDto;
 import com.checkout.hybris.core.klarna.capture.response.KlarnaCaptureResponseDto;
 import com.checkout.hybris.core.klarna.session.request.KlarnaSessionRequestDto;
+import com.checkout.hybris.core.klarna.session.response.KlarnaPartnerMetadataResponseDto;
 import com.checkout.hybris.core.klarna.session.response.KlarnaSessionResponseDto;
 import com.checkout.hybris.core.klarna.voids.request.KlarnaVoidRequestDto;
 import com.checkout.hybris.core.klarna.voids.response.KlarnaVoidResponseDto;
@@ -17,6 +15,8 @@ import com.checkout.hybris.core.order.daos.CheckoutComOrderDao;
 import com.checkout.hybris.core.payment.daos.CheckoutComPaymentInfoDao;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.core.payment.services.CheckoutComApiService;
+import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
+import com.checkout.sdk.CheckoutApi;
 import com.checkout.sdk.payments.*;
 import com.checkout.sdk.sources.SourceRequest;
 import com.checkout.sdk.sources.SourceResponse;
@@ -24,7 +24,6 @@ import com.checkout.sdk.sources.SourcesClient;
 import com.checkout.sdk.tokens.TokenResponse;
 import com.checkout.sdk.tokens.TokensClient;
 import com.checkout.sdk.tokens.WalletTokenRequest;
-import com.google.common.collect.ImmutableList;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.basecommerce.model.site.BaseSiteModel;
 import de.hybris.platform.core.model.order.OrderModel;
@@ -37,13 +36,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.mockito.exceptions.base.MockitoException;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.ConnectException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -52,7 +52,7 @@ import java.util.concurrent.ExecutionException;
 import static java.util.Optional.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @UnitTest
@@ -60,7 +60,6 @@ import static org.mockito.Mockito.*;
 public class DefaultCheckoutComPaymentIntegrationServiceTest {
 
     private static final String SECRET_KEY = "secretKey";
-    private static final String PUBLIC_KEY = "publicKey";
     private static final String PAYMENT_ID = "paymentId";
     private static final String CKO_SESSION_ID = "cko-session-id";
     private static final String ORDER_REFERENCE = "order_reference";
@@ -208,7 +207,7 @@ public class DefaultCheckoutComPaymentIntegrationServiceTest {
             return args.execute();
         });
 
-        doReturn("").when(testObj).prettyPrint(anyObject());
+        doReturn("").when(testObj).prettyPrint(any());
         when(checkoutComApiServiceMock.createCheckoutApi()).thenReturn(checkoutApiMock);
     }
 
@@ -272,7 +271,7 @@ public class DefaultCheckoutComPaymentIntegrationServiceTest {
 
     @Test
     public void capturePayment_WhenPaymentNotKlarna_ShouldDoNormalCaptureAndGiveBackTheResponse() throws ExecutionException, InterruptedException {
-        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(ImmutableList.of(paymentInfoMock));
+        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(List.of(paymentInfoMock));
 
         final CaptureResponse result = testObj.capturePayment(captureRequestMock, PAYMENT_ID);
 
@@ -283,7 +282,7 @@ public class DefaultCheckoutComPaymentIntegrationServiceTest {
 
     @Test
     public void capturePayment_WhenPaymentIsKlarna_ShouldDoKlarnaCaptureAndGiveBackTheResponse() throws ExecutionException, InterruptedException {
-        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(ImmutableList.of(klarmePaymentInfoMock));
+        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(List.of(klarmePaymentInfoMock));
         doReturn(captureResponseMock).when(testObj).captureKlarnaPayment(captureRequestMock, PAYMENT_ID, SITE_ID);
 
         final CaptureResponse result = testObj.capturePayment(captureRequestMock, PAYMENT_ID);
@@ -302,7 +301,7 @@ public class DefaultCheckoutComPaymentIntegrationServiceTest {
 
     @Test
     public void voidPayment_WhenPaymentNotKlarna_ShouldCallNormalVoidAndGiveBackTheResponse() throws ExecutionException, InterruptedException {
-        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(ImmutableList.of(paymentInfoMock));
+        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(List.of(paymentInfoMock));
 
         final VoidResponse result = testObj.voidPayment(voidRequestMock, PAYMENT_ID);
 
@@ -313,7 +312,7 @@ public class DefaultCheckoutComPaymentIntegrationServiceTest {
 
     @Test
     public void voidPayment_WhenPaymentIsKlarna_ShouldCallKlarnaVoidAndGiveBackTheResponse() throws ExecutionException, InterruptedException {
-        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(ImmutableList.of(klarmePaymentInfoMock));
+        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_ID)).thenReturn(List.of(klarmePaymentInfoMock));
         doReturn(voidResponseMock).when(testObj).voidKlarnaPayment(voidRequestMock, PAYMENT_ID, SITE_ID);
 
         final VoidResponse result = testObj.voidPayment(voidRequestMock, PAYMENT_ID);

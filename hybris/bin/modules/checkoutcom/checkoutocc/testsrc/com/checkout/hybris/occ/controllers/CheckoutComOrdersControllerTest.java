@@ -30,7 +30,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.List;
@@ -93,7 +93,6 @@ public class CheckoutComOrdersControllerTest {
         when(cartFacadeMock.validateCartData()).thenReturn(Collections.emptyList());
         when(cartFacadeMock.getSessionCart()).thenReturn(cartDataMock);
         when(checkoutFlowFacadeMock.authorizePayment()).thenReturn(authorizeResponseDataMock);
-        when(checkoutFlowFacadeMock.getCurrentPaymentMethodType()).thenReturn("CARD");
         when(authorizeResponseDataMock.getIsSuccess()).thenReturn(Boolean.TRUE);
         when(authorizeResponseDataMock.getIsRedirect()).thenReturn(Boolean.FALSE);
         when(acceleratorCheckoutFacadeCheckoutFacadeMock.placeOrder()).thenReturn(orderDataMock);

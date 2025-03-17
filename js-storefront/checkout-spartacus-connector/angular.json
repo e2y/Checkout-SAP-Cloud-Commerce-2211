@@ -4,7 +4,7 @@
   "newProjectRoot": "projects",
   "projects": {
     "checkout-spartacus-connector": {
-      "projectType": "",
+      "projectType": "library",
       "root": "projects/checkout-spartacus-connector",
       "sourceRoot": "projects/checkout-spartacus-connector/src",
       "prefix": "y",
@@ -26,7 +26,12 @@
           "options": {
             "main": "projects/checkout-spartacus-connector/src/test.ts",
             "tsConfig": "projects/checkout-spartacus-connector/tsconfig.spec.json",
-            "karmaConfig": "projects/checkout-spartacus-connector/karma.conf.js"
+            "karmaConfig": "projects/checkout-spartacus-connector/karma.conf.js",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/"
+              ]
+            }
           }
         },
         "lint": {
@@ -61,12 +66,30 @@
             "tsConfig": "projects/example-storefront/tsconfig.app.json",
             "assets": [
               "projects/example-storefront/src/favicon.ico",
-              "projects/example-storefront/src/assets"
+              "projects/example-storefront/src/assets",
+              {
+                "glob": "**/*",
+                "input": "./node_modules/@spartacus/smartedit/assets",
+                "output": "assets/"
+              }
             ],
             "styles": [
               "projects/example-storefront/src/styles.scss",
-              "projects/example-storefront/src/styles/spartacus/user.scss"
+              "projects/example-storefront/src/styles/spartacus/user.scss",
+              "projects/example-storefront/src/styles/spartacus/asm.scss",
+              "projects/example-storefront/src/styles/spartacus/cart.scss",
+              "projects/example-storefront/src/styles/spartacus/checkout.scss",
+              "projects/example-storefront/src/styles/spartacus/order.scss",
+              "projects/example-storefront/src/styles/spartacus/product.scss",
+              "projects/example-storefront/src/styles/spartacus/storefinder.scss",
+              "projects/checkout-spartacus-connector/src/styles/styles.scss",
+              "@angular/cdk/overlay-prebuilt.css"
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/"
+              ]
+            },
             "allowedCommonJsDependencies": [
               "qrcode"
             ],
@@ -107,7 +130,7 @@
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "6kb",
-                  "maximumError": "10kb"
+                  "maximumError": "12kb"
                 }
               ]
             },
@@ -139,7 +162,7 @@
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "6kb",
-                  "maximumError": "10kb"
+                  "maximumError": "12kb"
                 }
               ]
             }
@@ -149,18 +172,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "example-storefront:build"
+            "buildTarget": "example-storefront:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "example-storefront:build:production"
+              "buildTarget": "example-storefront:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "example-storefront:build"
+            "buildTarget": "example-storefront:build"
           }
         },
         "lint": {
@@ -169,6 +192,30 @@
             "lintFilePatterns": [
               "projects/example-storefront/**/*.ts",
               "projects/example-storefront/**/*.html"
+            ]
+          }
+        },
+        "test": {
+          "options": {
+            "styles": [
+              "projects/example-storefront/src/styles/spartacus/asm.scss",
+              "projects/example-storefront/src/styles/spartacus/cart.scss",
+              "projects/example-storefront/src/styles/spartacus/checkout.scss",
+              "projects/example-storefront/src/styles/spartacus/order.scss",
+              "projects/example-storefront/src/styles/spartacus/organization.scss",
+              "projects/example-storefront/src/styles/spartacus/product.scss",
+              "projects/example-storefront/src/styles/spartacus/product-configurator.scss",
+              "projects/example-storefront/src/styles/spartacus/storefinder.scss",
+              "projects/example-storefront/src/styles/spartacus/epd-visualization.scss",
+              "projects/example-storefront/src/styles/spartacus/qualtrics-embedded-feedback.scss",
+              "projects/example-storefront/src/styles/spartacus/customer-ticketing.scss"
+            ],
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "./node_modules/@spartacus/smartedit/assets",
+                "output": "assets/"
+              }
             ]
           }
         }
@@ -203,6 +250,5 @@
         }
       }
     }
-  },
-  "defaultProject": "checkout-spartacus-connector"
+  }
 }

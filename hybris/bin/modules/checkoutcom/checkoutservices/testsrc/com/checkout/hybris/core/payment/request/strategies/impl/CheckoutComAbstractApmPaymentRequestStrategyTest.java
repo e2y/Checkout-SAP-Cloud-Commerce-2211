@@ -11,9 +11,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.SOFORT;
+import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.PAYPAL;
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -54,11 +54,11 @@ public class CheckoutComAbstractApmPaymentRequestStrategyTest {
     @Test
     public void getRequestSourcePaymentRequest_WhenGenericAPMPayment_ShouldCreateAlternativePaymentRequestWithType() {
         when(cartMock.getPaymentInfo()).thenReturn(checkoutComRedirectAPMPaymentInfoMock);
-        when(checkoutComRedirectAPMPaymentInfoMock.getType()).thenReturn(SOFORT.name());
+        when(checkoutComRedirectAPMPaymentInfoMock.getType()).thenReturn(PAYPAL.name());
 
         final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
 
-        assertEquals(SOFORT.name().toLowerCase(), result.getSource().getType());
+        assertEquals(PAYPAL.name().toLowerCase(), result.getSource().getType());
     }
 
     @Test

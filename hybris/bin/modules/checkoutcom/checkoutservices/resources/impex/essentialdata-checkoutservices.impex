@@ -121,7 +121,6 @@ INSERT_UPDATE MadaBin; code[unique = true]
                      ; 531196
 
 INSERT_UPDATE CheckoutComAPMConfiguration; code[unique = true]; name[lang = en]
-                                         ; SOFORT             ; Sofort
                                          ; PAYPAL             ; PayPal
                                          ; POLI               ; POLi
                                          ; IDEAL              ; iDeal
@@ -129,7 +128,6 @@ INSERT_UPDATE CheckoutComAPMConfiguration; code[unique = true]; name[lang = en]
                                          ; ALIPAY             ; Alipay
                                          ; BENEFITPAY         ; Benefit Pay
                                          ; BANCONTACT         ; Bancontact
-                                         ; GIROPAY            ; Giropay
                                          ; EPS                ; Eps
                                          ; KNET               ; Knet
                                          ; QPAY               ; QPay

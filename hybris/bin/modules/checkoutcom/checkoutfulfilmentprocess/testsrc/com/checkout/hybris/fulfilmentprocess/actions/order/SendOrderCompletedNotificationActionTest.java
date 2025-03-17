@@ -12,11 +12,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -59,6 +58,6 @@ public class SendOrderCompletedNotificationActionTest {
 
         testObj.executeAction(orderProcessModel);
 
-        verifyZeroInteractions(eventServiceMock);
+        verifyNoInteractions(eventServiceMock);
     }
 }

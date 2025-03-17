@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.hybris.platform</groupId>
 	<artifactId>checkoutsampledataaddon</artifactId>
-	<version>2205.0</version>
+    <version>2211.5</version>
 
 	<packaging>jar</packaging>
 

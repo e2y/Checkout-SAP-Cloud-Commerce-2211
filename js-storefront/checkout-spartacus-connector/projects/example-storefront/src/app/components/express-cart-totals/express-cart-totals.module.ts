@@ -1,10 +1,11 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CheckoutComExpressButtonsModule } from '@checkout-components/checkout-com-express-buttons/checkout-com-express-buttons.module';
 import { ExpressCartTotalsComponent } from './express-cart-totals.component';
 import { FeaturesConfigModule, I18nModule, provideConfig, UrlModule } from '@spartacus/core';
-import { CartCouponModule, CartSharedModule, ProgressButtonModule } from '@spartacus/storefront';
+import { ProgressButtonModule } from '@spartacus/storefront';
 import { RouterModule } from '@angular/router';
-import { CheckoutComExpressButtonsModule } from 'checkout-spartacus-connector';
+import { CartCouponModule, CartSharedModule } from '@spartacus/cart/base/components';
 
 @NgModule({
   declarations: [
@@ -22,13 +23,12 @@ import { CheckoutComExpressButtonsModule } from 'checkout-spartacus-connector';
     CartCouponModule,
     FeaturesConfigModule,
     ProgressButtonModule,
-
     CheckoutComExpressButtonsModule,
   ],
   providers: [
     provideConfig({
       cmsComponents: {
-        CartTotalsComponent: {
+        CartProceedToCheckoutComponent: {
           component: ExpressCartTotalsComponent,
         },
       },

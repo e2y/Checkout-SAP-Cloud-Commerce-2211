@@ -1,117 +1,157 @@
-/* Angular */
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, ViewEncapsulation } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-/* Rxjs */
-import { BehaviorSubject, EMPTY, Observable, Subject } from 'rxjs';
-import { finalize, skip, switchMap, take, takeUntil } from 'rxjs/operators';
-/* Spartacus */
+import { ApmPaymentDetails, CheckoutComPaymentDetails } from '@checkout-core/interfaces';
+import { CheckoutComApmFacade } from '@checkout-facades/checkout-com-apm.facade';
+import { CheckoutComBillingAddressFormFacade } from '@checkout-facades/checkout-com-checkout-billing-address-form.facade';
+import { CheckoutComPaymentFacade } from '@checkout-facades/checkout-com-payment.facade';
+import { ApmData, PaymentType } from '@checkout-model/ApmData';
+import { ActiveCartFacade } from '@spartacus/cart/base/root';
+import { CheckoutPaymentMethodComponent, CheckoutStepService } from '@spartacus/checkout/base/components';
+import { CheckoutDeliveryAddressFacade } from '@spartacus/checkout/base/root';
 import {
-  ActiveCartService,
   Address,
   GlobalMessageService,
+  GlobalMessageType,
+  HttpErrorModel,
+  LoggerService,
   PaymentDetails,
+  QueryState,
   TranslationService,
-  UserIdService,
+  tryNormalizeHttpError,
   UserPaymentService
 } from '@spartacus/core';
-import { CheckoutStepService, PaymentMethodComponent } from '@spartacus/checkout/components';
-/* CheckoutCom */
-import { CheckoutComPaymentService } from '../../../core/services/checkout-com-payment.service';
-import { ApmData, PaymentType } from '../../../core/model/ApmData';
-import { ApmPaymentDetails, CheckoutComPaymentDetails } from '../../interfaces';
-import { CheckoutComApmService } from '../../../core/services/checkout-com-apm.service';
-import { CheckoutDeliveryFacade, CheckoutFacade, CheckoutPaymentFacade } from '@spartacus/checkout/root';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { finalize, take } from 'rxjs/operators';
 
 @Component({
   selector: 'lib-checkout-com-payment-method',
   templateUrl: './checkout-com-payment-method.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None
 })
-export class CheckoutComPaymentMethodComponent extends PaymentMethodComponent implements OnInit, OnDestroy {
-  public requiresCvn = false;
-  public processing$ = new BehaviorSubject<boolean>(false);
-  public cvnForm: FormGroup = new FormGroup({
-    cvn: new FormControl('', Validators.required)
+export class CheckoutComPaymentMethodComponent extends CheckoutPaymentMethodComponent implements OnInit {
+  public requiresCvn: boolean = false;
+  public processing$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  public cvnForm: UntypedFormGroup = new UntypedFormGroup({
+    cvn: new UntypedFormControl('', Validators.required)
   });
   public selectedPaymentDetails: PaymentDetails;
-  public selectedApm$: Observable<ApmData> = this.checkoutComApmService.getSelectedApmFromState();
-  public isCardPayment = false;
-
-  protected activeCartId: string = null;
-  protected userId: string = null;
+  public selectedApm$: Observable<ApmData> = this.checkoutComApmFacade.getSelectedApmFromState();
+  public isCardPayment: boolean = false;
+  protected override deliveryAddress: Address;
   protected shouldRedirect: boolean;
-  protected deliveryAddress: Address;
-
-  private drop = new Subject<void>();
+  private destroyRef: DestroyRef = inject(DestroyRef);
+  private logger: LoggerService = inject(LoggerService);
 
   constructor(
-    protected activeCartService: ActiveCartService,
-    protected checkoutService: CheckoutFacade,
-    protected activatedRoute: ActivatedRoute,
-    protected translation: TranslationService,
-    protected checkoutStepService: CheckoutStepService,
-    protected userPaymentService: UserPaymentService,
-    protected checkoutDeliveryService: CheckoutDeliveryFacade,
-    protected checkoutPaymentService: CheckoutPaymentFacade,
-    protected globalMessageService: GlobalMessageService,
-    protected checkoutComPaymentService: CheckoutComPaymentService,
-    protected userIdService: UserIdService,
-    protected checkoutComApmService: CheckoutComApmService
+    protected override userPaymentService: UserPaymentService,
+    protected override checkoutDeliveryAddressFacade: CheckoutDeliveryAddressFacade,
+    protected override checkoutPaymentFacade: CheckoutComPaymentFacade,
+    protected override activatedRoute: ActivatedRoute,
+    protected override translationService: TranslationService,
+    protected override activeCartFacade: ActiveCartFacade,
+    protected override checkoutStepService: CheckoutStepService,
+    protected override globalMessageService: GlobalMessageService,
+    protected checkoutComApmFacade: CheckoutComApmFacade,
+    protected checkoutComBillingAddressFormFacade: CheckoutComBillingAddressFormFacade
   ) {
     super(
       userPaymentService,
-      checkoutService,
-      checkoutDeliveryService,
-      checkoutPaymentService,
-      globalMessageService,
+      checkoutDeliveryAddressFacade,
+      checkoutPaymentFacade,
       activatedRoute,
-      translation,
-      activeCartService,
-      checkoutStepService
+      translationService,
+      activeCartFacade,
+      checkoutStepService,
+      globalMessageService
     );
 
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     super.ngOnInit();
-
-    this.activeCartService.getActiveCartId().pipe(take(1), takeUntil(this.drop)).subscribe((cartId) => {
-      this.activeCartId = cartId;
-    }, err => console.error('getActiveCartId with errors', {err}));
-
-    this.userIdService.getUserId().pipe(take(1), takeUntil(this.drop)).subscribe((userId) => {
-      this.userId = userId;
-    }, err => console.error('getUserId with errors', {err}));
-
-    this.selectedApm$.pipe(takeUntil(this.drop)).subscribe((apm: ApmData) => {
-      this.isCardPayment = apm.code === PaymentType.Card;
-    }, err => console.error('selectedApm with errors', {err}));
-
-    this.checkoutDeliveryService.getDeliveryAddress()
-      .pipe(
-        take(1),
-        takeUntil(this.drop)
-      ).subscribe(deliveryAddress => {
-        this.deliveryAddress = deliveryAddress;
-      }, err => console.error('getDeliveryAddress with errors', {err}));
+    this.getSelectedApm();
+    this.getDeliveryAddress();
   }
 
-  selectPaymentMethod(paymentDetails: PaymentDetails): void {
+  /**
+   * Subscribes to the selected APM (Alternative Payment Method) observable.
+   * Updates the `isCardPayment` flag based on the selected APM's code.
+   * Logs any errors that occur during the subscription.
+   *
+   * @returns {void}
+   * @since 5.2.0
+   */
+  getSelectedApm(): void {
+    this.selectedApm$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (apm: ApmData): void => {
+        this.isCardPayment = apm.code === PaymentType.Card;
+      },
+      error: (error: unknown): void => {
+        this.logger.error('selectedApm with errors', { error });
+      }
+    });
+  }
+
+  /**
+   * Initializes the component by calling the parent class's `ngOnInit` method.
+   * Retrieves the active cart ID, user ID, selected APM, and delivery address.
+   *
+   * @override
+   * @returns {void}
+   * @since 5.2.0
+   */
+  getDeliveryAddress(): void {
+    this.checkoutDeliveryAddressFacade.getDeliveryAddressState()
+      .pipe(
+        take(1),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: (deliveryAddress: QueryState<Address>): void => {
+          this.deliveryAddress = deliveryAddress?.data;
+        },
+        error: (error: unknown): void => this.logger.error('getDeliveryAddress with errors', { error })
+      });
+  }
+
+  /**
+   * Selects the payment method by calling the parent class's `selectPaymentMethod` method.
+   * Updates the local `selectedPaymentDetails` variable with the provided payment details.
+   *
+   * @override
+   * @param {PaymentDetails} paymentDetails - The payment details to be selected.
+   * @returns {void}
+   * @since 4.7.2
+   */
+  override selectPaymentMethod(paymentDetails: PaymentDetails): void {
     // call the ootb payment details API for saved cards only!
     super.selectPaymentMethod(paymentDetails);
 
     this.selectedPaymentDetails = paymentDetails;
   }
 
-  next(): void {
+  /**
+   * Proceeds to the next step in the checkout process.
+   * If CVN (Card Verification Number) is required and the selected payment details are available,
+   * validates the CVN form. If the form is invalid, marks all fields as touched and stops the process.
+   * Otherwise, updates the selected payment method with the CVN and proceeds to the next step.
+   *
+   * @override
+   * @returns {void}
+   * @since 4.7.2
+   */
+  override next(): void {
     if (this.requiresCvn && this.selectedPaymentDetails) {
       // TODO cvv is not always required. we need a config from the BE
       if (this.cvnForm.invalid) {
         this.cvnForm.markAllAsTouched();
         return;
       } else {
-        super.selectPaymentMethod({
+        this.selectPaymentMethod({
           ...this.selectedPaymentDetails,
           cvn: this.cvnForm.value.cvn
         });
@@ -121,90 +161,104 @@ export class CheckoutComPaymentMethodComponent extends PaymentMethodComponent im
     super.next();
   }
 
-  setPaymentDetails({
-                      paymentDetails,
-                      billingAddress,
-                    }: {
-    paymentDetails: CheckoutComPaymentDetails;
-    billingAddress?: Address;
-  }): void {
-    const details = {...paymentDetails} as CheckoutComPaymentDetails;
+  /**
+   * Sets the payment details by updating the billing address and creating new payment details.
+   * If the billing address is not provided, it uses the delivery address.
+   * Updates the `processing$` observable to indicate the processing state.
+   * Logs any errors that occur during the process.
+   *
+   * @override
+   * @param {CheckoutComPaymentDetails} paymentDetails - The payment details to be set.
+   * @param {Address} [billingAddress] - The billing address to be used. If not provided, the delivery address is used.
+   * @returns {void}
+   * @since 2211.31.1
+   */
+  override setPaymentDetails({
+    paymentDetails,
+    billingAddress,
+  }: { paymentDetails: CheckoutComPaymentDetails; billingAddress?: Address; }): void {
+    const details: CheckoutComPaymentDetails = { ...paymentDetails } as CheckoutComPaymentDetails;
     if (billingAddress == null) {
       billingAddress = this.deliveryAddress;
     }
     details.billingAddress = billingAddress;
 
-    this.processing$.next(true);
-    this.checkoutComPaymentService.updatePaymentAddress(billingAddress).pipe(
-      switchMap(() => this.checkoutComPaymentService.createPaymentDetails(details, this.userId, this.activeCartId)),
-      finalize(() => this.processing$.next(false)),
-      takeUntil(this.drop)
-    ).subscribe((newPaymentDetails) => {
-      // this.checkoutPaymentService.setPaymentDetails(newPaymentDetails);
-      this.shouldRedirect = true;
-    }, (err) => {
-      // TODO :: Display an error message!
-      console.error('getPaymentDetailsFromState', err);
+    this.busy$.next(true);
+    this.checkoutPaymentFacade.createPaymentDetails(details).pipe(
+      finalize((): void => this.onSuccess()),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (): void => {
+        this.shouldRedirect = true;
+      },
+      complete: (): void => {
+        this.next();
+      },
+      error: (error: unknown): void => {
+        this.onError();
+        const httpError: HttpErrorModel = tryNormalizeHttpError(error, this.logger);
+        const errorMessage: string = httpError?.details?.[0]?.message;
+        this.logger.error('createPaymentDetails with errors', { error });
+        this.globalMessageService.add(
+          {
+            raw: errorMessage,
+          },
+          GlobalMessageType.MSG_TYPE_ERROR
+        );
+      }
     });
   }
 
+  /**
+   * Sets the APM (Alternative Payment Method) payment details by updating the billing address and creating new payment details.
+   * If the billing address is not provided, it uses the delivery address.
+   * Updates the `processing$` observable to indicate the processing state.
+   * If the APM is valid for the given billing country, persists the payment details and moves to the next step in checkout.
+   * Otherwise, shows an error.
+   * Logs any errors that occur during the process.
+   *
+   * @param {ApmPaymentDetails} paymentDetails - The APM payment details to be set.
+   * @param {Address} [billingAddress] - The billing address to be used. If not provided, the delivery address is used.
+   * @returns {void}
+   * @since 4.7.2
+   */
   setApmPaymentDetails({
-                         paymentDetails,
-                         billingAddress,
-                       }: {
+    paymentDetails,
+    billingAddress,
+  }: {
     paymentDetails: ApmPaymentDetails;
     billingAddress?: Address;
-  }) {
+  }): void {
     if (billingAddress == null) {
       billingAddress = this.deliveryAddress;
     }
-    const details = {...paymentDetails, billingAddress};
+    const details: ApmPaymentDetails = {
+      ...paymentDetails,
+      billingAddress
+    };
     this.processing$.next(true);
-
-    const isApm = paymentDetails.type !== PaymentType.ApplePay
-      && paymentDetails.type !== PaymentType.GooglePay
-      && paymentDetails.type !== PaymentType.Card;
-
-    if (isApm && billingAddress.country.isocode !== this.deliveryAddress.country.isocode) {
-      // if the country has changed, we have to request the available APM's for the given billing
-      // country and then validate if the APM is also available in this new dataset.
-      // if it is available, we persist the payment details and move to next step in checkout
-      // otherwise we show an error
-      this.checkoutComPaymentService.updatePaymentAddress(billingAddress).pipe(
-        switchMap(() => this.checkoutComApmService.requestAvailableApms().pipe(
-          skip(1), // first response is cached
-          take(1), // we only want 1 new APM list
-          switchMap((apms) => {
-            const apmExistsInNewCountryContext = !!apms.find(({code}) => code === paymentDetails.type);
-            this.shouldRedirect = apmExistsInNewCountryContext;
-            if (apmExistsInNewCountryContext) {
-              return this.checkoutComPaymentService
-                .createApmPaymentDetails(details, this.activeCartId, this.userId)
-                .pipe(finalize(() => this.processing$.next(false)));
-            } else {
-              this.processing$.next(false);
-              return EMPTY;
-            }
-          })
-        )),
-        takeUntil(this.drop),
-      ).subscribe();
-    } else {
-      // We know the APM is valid because the billing address is in same country as delivery country,
-      // or is the same address
-      this.checkoutComPaymentService.updatePaymentAddress(billingAddress).pipe(
-        switchMap(() => this.checkoutComPaymentService.createApmPaymentDetails(details, this.activeCartId, this.userId)),
-        finalize(() => this.processing$.next(false)),
-        takeUntil(this.drop)
-      ).subscribe((newPaymentDetails) => {
+    this.checkoutComApmFacade.createApmPaymentDetails(details).pipe(
+      finalize((): void => this.onSuccess()),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (): void => {
         this.shouldRedirect = true;
-      }, err => console.error('UpdatePaymentAddress with errors', {err}));
-    }
+      },
+      complete: (): void => {
+        this.next();
+      },
+      error: (error: unknown): void => {
+        this.onError();
+        const httpError: HttpErrorModel = tryNormalizeHttpError(error, this.logger);
+        const errorMessage: string = httpError?.details?.[0]?.message;
+        this.logger.error('createPaymentDetails with errors', { error });
+        this.globalMessageService.add(
+          {
+            raw: errorMessage,
+          },
+          GlobalMessageType.MSG_TYPE_ERROR
+        );
+      }
+    });
   }
-
-  ngOnDestroy() {
-    this.drop.next();
-    super.ngOnDestroy();
-  }
-
 }

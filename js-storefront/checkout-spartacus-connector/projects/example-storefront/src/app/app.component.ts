@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import LogRocket from 'logrocket';
 
-const logRocketAppId = 'LOG_ROCKET_APP_ID';
+const logRocketAppId: string = 'LOG_ROCKET_APP_ID';
 
 // Initialize LogRocket with your app ID
 try {
@@ -9,14 +9,13 @@ try {
     LogRocket.init(logRocketAppId);
   }
 } catch (err) {
-  console.log('failed to initialize logrocket', err);
+  console.warn('failed to initialize logrocket', err);
 }
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'example-storefront';
+  title: string = 'example-storefront';
 }

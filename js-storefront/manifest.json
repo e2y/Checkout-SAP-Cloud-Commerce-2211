@@ -5,5 +5,5 @@
       "path": "checkout-spartacus-connector/example-storefront"
     }
   ],
-  "nodeVersion": "12"
+  "nodeVersion": "20"
 }

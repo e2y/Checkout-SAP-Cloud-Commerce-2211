@@ -1,76 +1,84 @@
+import { ChangeDetectorRef, ElementRef, ViewContainerRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CheckoutComApmAchComponent } from './checkout-com-apm-ach.component';
+import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { CheckoutComBillingAddressFormComponent } from '@checkout-components/checkout-com-billing-address-form/checkout-com-billing-address-form.component';
+import { CheckoutComConnector } from '@checkout-core/connectors/checkout-com/checkout-com.connector';
+import { CheckoutComPaymentFacade } from '@checkout-core/facades/checkout-com-payment.facade';
+import { CHECKOUT_COM_LAUNCH_CALLER } from '@checkout-core/interfaces';
+import { CheckoutComAchFacade } from '@checkout-facades/checkout-com-ach.facade';
+import { AchSuccessMetadata } from '@checkout-model/Ach';
+import { CheckoutComBillingAddressFormService } from '@checkout-services/billing-address-form/checkout-com-billing-address-form.service';
+import { MockCxSpinnerComponent } from '@checkout-tests/components';
+import { generateAchSuccessMetadata } from '@checkout-tests/fake-data/apm-ach/apm-ach.mock';
+import { queryDebugElementByCss } from '@checkout-tests/finders.mock';
+import { MockCheckoutComPaymentFacade } from '@checkout-tests/services/checkou-com-payment.facade.mock';
+import { MockCheckoutComConnector } from '@checkout-tests/services/checkout-com.connector.mock';
+import { MockTranslationService } from '@checkout-tests/services/translations.services.mock';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { CheckoutBillingAddressFormService } from '@spartacus/checkout/base/components';
+import { CheckoutDeliveryAddressFacade } from '@spartacus/checkout/base/root';
 import {
   Address,
   AddressValidation,
+  EventService,
+  FeaturesConfigModule,
+  GlobalMessageEntities,
   GlobalMessageService,
-  I18nTestingModule, MockTranslatePipe,
-  Order,
+  GlobalMessageType,
+  I18nTestingModule,
+  LoggerService,
+  MockTranslatePipe,
   Region,
   RoutingService,
-  UserAddressAdapter,
-  UserAddressService
+  Translatable,
+  TranslationService,
+  UserAddressService,
+  UserPaymentService
 } from '@spartacus/core';
-import { Card, FormErrorsModule, ModalService } from '@spartacus/storefront';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { NgxPlaidLinkService } from 'ngx-plaid-link';
-import { CheckoutComAchService } from '../../../../core/services/ach/checkout-com-ach.service';
-import { Store, StoreModule } from '@ngrx/store';
-import { StateWithCheckoutCom } from '../../../../core/store/checkout-com.state';
-import { CheckoutDeliveryFacade } from '@spartacus/checkout/root';
-import { CheckoutComPaymentService } from '../../../../core/services/checkout-com-payment.service';
-import { ChangeDetectorRef, Component, Input, Output } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { By } from '@angular/platform-browser';
-import { CheckoutComApmAchConsentsComponent } from './checkout-com-apm-ach-consents/checkout-com-apm-ach-consents.component';
-import { CheckoutComBillingAddressComponent } from '../../checkout-com-billing-address/checkout-com-billing-address.component';
-import { reducer } from '../../../../core/store/checkout-com.reducer';
+import { Order } from '@spartacus/order/root';
+import { CardComponent, FormErrorsModule, LAUNCH_CALLER, LaunchDialogService, NgSelectA11yModule } from '@spartacus/storefront';
+import { NgxPlaidLinkService, PlaidLinkHandler } from 'ngx-plaid-link';
+import { LegacyPlaidConfig } from 'ngx-plaid-link/lib/interfaces';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { CheckoutComApmAchAccountListModalComponent } from './checkout-com-apm-ach-account-list-modal/checkout-com-apm-ach-account-list-modal.component';
+import { CheckoutComApmAchConsentsComponent } from './checkout-com-apm-ach-consents/checkout-com-apm-ach-consents.component';
+import { CheckoutComApmAchComponent } from './checkout-com-apm-ach.component';
 import createSpy = jasmine.createSpy;
 
-@Component({
-  selector: 'lib-checkout-com-billing-address',
-  template: '',
-})
-class MockCheckoutComBillingAddressComponent {
-  @Input() billingAddressForm: FormGroup;
-  @Output() sameAsShippingAddressChange = new BehaviorSubject<boolean>(true);
-}
-@Component({
-  selector: 'cx-card',
-  template: '',
-})
-class MockCardComponent {
-  @Input()
-  content: Card;
-}
-
-@Component({
-  template: '',
-  selector: 'lib-checkout-com-billing-address',
-})
-class MockLibCheckoutComBillingAddressComponent {
-  @Input() billingAddressForm;
-  @Output() sameAsShippingAddressChange = new BehaviorSubject<boolean>(true);
-}
-
-@Component({
-  selector: 'cx-spinner',
-  template: '',
-})
-class MockSpinnerComponent {
-}
-
 const achLinkToken = 'link-sandbox-294f20db-2531-44a6-a2f0-136506c963a6';
-/* TODO: Vefiry
-{
-SERIALIZED_NAME_LINK_TOKEN: 'expiration',
-SERIALIZED_NAME_EXPIRATION: 'link_token',
-SERIALIZED_NAME_REQUEST_ID: 'request_id',
-expiration: new Date().toUTCString(),
-linkToken: 'link-sandbox-294f20db-2531-44a6-a2f0-136506c963a6',
-requestId: 'Y6y9KO2GVzYtjY3',
-};*/
+const regions: Region = {
+  isocode: 'US-NY',
+  name: 'New York'
+};
+const deliveryAddress: Address = {
+  id: 'b9679f0b-5e53-49c1-9f24-7ed57a8cf3a3',
+  title: 'Miss',
+  titleCode: 'Mr.',
+  email: 'Heath61@hotmail.com',
+  firstName: 'Polly',
+  lastName: 'Dibbert',
+  companyName: 'Turcotte - Pfannerstill',
+  line1: '2639 Marcelo Street',
+  line2: 'Suite 219',
+  postalCode: '66491-6807',
+  town: 'Racine',
+  country: {
+    isocode: 'US',
+    name: 'United States',
+  },
+  region:
+    {
+      isocode: 'IL',
+      name: 'Kentucky',
+      isocodeShort: 'NH',
+    },
+  cellphone: '417-437-0050 x77699',
+  defaultAddress: false,
+  shippingAddress: true,
+  formattedAddress: '2639 Marcelo Street Suite 219, Racine, Brazil, 66491-6807',
+  visibleInAddressBook: true
+};
 const billingAddress: Address = {
   country: {
     isocode: 'US',
@@ -125,41 +133,16 @@ const metadata = {
   transfer_status: '',
   public_token: ''
 };
-const deliveryAddress: Address = {
-  country: {
-    isocode: 'US',
-  },
-  defaultAddress: false,
-  firstName: 'delivery',
-  formattedAddress: 'Address1, New York, City, 000001',
-  id: 'address_002',
-  lastName: 'address',
-  line1: 'test',
-  line2: '',
-  phone: '',
-  postalCode: '000001',
-  region: {
-    isocode: 'US-NY'
-  },
-  shippingAddress: true,
-  title: 'Mr.',
-  titleCode: 'mr',
-  town: 'City',
-  visibleInAddressBook: true
-};
+const mockCountries = [{
+  isocode: 'US',
+  name: 'United States'
+}];
+
 const addressValidation: AddressValidation = {
   errors: null,
   decision: 'ACCEPT',
   suggestedAddresses: [billingAddress, deliveryAddress]
 };
-const regions: Region[] = [
-  {
-    countryIso: 'US',
-    isocode: 'US',
-    isocodeShort: 'USA',
-    name: 'United States'
-  }
-];
 const mockOrder: Order = {
   code: '1',
   statusDisplay: 'Shipped',
@@ -183,28 +166,24 @@ const mockOrder: Order = {
   created: new Date('2019-02-11T13:02:58+0000'),
 };
 
-class MockCheckoutDeliveryFacade {
-  getDeliveryAddress = createSpy('CheckoutDeliveryFacade.getDeliveryAddress').and.returnValue(of(deliveryAddress));
-}
+const plaidLinkHandler = {
+  open: () => {
+  },
+  exit: () => {
+  },
+  destroy: () => {
+  }
+};
 
-class MockCheckoutComAchService implements Partial<CheckoutComAchService> {
-  getPlaidLinkMetadata = createSpy('CheckoutComAchService.getPlaidLinkMetadata').and.returnValue(of(metadata));
-  requestPlaidLinkToken = createSpy('CheckoutComAchService.requestPlaidLinkToken').and.returnValue(of(achLinkToken));
-  setPlaidLinkMetadata = createSpy('CheckoutComAchService.setPlaidLinkMetadata').and.callThrough();
-  requestPlaidSuccessOrder = createSpy('CheckoutComAchService.requestPlaidLinkToken').and.returnValue(of({
-    order: mockOrder,
-    error: null
-  }));
-}
+class MockGlobalMessageService implements Partial<GlobalMessageService> {
+  get(): Observable<GlobalMessageEntities> {
+    return of({});
+  }
 
-class MockUserAddressService implements Partial<MockUserAddressService> {
-  verifyAddress = createSpy('UserAddressService.verifyAddress').and.returnValue(of(addressValidation));
-  getRegions = createSpy('UserAddressService.getRegions').and.returnValue(of([regions]));
-}
+  add(_: string | Translatable, __: GlobalMessageType, ___?: number): void {
+  }
 
-class MockCheckoutComPaymentService implements Partial<MockCheckoutComPaymentService> {
-  updatePaymentAddress(): Observable<Address> {
-    return of(billingAddress);
+  remove(_: GlobalMessageType, __?: number): void {
   }
 }
 
@@ -212,266 +191,781 @@ class MockRoutingService {
   go = createSpy('RoutingService').and.callThrough();
 }
 
+class MockUserPaymentService implements Partial<UserPaymentService> {
+  getAllBillingCountries = createSpy('UserPaymentService.getAllBillingCountries').and.returnValue(of(mockCountries));
+  loadBillingCountries = createSpy('UserPaymentService.loadBillingCountries').and.callThrough();
+}
+
+let dialogClose$: BehaviorSubject<any | undefined> = new BehaviorSubject(undefined);
+
+class MockLaunchDialogService implements Partial<LaunchDialogService> {
+  get dialogClose() {
+    return dialogClose$.asObservable();
+  }
+
+  closeDialog(reason: any): void {
+    dialogClose$.next(reason);
+  }
+
+  openDialog(
+    _caller: LAUNCH_CALLER,
+    _openElement?: ElementRef,
+    _vcr?: ViewContainerRef,
+    _data?: any
+  ) {
+    return of();
+  }
+
+  openDialogAndSubscribe(
+    _caller: LAUNCH_CALLER,
+    _openElement?: ElementRef,
+    _data?: any
+  ) {
+  }
+}
+
 describe('CheckoutComApmAchComponent', () => {
+  let legacyPlaidConfig: LegacyPlaidConfig;
   let component: CheckoutComApmAchComponent;
   let fixture: ComponentFixture<CheckoutComApmAchComponent>;
-  let plaidLinkService: NgxPlaidLinkService;
-  let checkoutComAchService: CheckoutComAchService;
-  let userAddressService: UserAddressService;
-  let store: Store<StateWithCheckoutCom>;
-  let checkoutDeliveryFacade: CheckoutDeliveryFacade;
-  let modalInstance: ModalService;
+  let checkoutDeliveryAddressFacade: jasmine.SpyObj<CheckoutDeliveryAddressFacade>;
+  let userAddressService: jasmine.SpyObj<UserAddressService>;
+  let userPaymentService: UserPaymentService;
+  let globalMessageService: GlobalMessageService;
+  let launchDialogService: jasmine.SpyObj<LaunchDialogService>;
   let routingService: RoutingService;
+  let plaidLinkService: jasmine.SpyObj<NgxPlaidLinkService>;
+  let checkoutComAchFacade: jasmine.SpyObj<CheckoutComAchFacade>;
+  let checkoutComPaymentFacade: CheckoutComPaymentFacade;
+  let logger: LoggerService;
+  let eventService: EventService;
+  let billingAddressFormService: CheckoutComBillingAddressFormService;
+  let checkoutComConnector: CheckoutComConnector;
 
   beforeEach(async () => {
+    const checkoutDeliveryAddressFacadeSpy = jasmine.createSpyObj('CheckoutDeliveryAddressFacade', ['getDeliveryAddressState']);
+    const userAddressServiceSpy = jasmine.createSpyObj('UserAddressService', ['verifyAddress', 'getRegions']);
+    const plaidLinkServiceSpy = jasmine.createSpyObj('NgxPlaidLinkService', ['createPlaid']);
+    const checkoutComAchFacadeSpy = jasmine.createSpyObj('CheckoutComAchFacade', [
+      'getPlaidLinkToken',
+      'getPlaidLinkMetadata',
+      'requestPlaidLinkToken',
+      'setPlaidLinkMetadata',
+      'requestPlaidSuccessOrder',
+      'getPlaidOrder',
+    ]);
+    const checkoutComPaymentFacadeSpy = jasmine.createSpyObj('CheckoutComPaymentFacade', [
+      'updatePaymentAddress',
+      'getPaymentAddressFromState',
+      'getPaymentDetailsState',
+    ]);
+
     await TestBed.configureTestingModule({
       imports: [
         I18nTestingModule,
         FormErrorsModule,
         ReactiveFormsModule,
-        StoreModule.forRoot({ user: reducer }),
+        NgSelectModule,
+        FormErrorsModule,
+        FeaturesConfigModule,
+        NgSelectA11yModule
       ],
       declarations: [
         MockTranslatePipe,
-        MockCardComponent,
+        CardComponent,
+        MockCxSpinnerComponent,
         CheckoutComApmAchComponent,
-        CheckoutComBillingAddressComponent,
+        CheckoutComBillingAddressFormComponent,
         CheckoutComApmAchConsentsComponent,
         CheckoutComApmAchAccountListModalComponent,
-        MockSpinnerComponent,
       ],
       providers: [
-        Store,
-        FormBuilder,
-        NgxPlaidLinkService,
-        UserAddressService,
-        UserAddressAdapter,
-        CheckoutComPaymentService,
-        CheckoutDeliveryFacade,
-        GlobalMessageService,
+        UntypedFormBuilder,
         ChangeDetectorRef,
-        UserAddressAdapter,
-        ModalService,
+        {
+          provide: LaunchDialogService,
+          useClass: MockLaunchDialogService
+        },
+        {
+          provide: TranslationService,
+          useClass: MockTranslationService
+        },
+        {
+          provide: CheckoutDeliveryAddressFacade,
+          useValue: checkoutDeliveryAddressFacadeSpy
+        },
         {
           provide: UserAddressService,
-          useClass: MockUserAddressService
+          useValue: userAddressServiceSpy
         },
         {
-          provide: CheckoutComPaymentService,
-          useClass: MockCheckoutComPaymentService
+          provide: UserPaymentService,
+          useClass: MockUserPaymentService
         },
         {
-          provide: CheckoutComAchService,
-          useClass: MockCheckoutComAchService
+          provide: LaunchDialogService,
+          useClass: MockLaunchDialogService
         },
         {
-          provide: CheckoutDeliveryFacade,
-          useClass: MockCheckoutDeliveryFacade
+          provide: GlobalMessageService,
+          useClass: MockGlobalMessageService
+        },
+        {
+          provide: NgxPlaidLinkService,
+          useValue: plaidLinkServiceSpy
+        },
+        {
+          provide: CheckoutComPaymentFacade,
+          useClass: MockCheckoutComPaymentFacade
+        },
+        {
+          provide: CheckoutComAchFacade,
+          useValue: checkoutComAchFacadeSpy
         },
         {
           provide: RoutingService,
           useClass: MockRoutingService,
         },
+        CheckoutComBillingAddressFormService,
+        {
+          provide: CheckoutBillingAddressFormService,
+          useClass: CheckoutComBillingAddressFormService
+        },
+        {
+          provide: CheckoutComConnector,
+          useClass: MockCheckoutComConnector
+        },
       ]
     }).compileComponents();
-    plaidLinkService = TestBed.inject(NgxPlaidLinkService);
-    checkoutComAchService = TestBed.inject(CheckoutComAchService);
-    userAddressService = TestBed.inject(UserAddressService);
-    modalInstance = TestBed.inject(ModalService);
-    checkoutDeliveryFacade = TestBed.inject(CheckoutDeliveryFacade);
+    checkoutDeliveryAddressFacade = TestBed.inject(CheckoutDeliveryAddressFacade) as jasmine.SpyObj<CheckoutDeliveryAddressFacade>;
+    userAddressService = TestBed.inject(UserAddressService) as jasmine.SpyObj<UserAddressService>;
+    userPaymentService = TestBed.inject(UserPaymentService);
+    globalMessageService = TestBed.inject(GlobalMessageService);
+    launchDialogService = TestBed.inject(LaunchDialogService) as jasmine.SpyObj<LaunchDialogService>;
     routingService = TestBed.inject(RoutingService);
-    store = TestBed.inject(Store);
-    spyOn(store, 'dispatch').and.callThrough();
+    plaidLinkService = TestBed.inject(NgxPlaidLinkService) as jasmine.SpyObj<NgxPlaidLinkService>;
+    checkoutComAchFacade = TestBed.inject(CheckoutComAchFacade) as jasmine.SpyObj<CheckoutComAchFacade>;
+    checkoutComPaymentFacade = TestBed.inject(CheckoutComPaymentFacade);
+    logger = TestBed.inject(LoggerService);
+    eventService = TestBed.inject(EventService);
+    billingAddressFormService = TestBed.inject(CheckoutComBillingAddressFormService);
+    checkoutComConnector = TestBed.inject(CheckoutComConnector);
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(CheckoutComApmAchComponent);
     component = fixture.componentInstance;
-    component.achEnabled.next(true);
-    component.billingAddressForm = new FormGroup({});
+    component.achEnabled$.next(true);
+    component.billingAddressForm = new UntypedFormGroup({});
+    checkoutComAchFacade.getPlaidLinkToken.and.returnValue(of(achLinkToken));
+    checkoutComAchFacade.getPlaidLinkMetadata.and.returnValue(of(metadata));
+    checkoutComAchFacade.requestPlaidSuccessOrder.and.returnValue(of(mockOrder));
+    userAddressService.verifyAddress.and.returnValue(of(addressValidation));
+    userAddressService.getRegions.and.returnValue(of([regions]));
+    checkoutDeliveryAddressFacade.getDeliveryAddressState.and.returnValue(of({
+      loading: false,
+      data: deliveryAddress,
+      error: false
+    }));
+
+    legacyPlaidConfig = {
+      apiVersion: 'v2',
+      env: 'sandbox',
+      selectAccount: false,
+      token: null,
+      webhook: '',
+      product: ['auth'],
+      countryCodes: ['US'],
+      key: '',
+      onSuccess: () => component.onSuccess,
+      onExit: () => '',
+    };
     spyOn(component, 'open').and.returnValue();
-    spyOn(modalInstance, 'open').and.callThrough();
-    spyOn(modalInstance, 'closeActiveModal').and.callThrough();
-    fixture.detectChanges();
-    spyOn(component, 'showACHPopUpPayment').and.callThrough();
+    component.deliveryAddress$ = of(deliveryAddress);
+    component['billingAddress$'] = of(billingAddress);
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should Get Delivery Address', () => {
-    component.getDeliveryAddress();
-    fixture.detectChanges();
-    expect(component.paymentAddress).toBe(deliveryAddress);
+  describe('ngOnInit', () => {
+    it('should call getPlaidLinkToken, getPlaidLinkMetadata, and sameDeliveryAddress', () => {
+      spyOn(component, 'getPlaidLinkToken');
+      spyOn(component, 'getPlaidLinkMetadata');
+      spyOn(component, 'sameDeliveryAddress');
+
+      component.ngOnInit();
+
+      expect(component.getPlaidLinkToken).toHaveBeenCalled();
+      expect(component.getPlaidLinkMetadata).toHaveBeenCalled();
+      expect(component.sameDeliveryAddress).toHaveBeenCalled();
+    });
   });
 
-  it('should toggle enable/disable continue button', () => {
-    expect(component.disabled).toBeTrue;
-    const checkbox = fixture.debugElement.query(By.css('#customerConsent'));
-    expect(checkbox).toBeTruthy();
-    checkbox.nativeElement.click();
-    expect(component.disabled).toBeFalse();
-  });
-
-  it('should select Same Shipping Address', () => {
-    component.sameAsShippingAddress$ = new BehaviorSubject<boolean>(true);
-    component.sameShippingAddress();
-    expect(component.sameAddress).toBe(true);
-    expect(component.paymentAddress).toBe(deliveryAddress);
-  });
-
-  describe('should show Billing Address Form', () => {
-    beforeEach(() => {
-      component.sameAsShippingAddress$ = new BehaviorSubject<boolean>(true);
-      component.sameShippingAddress();
-      const sameAsShippingAddressCheckbox: HTMLInputElement = fixture.debugElement.query(By.css('#same-as-shipping-checkbox')).nativeElement;
-      expect(sameAsShippingAddressCheckbox.checked).toBeTrue();
-      sameAsShippingAddressCheckbox.click();
+  describe('getPlaidLinkToken', () => {
+    it('should set link token when Plaid Link token is retrieved successfully', (doneFn) => {
       fixture.detectChanges();
-      expect(sameAsShippingAddressCheckbox.checked).toBeFalse();
-      expect(component.sameAddress).toBe(false);
-      expect(fixture.debugElement.query(By.css('#billing-address-form'))).toBeTruthy();
+      component.getPlaidLinkToken();
+
+      component.linkToken.subscribe((token) => {
+        expect(token).toBe(achLinkToken);
+        // @ts-ignore
+        expect(component.config.token).toBe(achLinkToken);
+        doneFn();
+      });
     });
 
-    it('should Handle Address Verification Results', () => {
+    it('should handle error when retrieving Plaid Link token', () => {
+      const error = new Error('error');
+      checkoutComAchFacade.getPlaidLinkToken.and.returnValue(throwError(() => error));
+      spyOn(component, 'showErrors');
+      fixture.detectChanges();
+
+      component.getPlaidLinkToken();
+
+      expect(component.showErrors).toHaveBeenCalledWith(
+        'plaidLinkTokenApi',
+        'Failed to retrieve Plaid Link token',
+        error
+      );
+    });
+
+    it('should not set link token if response is empty', (doneFn) => {
+      checkoutComAchFacade.getPlaidLinkToken.and.returnValue(of());
+      component.getPlaidLinkToken();
+      fixture.detectChanges();
+
+      component.linkToken.subscribe((token) => {
+        expect(token).toBe('');
+        // @ts-ignore
+        expect(component.config.token).toBe(null);
+        doneFn();
+      });
+    });
+  });
+
+  describe('getPlaidLinkMetadata', () => {
+    it('should set achMetadata when Plaid Link metadata is retrieved successfully', (doneFn) => {
+      const metadata: AchSuccessMetadata = generateAchSuccessMetadata();
+      checkoutComAchFacade.getPlaidLinkMetadata.and.returnValue(of(metadata));
+
+      component.getPlaidLinkMetadata();
+
+      component.plaidSuccessPopup$.subscribe((popup) => {
+        expect(component.achMetadata).toBe(metadata);
+        doneFn();
+      });
+    });
+
+    it('should handle error when retrieving Plaid Link metadata', () => {
+      const error = new Error('error');
+      checkoutComAchFacade.getPlaidLinkMetadata.and.returnValue(throwError(() => error));
+      spyOn(component['logger'], 'error');
+
+      component.getPlaidLinkMetadata();
+
+      expect(component['logger'].error).toHaveBeenCalledWith(error);
+    });
+
+    it('should not set achMetadata if response is empty', (doneFn) => {
+      checkoutComAchFacade.getPlaidLinkMetadata.and.returnValue(of(null));
+
+      component.getPlaidLinkMetadata();
+
+      component.plaidSuccessPopup$.subscribe((popup) => {
+        expect(component.achMetadata).toBeUndefined();
+        doneFn();
+      });
+    });
+  });
+
+  describe('sameDeliveryAddress', () => {
+    it('should set sameAddress to true and call getDeliveryAddress when sameAsDeliveryAddress$ is true', () => {
+      spyOn(component, 'getDeliveryAddress');
+      spyOn(billingAddressFormService, 'getSameAsDeliveryAddress').and.returnValue(of(true) as BehaviorSubject<boolean>);
+
+      component.sameDeliveryAddress();
+
+      expect(component.sameAsDeliveryAddress).toBeTrue();
+      expect(component.getDeliveryAddress).toHaveBeenCalled();
+    });
+
+    it('should set sameAddress to false and not call getDeliveryAddress when sameAsDeliveryAddress$ is false', () => {
+      spyOn(component, 'getDeliveryAddress');
+      spyOn(billingAddressFormService, 'getSameAsDeliveryAddress').and.returnValue(of(false) as BehaviorSubject<boolean>);
+      component.sameDeliveryAddress();
+
+      expect(component.sameAsDeliveryAddress).toBeFalse();
+      expect(component.getDeliveryAddress).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getDeliveryAddress', () => {
+    it('should set paymentAddress when delivery address is retrieved successfully', () => {
+      checkoutDeliveryAddressFacade.getDeliveryAddressState.and.returnValue(of({
+        loading: false,
+        data: deliveryAddress,
+        error: false
+      }));
+
+      component.getDeliveryAddress();
+
       expect(component.paymentAddress).toBe(deliveryAddress);
-      const {
-        firstName,
-        lastName,
-        line1,
-        line2,
-        town,
-        region,
-        country,
-        postalCode
-      } = billingAddress;
-      const formValue = {
-        firstName,
-        lastName,
-        line1,
-        line2,
-        town,
-        region,
-        country,
-        postalCode
-      };
-      component.billingAddressForm.setValue(formValue);
+    });
+
+    it('should handle error when retrieving delivery address', () => {
+      const error = new Error('error');
+      checkoutDeliveryAddressFacade.getDeliveryAddressState.and.returnValue(throwError(() => error));
+      spyOn(component['logger'], 'error');
+
+      component.getDeliveryAddress();
+
+      expect(component['logger'].error).toHaveBeenCalledWith(error);
+    });
+
+    it('should not set paymentAddress if response is empty', () => {
+      checkoutDeliveryAddressFacade.getDeliveryAddressState.and.returnValue(of({
+        loading: false,
+        error: false,
+        data: null
+      }));
+
+      component.getDeliveryAddress();
+
+      expect(component.paymentAddress).toBeNull();
+    });
+  });
+
+  describe('handleAddressVerificationResults', () => {
+    it('should update payment address and open Plaid link when address verification is accepted', () => {
+      spyOn(checkoutComPaymentFacade, 'updatePaymentAddress').and.returnValue(of(billingAddress));
+
       component.handleAddressVerificationResults(addressValidation);
-      expect(component.paymentAddress).toEqual(formValue);
+
+      expect(component.paymentAddress).toEqual(component.billingAddressForm.value);
       expect(component.open).toHaveBeenCalled();
     });
+
+    it('should display error message when address verification is rejected', () => {
+      spyOn(globalMessageService, 'add');
+      spyOn(logger, 'error');
+      const rejectedValidation: AddressValidation = {
+        ...addressValidation,
+        decision: 'REJECT'
+      };
+
+      component.handleAddressVerificationResults(rejectedValidation);
+
+      expect(globalMessageService.add).toHaveBeenCalledWith(
+        { key: 'addressForm.invalidAddress' },
+        GlobalMessageType.MSG_TYPE_ERROR
+      );
+      expect(logger.error).toHaveBeenCalledWith('Address verification failed', { error: 'REJECT' });
+    });
   });
 
-  it('plaid popup button should be visible', () => {
-    fixture.detectChanges();
-    expect(fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]')).toBeTruthy();
-  });
+  describe('showErrors', () => {
+    it('should disable ACH and display error message when info is provided', () => {
+      spyOn(globalMessageService, 'add');
+      spyOn(component['logger'], 'error');
+      component.showErrors('Error message', 'loggerMessage', 'errorMessage');
 
-  it('plaid popup button should not to be visible if plaid has error', () => {
-    component.achEnabled.next(false);
-    fixture.detectChanges();
-    expect(fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]')).toBeFalsy();
-  });
-
-  it('plaid popup should be visible when user click open button', () => {
-    component.linkToken.next('link-sandbox-294f20db-2531-44a6-a2f0-136506c963a6');
-    let button = fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]');
-    button.disabled = false;
-    button.click();
-    fixture.detectChanges();
-    expect(component.showACHPopUpPayment).toHaveBeenCalled();
-  });
-
-  describe('plaid popup should be open', () => {
-    let buttonContinue;
-    const findModal = () => fixture.debugElement.nativeElement.closest('body').querySelector('y-checkout-com-apm-ach-account-list-modal');
-    const openModal = () => {
-      expect(component.achMetadata).toBe(metadata);
-      component.onSuccess(metadata.public_token, metadata);
-      expect(modalInstance.open).toHaveBeenCalledWith(CheckoutComApmAchAccountListModalComponent, {
-        centered: true,
-        size: 'md',
-      });
-      expect(component.modalRef.componentInstance.achMetadata).toBe(component.achMetadata);
-      expect(findModal()).toBeTruthy();
-    };
-
-    beforeEach(() => {
-      const termsAndConditionCheckbox = fixture.debugElement.query(By.css('#customerConsent')).nativeElement;
-      buttonContinue = fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]');
-      spyOn(plaidLinkService, 'createPlaid').and.callThrough();
-      expect(component.linkToken.getValue()).toEqual(achLinkToken);
-      component.linkToken.next(component.linkToken.getValue());
-      expect(termsAndConditionCheckbox).toBeTruthy();
-      expect(buttonContinue).toBeTruthy();
-      /**
-       * Terms and conditions Checkbox Events Handlers
-       */
-      expect(termsAndConditionCheckbox.checked).toBeFalse();
-      expect(buttonContinue.disabled).toBeTrue();
-      termsAndConditionCheckbox.click();
-      fixture.detectChanges();
-      expect(termsAndConditionCheckbox.checked).toBeTrue();
-      expect(buttonContinue.disabled).toBeFalse();
+      expect(component.achEnabled$.getValue()).toBeFalse();
+      expect(globalMessageService.add).toHaveBeenCalledWith('Error message', GlobalMessageType.MSG_TYPE_ERROR);
+      expect(component['logger'].error).toHaveBeenCalledWith('loggerMessage', { error: 'errorMessage' });
     });
 
-    it(' when user clicks open button', () => {
+    it('should disable ACH and display error message when info is not provided', () => {
+      spyOn(globalMessageService, 'add');
+      spyOn(component['logger'], 'error');
+      component.showErrors(undefined, null, null);
+
+      expect(component.achEnabled$.getValue()).toBeFalse();
+      expect(globalMessageService.add).toHaveBeenCalledWith(undefined, GlobalMessageType.MSG_TYPE_ERROR);
+      expect(component['logger'].error).toHaveBeenCalledWith(null, { error: null });
+    });
+  });
+
+  describe('showACHPopUpPayment', () => {
+    it('should create Plaid link handler and open Plaid link on success', (doneFn) => {
+      plaidLinkService.createPlaid.and.returnValue(Promise.resolve(plaidLinkHandler) as Promise<PlaidLinkHandler>);
+
+      component.showACHPopUpPayment();
+
+      plaidLinkService.createPlaid(legacyPlaidConfig).then(() => {
+        expect(component['plaidLinkHandler']).toBe(plaidLinkHandler);
+        expect(component.open).toHaveBeenCalled();
+        doneFn();
+      });
+    });
+
+    it('should call onSuccess with token and metadata on success', (doneFn) => {
+      const token = 'public-token';
+      const metadata = generateAchSuccessMetadata();
+      spyOn(component, 'onSuccess');
+      plaidLinkService.createPlaid.and.returnValue(Promise.resolve(plaidLinkHandler) as Promise<PlaidLinkHandler>);
+
+      component.showACHPopUpPayment();
+
+      plaidLinkService.createPlaid(legacyPlaidConfig).then(() => {
+        component.onSuccess(token, metadata);
+        expect(component.onSuccess).toHaveBeenCalledWith(token, metadata);
+        doneFn();
+      });
+    });
+
+    it('should call exit on Plaid link handler on exit', (doneFn) => {
+      spyOn(component, 'exit');
+      plaidLinkService.createPlaid.and.returnValue(Promise.resolve(plaidLinkHandler) as Promise<PlaidLinkHandler>);
+
+      component.showACHPopUpPayment();
+
+      plaidLinkService.createPlaid(legacyPlaidConfig).then(() => {
+        component.exit();
+        expect(component.exit).toHaveBeenCalled();
+        doneFn();
+      });
+    });
+  });
+
+  describe('showPopUpConsents', () => {
+    it('should open dialog with correct parameters', () => {
+      spyOn(launchDialogService, 'openDialogAndSubscribe');
+      component.achMetadata = metadata;
+      component.element = { nativeElement: {} } as ElementRef;
+      component.showPopUpConsents();
+
+      expect(launchDialogService.openDialogAndSubscribe).toHaveBeenCalledWith(
+        CHECKOUT_COM_LAUNCH_CALLER.APM_ACH_CONSENTS,
+        component.element,
+        { achMetadata: metadata }
+      );
+    });
+  });
+
+  describe('showAchPlaidLinkAccounts', () => {
+    it('should open dialog with correct parameters', () => {
+      spyOn(launchDialogService, 'openDialogAndSubscribe');
+      component.achMetadata = metadata;
+      component.element = { nativeElement: {} } as ElementRef;
       fixture.detectChanges();
-      buttonContinue.click();
+      component.showAchPlaidLinkAccounts();
+
+      expect(launchDialogService.openDialogAndSubscribe).toHaveBeenCalledWith(
+        CHECKOUT_COM_LAUNCH_CALLER.ACH_ACCOUNTS_LIST,
+        component.element,
+        { achMetadata: metadata }
+      );
+    });
+
+    it('should place order when dialog is closed with submit type and parameters', () => {
+      spyOn(component, 'placeOrder').and.callThrough();
+      checkoutComAchFacade.requestPlaidSuccessOrder.and.returnValue(of(mockOrder));
+      component.achMetadata = metadata;
+      component.element = { nativeElement: {} } as ElementRef;
+      fixture.detectChanges();
+      component.showAchPlaidLinkAccounts();
+
+      dialogClose$.next({
+        type: 'submit',
+        parameters: metadata
+      });
+
+      expect(component.placeOrder).toHaveBeenCalledWith(metadata);
+    });
+
+    it('should not place order when dialog is closed without submit type', () => {
+      spyOn(component, 'placeOrder');
+      component.achMetadata = metadata;
+      component.element = { nativeElement: {} } as ElementRef;
+      launchDialogService.openDialogAndSubscribe(
+        CHECKOUT_COM_LAUNCH_CALLER.ACH_ACCOUNTS_LIST,
+        component.element,
+        { achMetadata: metadata }
+      );
+      fixture.detectChanges();
+      dialogClose$.next({ type: 'cancel' });
+
+      expect(component.placeOrder).not.toHaveBeenCalled();
+    });
+
+  });
+
+  describe('continueButtonDisabled', () => {
+    it('should disable the continue button when the target is unchecked', () => {
+      const target = { checked: false } as HTMLInputElement;
+      component.continueButtonDisabled(target);
+      expect(component.disabled).toBeTrue();
+    });
+
+    it('should enable the continue button when the target is checked', () => {
+      const target = { checked: true } as HTMLInputElement;
+      component.continueButtonDisabled(target);
+      expect(component.disabled).toBeFalse();
+    });
+  });
+
+  describe('onSuccess', () => {
+    it('should update plaidSuccessPopup$ with public_token and metadata', () => {
+      const publicToken = 'public-token';
+
+      component.onSuccess(publicToken, metadata);
+
+      expect(component.plaidSuccessPopup$.getValue()).toEqual({
+        public_token: publicToken,
+        metadata
+      });
+    });
+
+    it('should call setPlaidLinkMetadata with metadata', () => {
+      const publicToken = 'public-token';
+      component.onSuccess(publicToken, metadata);
+      expect(checkoutComAchFacade.setPlaidLinkMetadata).toHaveBeenCalledWith(metadata);
+    });
+
+    it('should call showAchPlaidLinkAccounts', () => {
+      const publicToken = 'public-token';
+      spyOn(component, 'showAchPlaidLinkAccounts');
+
+      component.onSuccess(publicToken, metadata);
+
+      expect(component.showAchPlaidLinkAccounts).toHaveBeenCalled();
+    });
+  });
+
+  describe('placeOrder', () => {
+    it('should navigate to order confirmation on successful order placement', () => {
+      checkoutComAchFacade.requestPlaidSuccessOrder.and.returnValue(of(mockOrder));
+      component.placeOrder(metadata);
+      expect(routingService.go).toHaveBeenCalledWith({ cxRoute: 'orderConfirmation' });
+    });
+
+    it('should handle error when order placement fails', () => {
+      const error = new Error('error');
+      spyOn(component['logger'], 'error');
+      checkoutComAchFacade.requestPlaidSuccessOrder.and.returnValue(throwError(() => error));
+
+      component.placeOrder(metadata);
+
+      expect(component['logger'].error).toHaveBeenCalledWith('Failed to place order', { error });
+      expect(component.showLoadingIcon$.value).toBeFalse();
+    });
+
+    it('should show loading icon while placing order', () => {
+      checkoutComAchFacade.requestPlaidSuccessOrder.and.returnValue(of(mockOrder));
+      component.placeOrder(metadata);
+
+      expect(component.showLoadingIcon$.value).toBeTrue();
+    });
+
+    it('should hide loading icon when order placement fails', () => {
+      const error = new Error('expected error');
+      spyOn(component['logger'], 'error');
+      checkoutComAchFacade.requestPlaidSuccessOrder.and.returnValue(throwError(() => error));
+      component.placeOrder(metadata);
+      expect(component['logger'].error).toHaveBeenCalledWith('Failed to place order', { error });
+      expect(component.showLoadingIcon$.value).toBeFalse();
+    });
+  });
+
+  describe('UI components', () => {
+    it('should toggle enable/disable continue button', () => {
+      fixture.detectChanges();
+      expect(component.disabled).toBeTrue;
+      const checkbox = fixture.debugElement.query(By.css('#customerConsent'));
+      expect(checkbox).toBeTruthy();
+      checkbox.nativeElement.click();
+      expect(component.disabled).toBeFalse();
+    });
+
+    describe('billing address form', () => {
+      describe('should show Billing Address Form', () => {
+        it('should not show billing address form component is present', () => {
+          spyOn(billingAddressFormService, 'getSameAsDeliveryAddress').and.returnValue(new BehaviorSubject<boolean>(true));
+          component.sameDeliveryAddress();
+          component.showSameAsDeliveryAddressCheckbox$ = of(true);
+          fixture.detectChanges();
+          const billingAddressComponent = fixture.debugElement.query(By.css('lib-checkout-com-billing-address'));
+          expect(billingAddressComponent).toBeFalsy();
+        });
+
+        it('should not show billing address form if sameAsDeliveryAddress$ is true', () => {
+          spyOn(billingAddressFormService, 'getSameAsDeliveryAddress').and.returnValue(new BehaviorSubject<boolean>(true));
+          component.showSameAsDeliveryAddressCheckbox$ = of(true);
+          component.sameDeliveryAddress();
+          fixture.detectChanges();
+          const sameAsShippingAddressCheckbox: HTMLInputElement = fixture.debugElement.query(By.css('#same-as-shipping-checkbox')).nativeElement;
+          expect(sameAsShippingAddressCheckbox.checked).toBeTrue();
+        });
+
+        it('should show billing address card', () => {
+          spyOn(checkoutComPaymentFacade, 'updatePaymentAddress').and.returnValue(of(billingAddress));
+          spyOn(component, 'toggleSameAsDeliveryAddress').and.callThrough();
+          checkoutDeliveryAddressFacade.getDeliveryAddressState.and.returnValue(of({
+            loading: false,
+            data: deliveryAddress,
+            error: false
+          }));
+          component.billingAddressForm = billingAddressFormService.getBillingAddressForm();
+          spyOn(billingAddressFormService, 'getSameAsDeliveryAddress').and.returnValue(new BehaviorSubject<boolean>(true));
+          component.showSameAsDeliveryAddressCheckbox$ = new BehaviorSubject<boolean>(true);
+          component.sameDeliveryAddress();
+          billingAddressFormService.billingAddress$.next(deliveryAddress);
+          fixture.detectChanges();
+          const sameAsShippingAddressCheckboxDebugElement = queryDebugElementByCss(fixture, '#same-as-shipping-checkbox');
+          const sameAsShippingAddressCheckbox: HTMLInputElement = sameAsShippingAddressCheckboxDebugElement.nativeElement;
+          expect(sameAsShippingAddressCheckbox.checked).toBeTrue();
+          sameAsShippingAddressCheckbox.click();
+          component.sameAsDeliveryAddress = false;
+          fixture.detectChanges();
+          expect(sameAsShippingAddressCheckbox.checked).toBeFalse();
+          expect(queryDebugElementByCss(fixture, '#billing-address-form')).toBeFalsy();
+          expect(component.paymentAddress).toEqual(deliveryAddress);
+
+          const billingAddressCard = queryDebugElementByCss(fixture, '.payment-form-card');
+          expect(billingAddressCard).toBeTruthy();
+          expect(billingAddressCard.nativeElement.querySelector('.cx-card-label-bold').textContent).toContain(deliveryAddress.firstName + ' ' + deliveryAddress.lastName);
+          const cardLabel = billingAddressCard.nativeElement.querySelectorAll('.cx-card-label');
+          expect(cardLabel[0].textContent).toContain(deliveryAddress.line1);
+          expect(cardLabel[1].textContent).toContain(`${deliveryAddress.line2}`);
+          expect(cardLabel[2].textContent).toContain(`${deliveryAddress.town}, ${deliveryAddress.region.isocode}, ${deliveryAddress.country.isocode}`);
+          expect(cardLabel[3].textContent).toContain(deliveryAddress.postalCode);
+          expect(cardLabel[4].textContent).toContain(`addressCard.mobileNumber: ${deliveryAddress.cellphone}`);
+
+        });
+
+        it('should Handle Address Verification Results', () => {
+          spyOn(checkoutComPaymentFacade, 'updatePaymentAddress').and.returnValue(of(billingAddress));
+          spyOn(component, 'toggleSameAsDeliveryAddress').and.callThrough();
+          checkoutDeliveryAddressFacade.getDeliveryAddressState.and.returnValue(of({
+            loading: false,
+            data: deliveryAddress,
+            error: false
+          }));
+          component.billingAddressForm = billingAddressFormService.getBillingAddressForm();
+          spyOn(billingAddressFormService, 'getSameAsDeliveryAddress').and.returnValue(new BehaviorSubject<boolean>(true));
+          component.showSameAsDeliveryAddressCheckbox$ = new BehaviorSubject<boolean>(true);
+          component.sameDeliveryAddress();
+          fixture.detectChanges();
+          const sameAsShippingAddressCheckboxDebugElement = queryDebugElementByCss(fixture, '#same-as-shipping-checkbox');
+          const sameAsShippingAddressCheckbox: HTMLInputElement = sameAsShippingAddressCheckboxDebugElement.nativeElement;
+          expect(sameAsShippingAddressCheckbox.checked).toBeTrue();
+          sameAsShippingAddressCheckbox.click();
+          component.enableEditMode();
+          component.sameAsDeliveryAddress = false;
+          fixture.detectChanges();
+          expect(sameAsShippingAddressCheckbox.checked).toBeFalse();
+          expect(queryDebugElementByCss(fixture, '#billing-address-form')).toBeTruthy();
+          expect(component.paymentAddress).toEqual(deliveryAddress);
+          const {
+            firstName,
+            lastName,
+            line1,
+            line2,
+            town,
+            region,
+            country,
+            postalCode
+          } = billingAddress;
+
+          const formValue = {
+            firstName,
+            lastName,
+            line1,
+            line2,
+            town,
+            region,
+            country,
+            postalCode
+          };
+
+          component.billingAddressForm.setValue(formValue);
+          component.handleAddressVerificationResults(addressValidation);
+          expect(component.paymentAddress).toEqual(formValue);
+          expect(component.open).toHaveBeenCalled();
+        });
+      });
+    });
+
+    it('plaid popup button should be visible', () => {
+      fixture.detectChanges();
+      expect(fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]')).toBeTruthy();
+    });
+
+    it('plaid popup button should not to be visible if plaid has error', () => {
+      component.achEnabled$.next(false);
+      fixture.detectChanges();
+      expect(fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]')).toBeFalsy();
+    });
+
+    it('plaid popup should be visible when user click open button', () => {
+      spyOn(component, 'showACHPopUpPayment');
+      component.linkToken.next('link-sandbox-294f20db-2531-44a6-a2f0-136506c963a6');
+      fixture.detectChanges();
+      let button = fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]');
+      button.disabled = false;
+      button.click();
       fixture.detectChanges();
       expect(component.showACHPopUpPayment).toHaveBeenCalled();
-      expect(plaidLinkService.createPlaid).toHaveBeenCalled();
-      console.log('Plaidlink Modal open');
-      const closeIframe = new Promise(resolve => setTimeout(resolve, 2000));
-
-      closeIframe.then(() => {
-        const iframe = fixture.nativeElement.ownerDocument.querySelector('iframe');
-        iframe.remove();
-        console.log('Plaidlink Modal Removed');
-      });
     });
 
-    describe('should open Account List Modal', () => {
-      beforeEach(() => openModal());
-
-      it('then should close Account List Modal', () => {
-        const modal = findModal();
-        const closeButton = modal.querySelector('.close');
-        expect(closeButton).toBeTruthy();
-        closeButton.click();
+    describe('plaid popup should be open', () => {
+      let buttonContinue;
+      beforeEach(() => {
         fixture.detectChanges();
-        expect(component.showLoadingIcon).toBe(false);
-        expect(modalInstance.getActiveModal().closed).toBeTruthy();
+        const termsAndConditionCheckbox = fixture.debugElement.query(By.css('#customerConsent')).nativeElement;
+        buttonContinue = fixture.debugElement.nativeElement.querySelector('button[data-test-id="ach-plaid-open-btn"]');
+        expect(component.linkToken.getValue()).toEqual(achLinkToken);
+        component.linkToken.next(component.linkToken.getValue());
+        expect(termsAndConditionCheckbox).toBeTruthy();
+        expect(buttonContinue).toBeTruthy();
+        expect(termsAndConditionCheckbox.checked).toBeFalse();
+        expect(buttonContinue.disabled).toBeTrue();
+        termsAndConditionCheckbox.click();
+        fixture.detectChanges();
+        expect(termsAndConditionCheckbox.checked).toBeTrue();
+        expect(buttonContinue.disabled).toBeFalse();
+      });
+
+      it(' when user clicks open button', () => {
+        // @ts-ignore
+        plaidLinkService.createPlaid.and.returnValue(Promise.resolve(plaidLinkHandler));
+        spyOn(checkoutComPaymentFacade, 'updatePaymentAddress').and.returnValue(of(billingAddress));
+        fixture.detectChanges();
+        buttonContinue.click();
+        fixture.detectChanges();
+        expect(plaidLinkService.createPlaid).toHaveBeenCalled();
       });
 
       it(' and should place order', () => {
-        spyOn(component, 'placeOrder').and.callThrough();
-        modalInstance.closeActiveModal({
+        checkoutComAchFacade.requestPlaidSuccessOrder.and.returnValue(of(mockOrder));
+        checkoutComAchFacade.getPlaidOrder.and.returnValue(of(mockOrder));
+        component.placeOrder(metadata);
+        dialogClose$.next({
           type: 'submit',
-          parameters: component.achMetadata
+          parameters: metadata
         });
-        expect(component.showLoadingIcon).toBe(true);
-        expect(component.placeOrder).toHaveBeenCalledWith(metadata);
         fixture.detectChanges();
-        checkoutComAchService.requestPlaidSuccessOrder(component.achMetadata.public_token, component.achMetadata, !component.disabled)
-          .subscribe(order => expect(order).toEqual({
-            order: mockOrder,
-            error: null
-          }));
+        expect(component.showLoadingIcon$.value).toBe(true);
+        fixture.detectChanges();
+        checkoutComAchFacade.getPlaidOrder().subscribe(order => expect(order).toEqual(mockOrder));
         expect(routingService.go).toHaveBeenCalledWith({ cxRoute: 'orderConfirmation' });
-        expect(modalInstance.getActiveModal().closed).toBeTruthy();
       });
-    });
-  });
 
-  it('should show Popup Consents', () => {
-    let popupConsent = fixture.debugElement.query(By.css('#popup-consent')).nativeElement;
-    fixture.detectChanges();
-    popupConsent.click();
-    expect(modalInstance.open).toHaveBeenCalledWith(CheckoutComApmAchConsentsComponent, {
-      centered: true,
-      size: 'lg',
+      it('should show Popup Consents', () => {
+        spyOn(launchDialogService, 'openDialogAndSubscribe');
+        component.achEnabled$.next(true);
+        fixture.detectChanges();
+        let popupConsent = fixture.debugElement.query(By.css('#popup-consent')).nativeElement;
+        fixture.detectChanges();
+        popupConsent.click();
+        expect(launchDialogService.openDialogAndSubscribe).toHaveBeenCalledWith(
+          CHECKOUT_COM_LAUNCH_CALLER.APM_ACH_CONSENTS,
+          component.element,
+          { achMetadata: metadata }
+        );
+      });
     });
   });
 });

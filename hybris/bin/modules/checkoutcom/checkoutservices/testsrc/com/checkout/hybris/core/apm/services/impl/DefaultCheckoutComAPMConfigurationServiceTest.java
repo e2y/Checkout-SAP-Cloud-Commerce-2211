@@ -14,6 +14,7 @@ import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.order.CartService;
 import de.hybris.platform.servicelayer.internal.dao.GenericDao;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +22,7 @@ import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.*;
 
@@ -292,6 +293,23 @@ public class DefaultCheckoutComAPMConfigurationServiceTest {
 
         assertThat(result).hasSize(1);
         assertEquals(apmConfiguration1Mock, result.get(0));
+    }
+
+    @Test
+    public void getAvailableApmsByCountryCode_WhenCountryCodeProvided_ShouldReturnAvailableApms() {
+        doReturn(true).when(testObj).isApmAvailable(apmConfiguration1Mock, UK.getCountry(), CART_CURRENCY);
+
+        final List<CheckoutComAPMConfigurationModel> result = testObj.getAvailableApmsByCountryCode(UK.getCountry());
+
+        assertThat(result).hasSize(1);
+        assertEquals(apmConfiguration1Mock, result.get(0));
+    }
+
+    @Test
+    public void getAvailableApmsByCountryCode_WhenNoCountryCodeProvided_ShouldReturnEmptyList() {
+        final List<CheckoutComAPMConfigurationModel> result = testObj.getAvailableApmsByCountryCode(StringUtils.EMPTY);
+
+        assertEquals(0, result.size());
     }
 
     @Test

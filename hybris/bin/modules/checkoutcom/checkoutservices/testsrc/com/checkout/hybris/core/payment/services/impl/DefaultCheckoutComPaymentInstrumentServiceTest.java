@@ -9,7 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -51,7 +51,7 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		doReturn(instrumentClientMock).when(testObj).getInstrumentsClient();
 
 	}
@@ -75,7 +75,7 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 				.isInstanceOf(CheckoutComPaymentIntegrationException.class)
 				.hasCause(interruptedException)
 				.hasMessage(INSTRUMENT_REMOVAL_FAILED);
-		
+
 		verify(instrumentClientMock).deleteInstrument(SUBSCRIPTION_ID);
 	}
 

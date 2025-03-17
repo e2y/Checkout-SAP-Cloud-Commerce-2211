@@ -4,7 +4,6 @@ import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.addon.validators.paymentform.CheckoutComFawryPaymentDataFormValidator;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.resolvers.CheckoutComPaymentTypeResolver;
-import com.google.common.collect.ImmutableMap;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.acceleratorstorefrontcommons.forms.ForgottenPwdForm;
 import org.junit.Before;
@@ -12,7 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -22,7 +21,8 @@ import java.util.Map;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.FAWRY;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -45,7 +45,7 @@ public class CheckoutComPaymentDataFormValidValidatorTest {
 
     @Before
     public void setUp() {
-        paymentDataForm.setFormAttributes(ImmutableMap.of("type", FAWRY.name()));
+        paymentDataForm.setFormAttributes(Map.of("type", FAWRY.name()));
         errors = new BeanPropertyBindingResult(paymentDataForm, paymentDataForm.getClass().getSimpleName());
         when(validatorsMock.get(FAWRY)).thenReturn(checkoutComFawryPaymentDataFormValidatorMock);
     }
@@ -84,7 +84,7 @@ public class CheckoutComPaymentDataFormValidValidatorTest {
 
     @Test
     public void validate_WhenTypeAttributeNotFound_ShouldReturnErrors() {
-        paymentDataForm.setFormAttributes(ImmutableMap.of("number", "122323"));
+        paymentDataForm.setFormAttributes(Map.of("number", "122323"));
 
         testObj.validate(paymentDataForm, errors);
 
@@ -95,7 +95,7 @@ public class CheckoutComPaymentDataFormValidValidatorTest {
 
     @Test
     public void validate_WhenInvalidPaymentType_ShouldReturnErrors() {
-        paymentDataForm.setFormAttributes(ImmutableMap.of("type", "invalid"));
+        paymentDataForm.setFormAttributes(Map.of("type", "invalid"));
 
         testObj.validate(paymentDataForm, errors);
 

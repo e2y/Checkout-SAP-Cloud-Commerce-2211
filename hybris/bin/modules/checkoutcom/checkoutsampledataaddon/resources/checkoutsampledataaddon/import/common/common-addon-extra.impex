@@ -796,7 +796,6 @@ INSERT_UPDATE ZoneDeliveryMode; code[unique = true]    ; net; active[default = t
 
 # This is the configuration provided by Checkout.com. In order to be imported you need to define all countries and currencies
 INSERT_UPDATE CheckoutComAPMConfiguration; code[unique = true]; name[lang = en]; restrictedCountries(isocode)                                                                                         ; restrictedCurrencies(isocode)
-                                         ; SOFORT             ; Sofort         ; AT,BE,DE,ES,IT,NL                                                                                                    ; EUR
                                          ; PAYPAL             ; PayPal         ;                                                                                                                      ;
                                          ; POLI               ; POLi           ; NZ                                                                                                                ; AUD,NZD
                                          ; IDEAL              ; iDeal          ; NL                                                                                                                   ; EUR
@@ -804,7 +803,6 @@ INSERT_UPDATE CheckoutComAPMConfiguration; code[unique = true]; name[lang = en];
                                          ; ALIPAY             ; Alipay         ; US,CN                                                                                                                ; USD
                                          ; BENEFITPAY         ; Benefit Pay    ; BH                                                                                                                   ; BHD
                                          ; BANCONTACT         ; Bancontact     ; BE                                                                                                                   ; EUR
-                                         ; GIROPAY            ; Giropay        ; DE                                                                                                                   ; EUR
                                          ; EPS                ; Eps            ; AT                                                                                                                   ; EUR
                                          ; KNET               ; Knet           ; KW                                                                                                                   ; KWD
                                          ; QPAY               ; QPay           ; QA                                                                                                                   ; QAR
@@ -820,7 +818,7 @@ INSERT_UPDATE CheckoutComOxxoConfiguration; code[unique = true]; name[lang = en]
                                           ; OXXO               ; Oxxo           ; MX                          ; MXN                          ; redirect OXXO Demo Payment ; redirect
 
 INSERT_UPDATE CheckoutComGlobalAPMConfiguration; nasAPMs(code)
-                                               ; IDEAL,BANCONTACT,GIROPAY,EPS,MULTIBANCO,P24,ACH,FAWRY,KLARNA
+                                               ; IDEAL,BANCONTACT,EPS,MULTIBANCO,P24,ACH,FAWRY,KLARNA
 
 INSERT_UPDATE Trigger; cronJob(code)[unique = true]                   ; cronExpression   ; active[default = true]
                      ; checkoutComCompletedPaymentEventCleanupCronJob ; 0 0 23 1/1 * ? * ;

@@ -1,121 +1,52 @@
-import {Component, Input, OnDestroy, OnInit} from '@angular/core';
-import {CheckoutComApplepayService} from '../../../../core/services/applepay/checkout-com-applepay.service';
-import {
-  ActiveCartService,
-  Cart,
-  MultiCartService, OCC_USER_ID_ANONYMOUS,
-  RoutingService,
-  StateUtils,
-  UserIdService,
-  WindowRef
-} from '@spartacus/core';
-import {
-  CheckoutComApmApplepayComponent
-} from '../../checkout-com-apm-component/checkout-com-apm-applepay/checkout-com-apm-applepay.component';
-import {CheckoutFacade} from '@spartacus/checkout/root';
-import {filter, map, switchMap, takeUntil, tap} from 'rxjs/operators';
-import {ApplePayPaymentRequest} from '../../../../core/model/ApplePay';
-import {Subject} from "rxjs";
-import {getUserIdCartId} from "../../../../core/shared/get-user-cart-id";
-
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ApplePayPaymentRequest } from '@checkout-model/ApplePay';
+import { CheckoutComApmApplepayComponent } from '../../checkout-com-apm-component/checkout-com-apm-applepay/checkout-com-apm-applepay.component';
 
 @Component({
   selector: 'lib-checkout-com-express-applepay',
   templateUrl: './checkout-com-express-applepay.component.html',
 })
-export class CheckoutComExpressApplepayComponent extends CheckoutComApmApplepayComponent implements OnInit, OnDestroy {
+export class CheckoutComExpressApplepayComponent extends CheckoutComApmApplepayComponent implements OnInit {
   @Input() expressCheckout?: boolean;
   @Input() productCode?: string;
-  userId: string;
-  cartId: string;
-  protected drop = new Subject();
-
-  constructor(
-    protected checkoutFacade: CheckoutFacade,
-    protected routingService: RoutingService,
-    protected checkoutComApplepayService: CheckoutComApplepayService,
-    protected windowRef: WindowRef,
-    protected userIdService: UserIdService,
-    protected activeCartService: ActiveCartService,
-    protected multiCartService: MultiCartService,
-  ) {
-    super(checkoutFacade, routingService, checkoutComApplepayService, windowRef, userIdService, activeCartService);
-  }
+  @Output() buttonApplePayClicked: EventEmitter<boolean> = new EventEmitter<boolean>();
 
 
-  ngOnInit(): void {
-    if (this.expressCheckout) {
-      this.onLoadCart();
-    }
-  }
-
-  onLoadCart(): void {
-    this.userIdService.takeUserId().pipe(
-      switchMap((userId: string) =>
-        this.multiCartService
-          .createCart({
-            userId,
-            extraData: {active: false},
-          })
-          .pipe(
-            filter((cartData: StateUtils.ProcessesLoaderState<Cart>) =>
-              Boolean(cartData.value?.code)
-            ),
-            map(
-              (cartData: StateUtils.ProcessesLoaderState<Cart>) => {
-                return userId === OCC_USER_ID_ANONYMOUS ? cartData.value?.guid : cartData.value?.code as string
-              }
-            ),
-
-            tap((cartId: string) => {
-                this.userId = userId;
-                this.cartId = cartId;
-                this.multiCartService.addEntry(userId, cartId, this.productCode, 1);
-                this.multiCartService.getCartEntity(cartId).pipe(
-                  filter(response => response.loading),
-                  takeUntil(this.drop)
-                ).subscribe(() => {
-                  this.checkoutComApplepayService.requestApplePayPaymentRequest(userId, cartId);
-                }, error => {
-                  console.log(error)
-                })
-              },
-              takeUntil(this.drop))
-          )
-      )
-    ).pipe(takeUntil(this.drop)).subscribe()
-  }
-
+  /**
+   * Handles the click event for the express checkout button.
+   * If express checkout is enabled, places the Apple Pay order using the current user and cart IDs.
+   * Otherwise, retrieves the user and cart IDs and places the Apple Pay order.
+   *
+   * @return {void}
+   * @since 4.2.7
+   */
   onExpressClick(): void {
     if (this.expressCheckout) {
-      this.placeApplePayOrder(this.userId, this.cartId);
+      this.buttonApplePayClicked.emit(true);
+      this.placeApplePayOrder();
     } else {
-      getUserIdCartId(this.userIdService, this.activeCartService).pipe(takeUntil(this.drop))
-        .subscribe(({userId, cartId}) => {
-          this.placeApplePayOrder(userId, cartId);
-        }, err => console.error('getUserIdCartId', {err}));
-
+      this.placeApplePayOrder();
     }
   }
 
   /**
-   * Modify the payment request to also require the shipping information
+   * Modifies the Apple Pay payment request to require shipping information.
+   * Adds the required shipping contact fields (postal address, name, and email) to the payment request.
    *
-   * @param paymentRequest default payment request from OCC
+   * @param {ApplePayPaymentRequest} paymentRequest - The default payment request from OCC.
+   * @protected
+   * @override
+   * @return {ApplePayPaymentRequest} - The modified payment request with required shipping contact fields.
+   * @since 4.2.7
    */
-  protected modifyPaymentRequest(paymentRequest: ApplePayPaymentRequest): ApplePayPaymentRequest {
+  protected override modifyPaymentRequest(paymentRequest: ApplePayPaymentRequest): ApplePayPaymentRequest {
     return {
       ...paymentRequest,
       requiredShippingContactFields: [
-        "postalAddress",
-        "name",
-        "email"
+        'postalAddress',
+        'name',
+        'email'
       ]
-    }
-  }
-
-  ngOnDestroy() {
-    super.ngOnDestroy();
-    this.drop.next();
+    };
   }
 }

@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nModule } from '@spartacus/core';
-import { CheckoutComBillingAddressModule } from '../../checkout-com-billing-address/checkout-com-billing-address.module';
+import { SpinnerModule } from '@spartacus/storefront';
+import { CheckoutComBillingAddressFormModule } from '@checkout-components/checkout-com-billing-address-form/checkout-com-billing-address-form.module';
 import { CheckoutComKlarnaComponent } from './checkout-com-klarna.component';
 
 @NgModule({
@@ -9,7 +10,8 @@ import { CheckoutComKlarnaComponent } from './checkout-com-klarna.component';
   imports: [
     CommonModule,
     I18nModule,
-    CheckoutComBillingAddressModule
+    CheckoutComBillingAddressFormModule,
+    SpinnerModule
   ],
   exports: [CheckoutComKlarnaComponent]
 })

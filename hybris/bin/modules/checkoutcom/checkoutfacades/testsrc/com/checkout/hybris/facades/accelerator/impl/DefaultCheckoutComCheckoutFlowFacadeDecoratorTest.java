@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.Assert.*;
@@ -39,7 +39,6 @@ import static org.mockito.Mockito.*;
 public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
 
     private static final String PAYMENT_ID = "paymentId";
-    private static final String TOKEN = "TOKEN";
     private static final String APPROVED_RESPONSE_CODE = "10000";
     private static final String DECLINED_RESPONSE_CODE = "20005";
     private static final String CART_CODE = "cart-code";
@@ -204,7 +203,7 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
 
         testObj.removePaymentInfoFromSessionCart();
 
-        verifyZeroInteractions(paymentInfoServiceMock);
+        verifyNoInteractions(paymentInfoServiceMock);
     }
 
     @Test
@@ -230,7 +229,7 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
         testObj.setPaymentInfoBillingAddressOnSessionCart();
 
         verify(cartServiceMock, never()).getSessionCart();
-        verifyZeroInteractions(addressServiceMock);
+        verifyNoInteractions(addressServiceMock);
     }
 
     @Test(expected = IllegalArgumentException.class)

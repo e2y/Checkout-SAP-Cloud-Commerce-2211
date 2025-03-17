@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Optional;
 
@@ -49,7 +49,7 @@ public class CheckoutComCronJobPersistenceHookTest {
     public void shouldNotPerformACronJobWhenItemModelIsNotOfCronJobModel() {
         final Optional<ItemModel> result = testObj.execute(itemModelMock);
 
-        verifyZeroInteractions(cronJobServiceMock);
+        verifyNoInteractions(cronJobServiceMock);
         assertThat(result).isEmpty();
     }
 }

@@ -4,7 +4,6 @@ import com.checkout.data.apm.CheckoutComAPMConfigurationData;
 import com.checkout.data.apm.CheckoutComAPMConfigurationDataList;
 import com.checkout.dto.apm.CheckoutComAPMConfigurationListWsDTO;
 import com.checkout.hybris.facades.apm.CheckoutComAPMConfigurationFacade;
-import com.google.common.collect.ImmutableList;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.webservicescommons.mapping.DataMapper;
 import org.junit.Test;
@@ -13,11 +12,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.List;
 
 import static de.hybris.platform.webservicescommons.mapping.FieldSetLevelHelper.DEFAULT_LEVEL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,14 +40,14 @@ public class CheckoutComApmConfigurationControllerTest {
     public void getAvailableApmsForCart_ShouldReturnAvailableApms() {
         final CheckoutComAPMConfigurationData apmConfigurationData1 = createApmData("code1", "name1");
         final CheckoutComAPMConfigurationData apmConfigurationData2 = createApmData("code2", "name2");
-        when(checkoutComAPMAvailabilityFacadeMock.getAvailableApms()).thenReturn(ImmutableList.of(apmConfigurationData1, apmConfigurationData2));
+        when(checkoutComAPMAvailabilityFacadeMock.getAvailableApms()).thenReturn(List.of(apmConfigurationData1, apmConfigurationData2));
 
         testObj.getAvailableApmsForCart(DEFAULT_LEVEL);
 
         verify(dataMapperMock).map(dataListArgumentCaptor.capture(), eq(CheckoutComAPMConfigurationListWsDTO.class), eq(DEFAULT_LEVEL));
 
         final CheckoutComAPMConfigurationDataList dataList = dataListArgumentCaptor.getValue();
-        assertThat(dataList.getAvailableApmConfigurations().size()).isEqualTo(2);
+        assertThat(dataList.getAvailableApmConfigurations()).hasSize(2);
         assertThat(dataList.getAvailableApmConfigurations()).containsOnly(apmConfigurationData1, apmConfigurationData2);
     }
 

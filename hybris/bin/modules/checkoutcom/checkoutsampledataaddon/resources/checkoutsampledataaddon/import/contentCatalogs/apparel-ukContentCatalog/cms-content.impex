@@ -7,7 +7,6 @@ $lang = en
 
 INSERT_UPDATE Media; code[unique = true]; $media                            ; mime[default = 'image/jpeg']; $contentCV[unique = true]; folder(qualifier)
                    ; card-icon          ; $siteResource/card-icon.png       ;                             ;                          ; images
-                   ; sofort-icon        ; $siteResource/sofort-icon.png     ;                             ;                          ; images
                    ; paypal-icon        ; $siteResource/paypal-icon.png     ;                             ;                          ; images
                    ; poli-icon          ; $siteResource/poli-icon.png       ;                             ;                          ; images
                    ; ideal-icon         ; $siteResource/ideal-icon.png      ;                             ;                          ; images
@@ -17,7 +16,6 @@ INSERT_UPDATE Media; code[unique = true]; $media                            ; mi
                    ; google-pay-icon    ; $siteResource/google-pay-icon.png ;                             ;                          ; images
                    ; apple-pay-icon     ; $siteResource/apple-pay-icon.png  ;                             ;                          ; images
                    ; bancontact-icon    ; $siteResource/bancontact-icon.png ;                             ;                          ; images
-                   ; giropay-icon       ; $siteResource/giropay-icon.png    ;                             ;                          ; images
                    ; eps-icon           ; $siteResource/eps-icon.png        ;                             ;                          ; images
                    ; knet-icon          ; $siteResource/knet-icon.png       ;                             ;                          ; images
                    ; qpay-icon          ; $siteResource/qpay-icon.png       ;                             ;                          ; images
@@ -32,7 +30,6 @@ INSERT_UPDATE CheckoutComCardComponent; uid[unique = true]; $contentCV[unique = 
                                       ; cardComponent     ;                          ; "Card" ; card-icon
 
 INSERT_UPDATE CheckoutComAPMComponent; uid[unique = true]  ; $contentCV[unique = true]; name          ; apmConfiguration(code); $picture[lang = $lang]; visible[default = true];
-                                     ; sofortComponent     ;                          ; "SOFORT"      ; SOFORT                ; sofort-icon           ;
                                      ; payPalComponent     ;                          ; "PayPal"      ; PAYPAL                ; paypal-icon           ;
                                      ; poliComponent       ;                          ; "POLi"        ; POLI                  ; poli-icon             ;
                                      ; idealComponent      ;                          ; "iDeal"       ; IDEAL                 ; ideal-icon            ;
@@ -40,7 +37,6 @@ INSERT_UPDATE CheckoutComAPMComponent; uid[unique = true]  ; $contentCV[unique =
                                      ; alipayComponent     ;                          ; "Alipay"      ; ALIPAY                ; alipay-icon           ;
                                      ; benefitpayComponent ;                          ; "Benefit Pay" ; BENEFITPAY            ; benefitpay-icon       ;
                                      ; bancontactComponent ;                          ; "Bancontact"  ; BANCONTACT            ; bancontact-icon       ;
-                                     ; giropayComponent    ;                          ; "Giropay"     ; GIROPAY               ; giropay-icon          ;
                                      ; epsComponent        ;                          ; "Eps"         ; EPS                   ; eps-icon              ;
                                      ; knetComponent       ;                          ; "Knet"        ; KNET                  ; knet-icon             ;
                                      ; qpayComponent       ;                          ; "QPay"        ; QPAY                  ; qpay-icon             ;
@@ -65,7 +61,7 @@ INSERT_UPDATE CheckoutComApplePayExpressComponent; uid[unique = true]; $contentC
 
 
 INSERT_UPDATE ContentSlot; $contentCV[unique = true]; uid[unique = true]            ; name              ; cmsComponents(uid, $contentCV)
-                         ;                          ; CheckoutComPaymentButtonsSlot ; "Payment Buttons" ; cardComponent,sofortComponent,payPalComponent,poliComponent,idealComponent,klarnaComponent,alipayComponent,benefitpayComponent,googlePayComponent,applePayComponent,bancontactComponent,giropayComponent,epsComponent,knetComponent,qpayComponent,fawryComponent,multibancoComponent,sepaComponent,p24Component,oxxoComponent,achComponent
+                         ;                          ; CheckoutComPaymentButtonsSlot ; "Payment Buttons" ; cardComponent,payPalComponent,poliComponent,idealComponent,klarnaComponent,alipayComponent,benefitpayComponent,googlePayComponent,applePayComponent,bancontactComponent,epsComponent,knetComponent,qpayComponent,fawryComponent,multibancoComponent,sepaComponent,p24Component,oxxoComponent,achComponent
 
 INSERT_UPDATE ContentSlot; $contentCV[unique = true]; uid[unique = true]         ; cmsComponents(uid, $contentCV)
                          ;                          ; AddToCartSlot              ; AddToCart,applePayExpressComponent,googleExpressComponent

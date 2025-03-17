@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -47,20 +47,11 @@ public class CheckoutComMerchantControllerTest {
     }
 
     @Test
-    public void isMerchantABC_WhenMerchantIsNAS_ShouldReturnFalse() {
-        final ResponseEntity<String> result = testObj.isMerchantABC();
-
-        assertThat(result).hasFieldOrPropertyWithValue("body", IS_ABC_FALSE);
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
     public void isMerchantABC_WhenMerchantIsUndefined_ShouldReturnFalse() {
         final ResponseEntity<String> result = testObj.isMerchantABC();
 
         assertThat(result).hasFieldOrPropertyWithValue("body", IS_ABC_FALSE);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
-    
-    
+
 }

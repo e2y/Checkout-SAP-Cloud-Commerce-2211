@@ -7,29 +7,21 @@ import com.checkout.hybris.core.model.*;
 import com.checkout.hybris.core.order.daos.CheckoutComOrderDao;
 import com.checkout.hybris.core.payment.daos.CheckoutComPaymentInfoDao;
 import com.checkout.sdk.payments.CardSourceResponse;
-import com.google.common.collect.ImmutableList;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commerceservices.service.data.CommerceCheckoutParameter;
-import de.hybris.platform.core.GenericSearchConstants;
 import de.hybris.platform.core.model.order.AbstractOrderModel;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.OrderModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.core.model.user.CustomerModel;
-import de.hybris.platform.servicelayer.config.ConfigurationService;
-import de.hybris.platform.servicelayer.internal.dao.GenericDao;
 import de.hybris.platform.servicelayer.model.ModelService;
-import de.hybris.platform.servicelayer.session.SessionService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.spi.AbstractLogger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -109,13 +101,13 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         when(cardPaymentInfoMock.getCode()).thenReturn(PAYMENT_1_CODE);
         when(cardPaymentInfoMock.getUser()).thenReturn(userMock);
         when(cartModelMock.getPaymentInfo()).thenReturn(cardPaymentInfoMock);
-        when(userMock.getPaymentInfos()).thenReturn(ImmutableList.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
+        when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
         when(sourceMock.getId()).thenReturn(SUBSCRIPTION_ID);
         when(cartModelMock.getUser()).thenReturn(userMock);
-        when(userMock.getPaymentInfos()).thenReturn(ImmutableList.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
+        when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
         when(userPaymentInfo1Mock.getCode()).thenReturn(PAYMENT_1_CODE);
         when(userPaymentInfo2Mock.getCode()).thenReturn(PAYMENT_2_CODE);
-        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_1_CODE)).thenReturn(ImmutableList.of(paymentInfoModelMock, cardPaymentInfoMock));
+        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_1_CODE)).thenReturn(List.of(paymentInfoModelMock, cardPaymentInfoMock));
         when(paymentInfoModelMock.getOwner()).thenReturn(orderMock);
         when(cardPaymentInfoMock.getOwner()).thenReturn(userMock);
         when(orderMock.getSite().getUid()).thenReturn(SITE_ID);
@@ -367,11 +359,11 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
     @Test
     public void addSubscriptionToUserPayment_WhenNoMatchUserPayment_ShouldNotSetSubscription() {
         when(cardPaymentInfoMock.getMarkToSave()).thenReturn(true);
-        when(userMock.getPaymentInfos()).thenReturn(ImmutableList.of(userPaymentInfo2Mock));
+        when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo2Mock));
 
         testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
 
-        verifyZeroInteractions(modelServiceMock);
+        verifyNoInteractions(modelServiceMock);
     }
 
     @Test
@@ -380,7 +372,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
 
         testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
 
-        verifyZeroInteractions(modelServiceMock);
+        verifyNoInteractions(modelServiceMock);
     }
 
     @Test
@@ -389,7 +381,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
 
         testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
 
-        verifyZeroInteractions(modelServiceMock);
+        verifyNoInteractions(modelServiceMock);
     }
 
     @Test
@@ -398,7 +390,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
 
         testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
 
-        verifyZeroInteractions(modelServiceMock);
+        verifyNoInteractions(modelServiceMock);
     }
 
     @Test
@@ -454,7 +446,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
 
     @Test
     public void findAbstractOrderByPaymentId_WhenPaymentIdDoesNotBelongToAbstractOrder_ShouldReturnEmptyString() {
-        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_1_CODE)).thenReturn(ImmutableList.of(cardPaymentInfoMock));
+        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_1_CODE)).thenReturn(List.of(cardPaymentInfoMock));
 
         final List<AbstractOrderModel> result = testObj.findAbstractOrderByPaymentId(PAYMENT_1_CODE);
 

@@ -7,17 +7,17 @@ This [Checkout.com](https://www.checkout.com/) library adds payments capabilitie
 This library is tailored to the [Spartacus](https://sap.github.io/spartacus-docs/) Storefront:
 
 This release is compatible with:
-* Spartacus: version 4.2
-* Node module `checkout-spartacus-translations` v4.2.8
-* SAP Commerce Cloud: version 2011/2105/2205/2211
-* Angular CLI: Version 12.0.5 or later, < 13.
-* Node.js: Version 14.15 is required. Version 12.x reached end-of-life on April 30, 2022, and is no longer supported by Spartacus. It is strongly recommended that you migrate any existing Spartacus storefronts to Node.js 14 as soon as possible. If there are any issues with Spartacus and Node.js 14, please upgrade to the latest releases. If you continue to experience issues with Node.js 14, create a support ticket with SAP.
-* Yarn: Version 1.15 or later.
+* Spartacus: version 2211.32.1
+* Node module `checkout-spartacus-translations` v2211.32.1
+* SAP Commerce Cloud: version 2211
+* [Angular CLI](https://angular.dev/): Version 17.0.0 is the minimum required. The most recent 17.x version is strongly recommended.
+* [Node.js](https://nodejs.org/en): Version 20.9.0 is the minimum required. The most recent 20.x version is strongly recommended.
+* [yarn](https://yarnpkg.com/): Version 1.15 or later. or [npm](https://www.npmjs.com/): Version 10.2.4 or newer.
 * Requires Spartacus Feature Modules: `checkout` and `order`
 
 ## Development
 Install the [Checkout.com SAP Commerce Cloud Connector](https://github.com/checkout/SAP-Cloud-Commerce-2105).
-Run `yarn` and then `yarn run start` and the server will start on [http://localhost:4200](http://localhost:4200).   
+Run `yarn` and then `yarn run start:localtest` and the server will start on [https://localtest.me:4200](https://localtest.me:4200).   
 When you make some changes in the code of library, you need to rebuild it (but rebuilding of the "example-storefront" is not required) - `yarn run start` is a shortcut for this.
 
 ## Testing
@@ -46,6 +46,28 @@ The source code of the connector can be found on
 If you need to extend components, you can fork the repository so you are able to upgrade to future releases. In this fork, you can make your changes and import the library in your storefront.
 
 If you don't want to fork, you can `extend` components, copy the template and the Angular Component into your project. This will mean that you have to be vigilant when a new release of the library is integrated.
+## Release notes
+### Release 2211.32.1
+* Update Dependencies:
+  * [CheckoutSpartacusTranslations](https://www.npmjs.com/package/@checkout.com/checkout-spartacus-translations) to version 2211.32.1
+  *  "ngx-plaid-link": "^14.0.0",
+  
+* Removed Dependencies:
+  * "ng2-tooltip-directive": "^2.10.3"
+
+| Supported APM’s: | 
+|------------------|
+| ACH Direct Debit |
+| ApplePay         |
+| Bancontact       |
+| Credit Card      |
+| Eps              |
+| GooglePay        |
+| iDeal            |
+| Klarna           |
+| Multibanco       |
+| Przelewy24       |
+| Fawry            |
 
 ## Release notes
 ### Release 4.2.7
@@ -104,7 +126,6 @@ Use this release if you are using Spartacus 4.2.x
   * Benefit Pay
   * EPS
   * Fawry
-  * Giropay
   * GooglePay
   * iDeal
   * Klarna
@@ -117,7 +138,6 @@ Use this release if you are using Spartacus 4.2.x
   * Przelewy24
   * QPay
   * Sepa
-  * Sofort
 * Credit card form placeholder localisation
 * Display card payment icon
 * Made OCC endpoints configurable

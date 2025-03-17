@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class CheckoutComOxxoPaymentInfoDataReversePopulatorTest {
 
         testObj.populate(source, target);
 
-        Assert.assertEquals(target.getDocument(), DOCUMENT_VALUE);
+        Assert.assertEquals(DOCUMENT_VALUE, target.getDocument());
     }
 
     @Test(expected = IllegalArgumentException.class)

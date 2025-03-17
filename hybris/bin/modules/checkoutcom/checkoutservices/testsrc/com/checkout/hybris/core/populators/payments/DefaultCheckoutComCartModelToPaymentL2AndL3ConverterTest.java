@@ -22,7 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.List;
 
@@ -95,7 +95,7 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 	private UnitModel unitModel;
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		paymentRequest = PaymentRequest.fromSource(new TokenSource("cardToken"), USD, TOTAL_PRICE_WITH_PENNIES);
 	}
 
@@ -240,8 +240,7 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 	}
 
 	private TaxValue createTaxValueModel(final double taxes) {
-		final TaxValue taxValue = new TaxValue("taxCode", taxes, false, "taxName");
-		return taxValue;
+		return new TaxValue("taxCode", taxes, false, "taxName");
 	}
 
 	private ProductModel createProductModel(final String productName, final String code) {

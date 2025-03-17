@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
@@ -43,7 +43,7 @@ public class DefaultCheckoutComApmMappedPaymentInfoReverseConverterTest {
     @Before
     public void setUp() {
         when(convertersMapMock.containsKey(CheckoutComPaymentType.BENEFITPAY)).thenReturn(true);
-        when(convertersMapMock.containsKey(CheckoutComPaymentType.GIROPAY)).thenReturn(false);
+        when(convertersMapMock.containsKey(CheckoutComPaymentType.PAYPAL)).thenReturn(false);
         when(convertersMapMock.get(CheckoutComPaymentType.BENEFITPAY)).thenReturn(benefitPayConverterMock);
         ReflectionTestUtils.setField(testObj, "defaultConverter", defaultConverterMock);
         when(benefitPayConverterMock.convert(apmPaymentInfoDataMock)).thenReturn(benefitPayPaymentInfoMock);
@@ -60,7 +60,7 @@ public class DefaultCheckoutComApmMappedPaymentInfoReverseConverterTest {
 
     @Test
     public void convertAPMPaymentInfoData_WhenSpecificConverterFound_ShouldInvokeTheSpecificConverter() {
-        final CheckoutComAPMPaymentInfoModel result = testObj.convertAPMPaymentInfoData(apmPaymentInfoDataMock, CheckoutComPaymentType.GIROPAY);
+        final CheckoutComAPMPaymentInfoModel result = testObj.convertAPMPaymentInfoData(apmPaymentInfoDataMock, CheckoutComPaymentType.PAYPAL);
 
         verify(defaultConverterMock).convert(apmPaymentInfoDataMock);
         assertEquals(apmPaymentInfoModelMock, result);

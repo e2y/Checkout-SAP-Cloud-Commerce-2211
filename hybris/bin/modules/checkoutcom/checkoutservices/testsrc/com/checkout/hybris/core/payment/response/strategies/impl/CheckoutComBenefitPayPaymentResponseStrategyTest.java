@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.BENEFITPAY;
 import static org.junit.Assert.*;

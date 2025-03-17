@@ -29,7 +29,6 @@ INSERT_UPDATE AchAccountType; code[unique = true]
                             ; CorpSavings
 
 INSERT_UPDATE CheckoutComAPMConfiguration; code[unique = true]; name[lang = en]; restrictedCountries(isocode)                                                                                         ; restrictedCurrencies(isocode)
-                                         ; SOFORT             ; Sofort         ; AT,BE,DE,ES,IT,NL                                                                                                    ; EUR
                                          ; PAYPAL             ; PayPal         ;                                                                                                                      ;
                                          ; POLI               ; POLi           ; NZ                                                                                                                   ; NZD
                                          ; IDEAL              ; iDeal          ; NL                                                                                                                   ; EUR
@@ -37,7 +36,6 @@ INSERT_UPDATE CheckoutComAPMConfiguration; code[unique = true]; name[lang = en];
                                          ; ALIPAY             ; Alipay         ; US,CN                                                                                                                ; USD
                                          ; BENEFITPAY         ; Benefit Pay    ; BH                                                                                                                   ; BHD
                                          ; BANCONTACT         ; Bancontact     ; BE                                                                                                                   ; EUR
-                                         ; GIROPAY            ; Giropay        ; DE                                                                                                                   ; EUR
                                          ; EPS                ; Eps            ; AT                                                                                                                   ; EUR
                                          ; KNET               ; Knet           ; KW                                                                                                                   ; KWD
                                          ; QPAY               ; QPay           ; QA                                                                                                                   ; QAR
@@ -52,7 +50,7 @@ INSERT_UPDATE CheckoutComOxxoConfiguration; code[unique = true]; name[lang = en]
                                           ; OXXO               ; Oxxo           ; MX                          ; MXN                          ; redirect OXXO Demo Payment ; redirect
 
 INSERT_UPDATE CheckoutComGlobalAPMConfiguration; nasAPMs(code);
-                                               ; IDEAL,BANCONTACT,GIROPAY,EPS,MULTIBANCO,P24,FAWRY,KLARNA
+                                               ; IDEAL,BANCONTACT,EPS,MULTIBANCO,P24,FAWRY,KLARNA
 
 INSERT_UPDATE ZoneDeliveryModeValue; deliveryMode(code)[unique = true]; value ; minimum[unique = true]; currency(isocode)[unique = true]; zone(code)[default = 'brazil'][unique = true]
                                    ; premium-gross                    ; 10.99 ; 0.00                  ; USD                             ;

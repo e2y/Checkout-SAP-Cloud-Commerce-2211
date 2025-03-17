@@ -3,15 +3,15 @@ package com.checkout.hybris.facades.apm.impl;
 import com.checkout.data.apm.CheckoutComAPMConfigurationData;
 import com.checkout.hybris.core.apm.services.CheckoutComAPMConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComAPMConfigurationModel;
-import com.google.common.collect.ImmutableList;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.servicelayer.dto.converter.Converter;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 public class DefaultCheckoutComAPMConfigurationFacadeTest {
 
     private static final String APM_CODE = "apmCode";
+    private static final String COUNTRY_CODE = "UK";
 
     @InjectMocks
     private DefaultCheckoutComAPMConfigurationFacade testObj;
@@ -42,7 +43,8 @@ public class DefaultCheckoutComAPMConfigurationFacadeTest {
     @Before
     public void setUp() {
         when(apmConfigurationModelMock.getCode()).thenReturn(APM_CODE);
-        when(checkoutComAPMConfigurationServiceMock.getAvailableApms()).thenReturn(ImmutableList.of(apmConfigurationModelMock));
+        when(checkoutComAPMConfigurationServiceMock.getAvailableApms()).thenReturn(List.of(apmConfigurationModelMock));
+        when(checkoutComAPMConfigurationServiceMock.getAvailableApmsByCountryCode(COUNTRY_CODE)).thenReturn(List.of(apmConfigurationModelMock));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -113,6 +115,32 @@ public class DefaultCheckoutComAPMConfigurationFacadeTest {
         when(checkoutComAPMConfigurationServiceMock.getAvailableApms()).thenReturn(Collections.emptyList());
 
         final List<CheckoutComAPMConfigurationData> result = testObj.getAvailableApms();
+
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void getAvailableApmsByCountryCode_WhenAvailableApmsForCountryCodeProvided_ShouldReturnListOfAvailableApmData() {
+        when(checkoutComAPMConfigurationConverterMock.convert(apmConfigurationModelMock)).thenReturn(apmConfigurationDataMock);
+
+        final List<CheckoutComAPMConfigurationData> result = testObj.getAvailableApmsByCountryCode(COUNTRY_CODE);
+
+        assertEquals(1, result.size());
+        assertEquals(apmConfigurationDataMock, result.get(0));
+    }
+
+    @Test
+    public void getAvailableApms_WhenNoAvailableApmsForCountryCodeProvided_ShouldReturnEmptyList() {
+        when(checkoutComAPMConfigurationServiceMock.getAvailableApmsByCountryCode(COUNTRY_CODE)).thenReturn(Collections.emptyList());
+
+        final List<CheckoutComAPMConfigurationData> result = testObj.getAvailableApmsByCountryCode(COUNTRY_CODE);
+
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void getAvailableApmsByCountryCode_WhenNoCountryCodeProvided_ShouldReturnEmptyList() {
+        final List<CheckoutComAPMConfigurationData> result = testObj.getAvailableApmsByCountryCode(StringUtils.EMPTY);
 
         assertEquals(0, result.size());
     }

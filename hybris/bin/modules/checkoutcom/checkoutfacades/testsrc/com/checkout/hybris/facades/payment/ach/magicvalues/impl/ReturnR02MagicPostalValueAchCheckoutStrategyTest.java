@@ -5,7 +5,7 @@ import de.hybris.bootstrap.annotations.UnitTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,13 +22,13 @@ public class ReturnR02MagicPostalValueAchCheckoutStrategyTest {
     public void createAchBankInfoDetailsData_shouldReturnAnObjectWithTheAttributesFieldWithTheMagicValues() {
         final AchBankInfoDetailsData achBankInfoDetailsData = testObj.createAchBankInfoDetailsData();
 
-        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("accountHolderName", "Tom Black");
-        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("accountType", "CHECKING");
-        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("accountNumber", "9999999999");
-        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("bankRouting", "011075150");
-        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("mask", "0000009999");
-        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("institutionName", "Bank of america");
-        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("companyName", "Widget Inc");
+        assertThat(achBankInfoDetailsData).hasFieldOrPropertyWithValue("accountHolderName", "Tom Black")
+            .hasFieldOrPropertyWithValue("accountType", "CHECKING")
+            .hasFieldOrPropertyWithValue("accountNumber", "9999999999")
+            .hasFieldOrPropertyWithValue("bankRouting", "011075150")
+            .hasFieldOrPropertyWithValue("mask", "0000009999")
+            .hasFieldOrPropertyWithValue("institutionName", "Bank of america")
+            .hasFieldOrPropertyWithValue("companyName", "Widget Inc");
     }
 
     @Test

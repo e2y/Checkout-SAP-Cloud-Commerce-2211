@@ -15,7 +15,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.BANCONTACT;
 import static org.junit.Assert.assertEquals;
@@ -29,7 +29,6 @@ public class CheckoutComBancontactPaymentRequestStrategyTest {
     private static final Long CHECKOUT_COM_TOTAL_PRICE = 10000L;
     private static final String PAYMENT_COUNTRY_KEY = "payment_country";
     private static final String ACCOUNT_HOLDER_NAME_KEY = "account_holder_name";
-    private static final String TITLE_NAME = "Mrs";
     private static final String CUSTOMER_NAME = "Mr John Snow";
     private static final String COUNTRY_CODE = "PT";
 

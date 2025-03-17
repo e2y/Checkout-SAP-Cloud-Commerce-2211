@@ -1,19 +1,18 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ConfigModule, CmsConfig, I18nModule } from '@spartacus/core';
-import { CheckoutComStoreModule } from '../../../core/store/checkout-com-store.module';
-import { CheckoutComFramesFormModule } from '../checkout-com-frames-form/checkout-com-frames-form.module';
+import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { CheckoutComOccModule } from '@checkout-core/occ/checkout-com-occ.module';
+import { CheckoutComApmModule } from '@checkout-components/checkout-com-apm-component/checkout-com-apm.module';
+import { CheckoutComFramesFormModule } from '@checkout-components/checkout-com-frames-form/checkout-com-frames-form.module';
+import { CheckoutComPaymentFormModule } from '@checkout-components/checkout-com-payment-form/checkout-com-payment-form.module';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { FormErrorsModule, IconModule, CardModule, SpinnerModule } from '@spartacus/storefront';
-import { CheckoutComOccModule } from '../../../core/adapters/occ/checkout-com-occ.module';
+import { CmsConfig, ConfigModule, I18nModule } from '@spartacus/core';
+import { CardModule, FormErrorsModule, IconModule, SpinnerModule } from '@spartacus/storefront';
 import { CheckoutComPaymentMethodComponent } from './checkout-com-payment-method.component';
-import {CheckoutComPaymentFormModule} from '../checkout-com-payment-form/checkout-com-payment-form.module';
-import {CheckoutComApmModule} from '../checkout-com-apm-component/checkout-com-apm.module';
-
 
 @NgModule({
   declarations: [CheckoutComPaymentMethodComponent],
+  exports: [CheckoutComPaymentMethodComponent],
   imports: [
     CommonModule,
     ConfigModule.withConfig({
@@ -23,7 +22,6 @@ import {CheckoutComApmModule} from '../checkout-com-apm-component/checkout-com-a
         }
       }
     } as CmsConfig),
-    CheckoutComStoreModule,
     CheckoutComOccModule,
     CheckoutComFramesFormModule,
     CheckoutComPaymentFormModule,
@@ -37,4 +35,5 @@ import {CheckoutComApmModule} from '../checkout-com-apm-component/checkout-com-a
     CheckoutComApmModule
   ]
 })
-export class CheckoutComPaymentMethodModule { }
+export class CheckoutComPaymentMethodModule {
+}

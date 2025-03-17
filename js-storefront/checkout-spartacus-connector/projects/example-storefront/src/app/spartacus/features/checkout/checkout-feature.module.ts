@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { NgModule } from '@angular/core';
-import { checkoutTranslationChunksConfig, checkoutTranslations } from "@spartacus/checkout/assets";
-import { CheckoutRootModule, CHECKOUT_FEATURE } from "@spartacus/checkout/root";
-import { CmsConfig, I18nConfig, provideConfig } from "@spartacus/core";
+import { checkoutTranslationChunksConfig, checkoutTranslations } from '@spartacus/checkout/base/assets';
+import { CHECKOUT_FEATURE, CheckoutRootModule } from '@spartacus/checkout/base/root';
+import { CmsConfig, I18nConfig, provideConfig } from '@spartacus/core';
 
 @NgModule({
   declarations: [],
@@ -12,7 +13,8 @@ import { CmsConfig, I18nConfig, provideConfig } from "@spartacus/core";
     featureModules: {
       [CHECKOUT_FEATURE]: {
         module: () =>
-          import('@spartacus/checkout').then((m) => m.CheckoutModule),
+          // eslint-disable-next-line @typescript-eslint/typedef
+          import('@spartacus/checkout/base').then((m) => m.CheckoutModule),
       },
     }
   }),

@@ -1,22 +1,14 @@
-import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { PaymentType } from '@checkout-model/ApmData';
+import { CheckoutComApmService } from '@checkout-services/apm/checkout-com-apm.service';
+import { MockCxMediaComponent } from '@checkout-tests/components/cx-media.mock';
+import { of } from 'rxjs';
 import { CheckoutComApmTileComponent } from './checkout-com-apm-tile.component';
-import {ApmData, PaymentType} from '../../../../core/model/ApmData';
-import {Observable, of} from 'rxjs';
-import {CheckoutComApmService} from '../../../../core/services/checkout-com-apm.service';
 import createSpy = jasmine.createSpy;
-import { Component, Input } from '@angular/core';
 
-const apm = {code: PaymentType.PayPal};
+const apm = { code: PaymentType.PayPal };
 
-@Component({
-  selector: 'cx-media',
-  template: ''
-})
-class MockMediaComponent {
-  @Input() container: any;
-}
-
-class CheckoutComApmServiceStub  {
+class CheckoutComApmServiceStub {
   getSelectedApmFromState = createSpy('getSelectedApmFromState').and.returnValue(of(apm));
   selectApm = createSpy('selectApm').and.stub();
 }
@@ -28,12 +20,15 @@ describe('CheckoutComApmTileComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CheckoutComApmTileComponent, MockMediaComponent ],
-      providers: [
-        { provide: CheckoutComApmService, useClass: CheckoutComApmServiceStub }
-      ]
-    })
-    .compileComponents();
+        declarations: [CheckoutComApmTileComponent, MockCxMediaComponent],
+        providers: [
+          {
+            provide: CheckoutComApmService,
+            useClass: CheckoutComApmServiceStub
+          }
+        ]
+      })
+      .compileComponents();
   });
 
   beforeEach(() => {
@@ -50,7 +45,7 @@ describe('CheckoutComApmTileComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should handle click event', fakeAsync(()=> {
+  it('should handle click event', fakeAsync(() => {
     fixture.debugElement.nativeElement.click();
     tick();
 

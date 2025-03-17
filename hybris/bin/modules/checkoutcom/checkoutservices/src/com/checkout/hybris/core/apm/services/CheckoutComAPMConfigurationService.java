@@ -58,6 +58,14 @@ public interface CheckoutComAPMConfigurationService {
     List<CheckoutComAPMConfigurationModel> getAvailableApms();
 
     /**
+     * Returns a list of available apms for the session cart for a specific country code
+     *
+     * @param countryCode the country code
+     * @return List of {@link CheckoutComAPMConfigurationModel} which are available for the cart for the country code provided
+     */
+    List<CheckoutComAPMConfigurationModel> getAvailableApmsByCountryCode(final String countryCode);
+
+    /**
      * Returns the Media for the apm configuration
      *
      * @param apmConfigurationModel teh apm configuration

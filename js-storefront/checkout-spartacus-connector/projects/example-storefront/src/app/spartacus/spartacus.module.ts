@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BaseStorefrontModule } from '@spartacus/storefront';
-import { SpartacusFeaturesModule } from './spartacus-features.module';
 import { SpartacusConfigurationModule } from './spartacus-configuration.module';
+import { SpartacusFeaturesModule } from './spartacus-features.module';
 
 @NgModule({
   declarations: [],
@@ -12,4 +12,5 @@ import { SpartacusConfigurationModule } from './spartacus-configuration.module';
   ],
   exports: [BaseStorefrontModule]
 })
-export class SpartacusModule { }
+export class SpartacusModule {
+}

@@ -8,10 +8,7 @@ import de.hybris.platform.webservicescommons.cache.CacheControlDirective;
 import de.hybris.platform.webservicescommons.mapping.DataMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -35,4 +32,14 @@ public class CheckoutComApmConfigurationController {
         apmConfigurationDataList.setAvailableApmConfigurations(checkoutComAPMAvailabilityFacade.getAvailableApms());
         return dataMapper.map(apmConfigurationDataList, CheckoutComAPMConfigurationListWsDTO.class, fields);
     }
+
+    @Secured({"ROLE_CUSTOMERGROUP", "ROLE_GUEST", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_TRUSTED_CLIENT", "ROLE_CLIENT"})
+    @GetMapping(value = "/available/{countryCode}")
+    public CheckoutComAPMConfigurationListWsDTO getAvailableApmsForCartByCountryCode(@RequestParam(required = false, defaultValue = DEFAULT_LEVEL) final String fields,
+                                                                                     @PathVariable final String countryCode) {
+        final CheckoutComAPMConfigurationDataList apmConfigurationDataList = new CheckoutComAPMConfigurationDataList();
+        apmConfigurationDataList.setAvailableApmConfigurations(checkoutComAPMAvailabilityFacade.getAvailableApmsByCountryCode(countryCode));
+        return dataMapper.map(apmConfigurationDataList, CheckoutComAPMConfigurationListWsDTO.class, fields);
+    }
+
 }

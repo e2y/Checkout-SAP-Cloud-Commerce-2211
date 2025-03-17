@@ -2,9 +2,24 @@
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+// eslint-disable-next-line @typescript-eslint/typedef
 export const environment = {
   production: false,
-  occBaseUrl: 'https://localhost:9002'
+  enableStoreDevTools: true,
+  occBaseUrl: 'https://localhost:9002',
+  cds: false,
+  b2b: false,
+  cdc: false,
+  cpq: false,
+  digitalPayments: false,
+  epdVisualization:false,
+  s4om: false,
+  context: {
+    baseSite: ['electronics-spa'],
+    currency: [
+      'USD', 'PLN', 'MXN', 'NZD', 'BHD', 'AUD', 'QAR', 'JPY', 'BRL', 'EUR', 'GBP', 'EGP', 'KWD'
+    ],
+  },
 };
 
 /*

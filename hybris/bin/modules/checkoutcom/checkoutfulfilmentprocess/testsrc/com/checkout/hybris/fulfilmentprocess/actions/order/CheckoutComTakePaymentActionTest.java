@@ -21,7 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Set;
 
@@ -92,7 +92,7 @@ public class CheckoutComTakePaymentActionTest {
         final String result = testObj.execute(orderProcessMock);
 
         assertEquals(NOK, result);
-        verifyZeroInteractions(paymentServiceMock);
+        verifyNoInteractions(paymentServiceMock);
     }
 
     @Test
@@ -103,7 +103,7 @@ public class CheckoutComTakePaymentActionTest {
 
         assertEquals(NOK, result);
         verify(orderMock).setStatus(OrderStatus.PAYMENT_NOT_CAPTURED);
-        verifyZeroInteractions(paymentServiceMock);
+        verifyNoInteractions(paymentServiceMock);
     }
 
     @Test

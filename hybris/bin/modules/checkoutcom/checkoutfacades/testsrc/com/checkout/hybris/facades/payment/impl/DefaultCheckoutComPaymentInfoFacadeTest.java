@@ -25,7 +25,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.*;
@@ -100,8 +100,8 @@ public class DefaultCheckoutComPaymentInfoFacadeTest {
 
         verify(cartServiceMock, never()).getSessionCart();
         verify(paymentInfoServiceMock, never()).createPaymentInfo(checkoutComCreditCardPaymentInfoModelMock, cartModelMock);
-        verifyZeroInteractions(checkoutComCCPaymentInfoReverseConverterMock);
-        verifyZeroInteractions(checkoutComCCPaymentInfoReverseConverterMock);
+        verifyNoInteractions(checkoutComCCPaymentInfoReverseConverterMock);
+        verifyNoInteractions(checkoutComCCPaymentInfoReverseConverterMock);
     }
 
     @Test

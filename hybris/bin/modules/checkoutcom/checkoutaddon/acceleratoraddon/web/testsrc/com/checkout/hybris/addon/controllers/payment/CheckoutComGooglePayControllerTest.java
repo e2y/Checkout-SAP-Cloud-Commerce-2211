@@ -18,7 +18,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.validation.Validator;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +30,6 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class CheckoutComGooglePayControllerTest {
 
-    private static final String SHIPPING_ID = "shippingId";
     private static final String CUSTOMER_EMAIL = "test@email.com";
     private static final String CUSTOMER_NAME = "Name";
 
@@ -124,8 +123,8 @@ public class CheckoutComGooglePayControllerTest {
 
         testObj.getGooglePayDeliveryInfo(httpServletRequestMock, httpServletResponseMock, googlePayIntermediatePaymentDataMock);
 
-        verifyZeroInteractions(checkoutComCustomerFacadeMock);
-        verifyZeroInteractions(guidCookieStrategyMock);
+        verifyNoInteractions(checkoutComCustomerFacadeMock);
+        verifyNoInteractions(guidCookieStrategyMock);
         verify(checkoutComGooglePayFacadeMock).getGooglePayDeliveryInfo(googlePayIntermediatePaymentDataMock);
     }
 }
