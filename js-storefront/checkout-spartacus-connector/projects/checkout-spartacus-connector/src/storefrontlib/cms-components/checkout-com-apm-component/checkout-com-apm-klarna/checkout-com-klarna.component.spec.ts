@@ -1,25 +1,42 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { CheckoutComKlarnaComponent, KlarnaAddress } from './checkout-com-klarna.component';
-import { BehaviorSubject, EMPTY, of, throwError } from 'rxjs';
-import { PaymentType } from '../../../../core/model/ApmData';
-import { CheckoutComApmService } from '../../../../core/services/checkout-com-apm.service';
-import { Address, GlobalMessageService, GlobalMessageType, I18nTestingModule } from '@spartacus/core';
-import { CheckoutComPaymentService } from '../../../../core/services/checkout-com-payment.service';
-import { CheckoutDeliveryFacade } from '@spartacus/checkout/root';
-import { Component, Input, Output } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
-import { KlarnaInitParams } from '../../../../core/interfaces';
+import { ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { CheckoutComConnector } from '@checkout-core/connectors/checkout-com/checkout-com.connector';
+import { KlarnaAddress, KlarnaInitParams } from '@checkout-core/model/Klarna';
+import { CheckoutComPaymentFacade } from '@checkout-facades/checkout-com-payment.facade';
+import { PaymentType } from '@checkout-model/ApmData';
+import { CheckoutComApmService } from '@checkout-services/apm/checkout-com-apm.service';
+import { CheckoutComBillingAddressFormService } from '@checkout-services/billing-address-form/checkout-com-billing-address-form.service';
+import { CheckoutComPaymentService } from '@checkout-services/payment/checkout-com-payment.service';
+import { MockCxSpinnerComponent, MockLibCheckoutComBillingAddressFormComponent } from '@checkout-tests/components';
+import { generateAddressFromFromAddress, generateOneAddress } from '@checkout-tests/fake-data/address.mock';
+import { MockCheckoutComPaymentFacade } from '@checkout-tests/services/checkou-com-payment.facade.mock';
+import { MockCheckoutComConnector } from '@checkout-tests/services/checkout-com.connector.mock';
+import { MockCheckoutDeliveryAddressFacade } from '@checkout-tests/services/chekout-delivery-address.service.mock';
+import { MockLaunchDialogService } from '@checkout-tests/services/launch-dialog.service.mock';
+import { MockTranslationService } from '@checkout-tests/services/translations.services.mock';
+import { MockUserAddressService } from '@checkout-tests/services/user-address.service.mock';
+import { MockUserPaymentService } from '@checkout-tests/services/user-payment.service.mock';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { CheckoutBillingAddressFormService } from '@spartacus/checkout/base/components';
+import { CheckoutDeliveryAddressFacade } from '@spartacus/checkout/base/root';
+import {
+  Address,
+  EventService,
+  FeaturesConfigModule,
+  GlobalMessageService,
+  GlobalMessageType,
+  I18nTestingModule,
+  LoggerService,
+  QueryState,
+  TranslationService,
+  UserAddressService,
+  UserPaymentService
+} from '@spartacus/core';
+import { FormErrorsModule, LaunchDialogService, NgSelectA11yModule } from '@spartacus/storefront';
+import { EMPTY, Observable, of, throwError } from 'rxjs';
+import { CheckoutComKlarnaComponent } from './checkout-com-klarna.component';
 import createSpy = jasmine.createSpy;
-
-@Component({
-  selector: 'lib-checkout-com-billing-address',
-  template: '',
-})
-export class MockCheckoutComBillingAddressComponent {
-  @Input() billingAddressForm: FormGroup;
-  @Output() sameAsShippingAddressChange = new BehaviorSubject<boolean>(true);
-}
 
 const apm = { code: PaymentType.Klarna };
 
@@ -39,9 +56,13 @@ class MockGlobalMessageService {
   add = createSpy();
 }
 
-class MockCheckoutDeliveryFacade {
-  getDeliveryAddress() {
-    return of({ country: 'ES' });
+class MockCheckoutDeliveryFacade implements Partial<CheckoutDeliveryAddressFacade> {
+  getDeliveryAddressState(): Observable<QueryState<Address | undefined>> {
+    return of({
+      loading: false,
+      error: false,
+      data: null
+    });
   }
 }
 
@@ -53,69 +74,99 @@ class CheckoutComPaymentStub {
     return of(EMPTY);
   };
 }
-
-const billingAddressForm = new FormGroup({
-  firstName: new FormControl(''),
-  lastName: new FormControl(''),
-  line1: new FormControl(''),
-  postalCode: new FormControl(''),
-  town: new FormControl(''),
-  phone: new FormControl(''),
-  country: new FormGroup({
-    isocode: new FormControl('')
-  })
-});
-
 const shippingAddress: Address = {
-  firstName: 'firstName',
-  lastName: 'lastName',
-  email: 'test@test.com',
-  line1: 'line1',
-  postalCode: '000000',
-  town: 'town',
-  phone: '+000000',
+  firstName: 'John',
+  lastName: 'Doe',
+  email: 'john.doe@example.com',
+  line1: '123 Street',
+  postalCode: '12345',
+  town: 'Town',
+  phone: '1234567890',
   country: { isocode: 'US' },
 };
-const billingAddress: Address = {
-  firstName: 'billingFirstName',
-  lastName: 'billingLastName',
-  line1: 'line1',
-  postalCode: '000000',
-  town: 'town',
-  phone: '+000000',
-  country: { isocode: 'CA' },
-};
+const billingAddress: Address = generateOneAddress();
+
+const shippingAddressState = {
+  data: shippingAddress
+} as QueryState<Address>;
 
 describe('CheckoutComKlarnaComponent', () => {
   let component: CheckoutComKlarnaComponent;
   let fixture: ComponentFixture<CheckoutComKlarnaComponent>;
-  let checkoutDeliveryFacade: CheckoutDeliveryFacade;
   let checkoutComApmSrv: CheckoutComApmService;
   let msgSrv: GlobalMessageService;
-  let checkoutComPaymentService: CheckoutComPaymentService;
+  let userAddressService: UserAddressService;
+  let userPaymentService: UserPaymentService;
+  let checkoutDeliveryAddressFacade: CheckoutDeliveryAddressFacade;
+  let logger: LoggerService;
+  let eventService: EventService;
+  let checkoutComPaymentFacade: CheckoutComPaymentFacade;
+  let billingAddressFormService: CheckoutComBillingAddressFormService;
+  let checkoutComConnector: CheckoutComConnector;
   let initParamsSpy;
   let spyOnWinref;
+  let getDeliveryAddressStateSpy;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CheckoutComKlarnaComponent, MockCheckoutComBillingAddressComponent],
-      imports: [I18nTestingModule],
+      declarations: [
+        CheckoutComKlarnaComponent,
+        MockLibCheckoutComBillingAddressFormComponent,
+        MockCxSpinnerComponent
+      ],
+      imports: [
+        ReactiveFormsModule,
+        I18nTestingModule,
+        NgSelectModule,
+        FormErrorsModule,
+        FeaturesConfigModule,
+        NgSelectA11yModule,
+      ],
       providers: [
         {
-          provide: CheckoutComApmService,
-          useClass: CheckoutComApmServiceStub
+          provide: LaunchDialogService,
+          useClass: MockLaunchDialogService
+        },
+        {
+          provide: CheckoutDeliveryAddressFacade,
+          useClass: MockCheckoutDeliveryAddressFacade
+        },
+        {
+          provide: UserPaymentService,
+          useClass: MockUserPaymentService
         },
         {
           provide: GlobalMessageService,
           useClass: MockGlobalMessageService
         },
         {
-          provide: CheckoutComPaymentService,
-          useClass: CheckoutComPaymentStub
+          provide: UserAddressService,
+          useClass: MockUserAddressService
+        },
+        CheckoutComBillingAddressFormService,
+        {
+          provide: CheckoutBillingAddressFormService,
+          useClass: CheckoutComBillingAddressFormService
         },
         {
-          provide: CheckoutDeliveryFacade,
-          useClass: MockCheckoutDeliveryFacade
+          provide: CheckoutComPaymentFacade,
+          useClass: MockCheckoutComPaymentFacade
+        },
+        {
+          provide: CheckoutComConnector,
+          useClass: MockCheckoutComConnector
+        },
+        {
+          provide: TranslationService,
+          useClass: MockTranslationService
+        },
+        {
+          provide: CheckoutComApmService,
+          useClass: CheckoutComApmServiceStub
+        },
+        {
+          provide: CheckoutComPaymentService,
+          useClass: CheckoutComPaymentStub
         },
       ]
     }).compileComponents();
@@ -124,17 +175,25 @@ describe('CheckoutComKlarnaComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(CheckoutComKlarnaComponent);
     component = fixture.componentInstance;
-    checkoutDeliveryFacade = TestBed.inject(CheckoutDeliveryFacade);
     checkoutComApmSrv = TestBed.inject(CheckoutComApmService);
     msgSrv = TestBed.inject(GlobalMessageService);
-    checkoutComPaymentService = TestBed.inject(CheckoutComPaymentService);
+    userAddressService = TestBed.inject(UserAddressService);
+    userPaymentService = TestBed.inject(UserPaymentService);
+    checkoutDeliveryAddressFacade = TestBed.inject(CheckoutDeliveryAddressFacade);
+    checkoutComPaymentFacade = TestBed.inject(CheckoutComPaymentFacade);
+    checkoutComConnector = TestBed.inject(CheckoutComConnector);
+    billingAddressFormService = TestBed.inject(CheckoutComBillingAddressFormService);
+
     initParamsSpy = spyOn(checkoutComApmSrv, 'getKlarnaInitParams');
     initParamsSpy.and.callThrough();
     // @ts-ignore
     spyOn(component, 'loadWidget').and.callThrough();
+    spyOn(component['logger'], 'error');
     // @ts-ignore
     spyOnWinref = spyOnProperty(component.windowRef, 'nativeWindow');
     spyOnWinref.and.returnValue({});
+    getDeliveryAddressStateSpy = spyOn(checkoutDeliveryAddressFacade, 'getDeliveryAddressState');
+    getDeliveryAddressStateSpy.and.returnValue(of(shippingAddressState));
     fixture.detectChanges();
   });
 
@@ -218,39 +277,31 @@ describe('CheckoutComKlarnaComponent', () => {
   });
 
   describe('listenForAddressSourceChange', () => {
+    const formData = generateAddressFromFromAddress(billingAddress)
+
     it('should update klarnaShippingAddressData and klarnaBillingAddressData when sameAsShippingAddress is true', () => {
-      component.sameAsShippingAddress$.next(true);
-      spyOn(checkoutDeliveryFacade, 'getDeliveryAddress').and.returnValue(of(shippingAddress));
+      component['sameAsDeliveryAddress'] = true;
       component.listenForAddressSourceChange();
       expect(component.klarnaShippingAddressData).toEqual(component.normalizeKlarnaAddress(shippingAddress));
       expect(component.klarnaBillingAddressData).toEqual(component.klarnaShippingAddressData);
     });
 
     it('should update klarnaShippingAddressData and klarnaBillingAddressData separately when sameAsShippingAddress is false', () => {
-      component.billingAddressForm = billingAddressForm;
-      component.billingAddressForm.patchValue(billingAddress);
-      component.sameAsShippingAddress$.next(false);
+      billingAddressFormService.setBillingAddress(billingAddress);
+      component.billingAddressForm = billingAddressFormService.getBillingAddressForm();
+      component.billingAddressForm.patchValue(formData);
+      component['sameAsDeliveryAddress'] = false;
       fixture.detectChanges();
-      spyOn(checkoutDeliveryFacade, 'getDeliveryAddress').and.returnValue(of(shippingAddress));
       component.listenForAddressSourceChange();
       fixture.detectChanges();
       expect(component.klarnaShippingAddressData).toEqual(component.normalizeKlarnaAddress(shippingAddress));
       expect(component.klarnaBillingAddressData).toEqual(component.normalizeKlarnaAddress(billingAddress));
     });
-
-    it('should not update klarnaBillingAddressData when sameAsShippingAddress is false and country is not selected', () => {
-      component.billingAddressForm.patchValue(billingAddress);
-      component.sameAsShippingAddress$.next(false);
-      spyOn(checkoutDeliveryFacade, 'getDeliveryAddress').and.returnValue(of(shippingAddress));
-      component.listenForAddressSourceChange();
-      expect(component.klarnaShippingAddressData).toEqual(component.normalizeKlarnaAddress(shippingAddress));
-      expect(component.klarnaBillingAddressData).not.toEqual(component.normalizeKlarnaAddress(billingAddress));
-    });
   });
 
   describe('authorize', () => {
     it('should not authorize when sameAsShippingAddress is false and billingAddressForm is invalid', () => {
-      component.sameAsShippingAddress$.next(false);
+      component['sameAsDeliveryAddress'] = false;
       component.billingAddressForm.setErrors({ invalid: true });
       component.authorize();
       expect(component.authorizing$.getValue()).toBe(false);
@@ -270,7 +321,7 @@ describe('CheckoutComKlarnaComponent', () => {
     });
 
     it('should authorize when sameAsShippingAddress is true', () => {
-      component.sameAsShippingAddress$.next(true);
+      component['sameAsDeliveryAddress'] = true;
       // @ts-ignore
       spyOnWinref.and.returnValue({
         Klarna: {
@@ -287,7 +338,7 @@ describe('CheckoutComKlarnaComponent', () => {
     });
 
     it('should authorize when sameAsShippingAddress is false and billingAddressForm is valid', () => {
-      component.sameAsShippingAddress$.next(false);
+      component['sameAsDeliveryAddress'] = false;
       component.billingAddressForm.setErrors(null);
       // @ts-ignore
       spyOnWinref.and.returnValue({
@@ -307,7 +358,7 @@ describe('CheckoutComKlarnaComponent', () => {
 
   describe('listenForCountryCode', () => {
     beforeEach(() => {
-      component.billingAddressForm = billingAddressForm;
+      component.billingAddressForm = billingAddressFormService.getBillingAddressForm();
       // @ts-ignore
       component.billingAddressHasBeenSet = false;
       // @ts-ignore
@@ -364,7 +415,7 @@ describe('CheckoutComKlarnaComponent', () => {
     });
 
     it('should handle error when getting Klarna init params fails', () => {
-      initParamsSpy.and.returnValue(throwError('error'));
+      initParamsSpy.and.returnValue(throwError(() => 'error'));
       // @ts-ignore
       component.billingAddressHasBeenSet = true;
       // @ts-ignore
@@ -372,101 +423,88 @@ describe('CheckoutComKlarnaComponent', () => {
       // @ts-ignore
       component.listenForCountryCode();
       expect(msgSrv.add).toHaveBeenCalledWith({ key: 'paymentForm.klarna.initializationFailed' }, GlobalMessageType.MSG_TYPE_ERROR);
-    });
-  });
-
-  describe('listenForCountrySelection', () => {
-    it('should update currentCountryCode when country is selected', () => {
-      component.billingAddressForm = billingAddressForm;
-      // @ts-ignore
-      component.listenForCountrySelection();
-      component.billingAddressForm.setValue(billingAddress);
-      fixture.detectChanges();
-      // @ts-ignore
-      component.currentCountryCode.subscribe(value => {
-        expect(value).toEqual('CA');
-      });
+      expect(component['logger'].error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::listenForCountryCode', 'error');
+      expect(component.loadingWidget$.getValue()).toBe(false);
+      expect(component.initializing$.getValue()).toBe(false);
+      expect(component.authorizing$.getValue()).toBe(false);
+      expect(component.hasFailed).toBeTrue();
     });
 
-    it('should not update currentCountryCode when country is not selected', () => {
-      component.billingAddressForm = billingAddressForm;
-      // @ts-ignore
-      component.listenForCountrySelection();
-      const countryControl = component.billingAddressForm.get('country.isocode');
-      countryControl.setValue(null);
-      // @ts-ignore
-      component.currentCountryCode.subscribe(value => {
-        expect(value).toBeNull();
+    it('should handle error when getting Klarna init params fails request', () => {
+      const err = new HttpErrorResponse({
+        error: '404',
       });
-    });
-
-    it('should not update currentCountryCode when form value changes are not related to country', () => {
-      component.billingAddressForm = billingAddressForm;
-      const countryControl = component.billingAddressForm.get('country.isocode');
-      countryControl.setValue('US');
+      initParamsSpy.and.returnValue(of(err));
       // @ts-ignore
-      component.listenForCountrySelection();
-      component.billingAddressForm.get('firstName').setValue('John');
+      component.billingAddressHasBeenSet = true;
       // @ts-ignore
-      component.currentCountryCode.subscribe(value => {
-        expect(value).toEqual('US');
-      });
+      component.currentCountryCode.next('US');
+      // @ts-ignore
+      component.listenForCountryCode();
+      expect(msgSrv.add).toHaveBeenCalledWith({ key: 'paymentForm.klarna.initializationFailed' }, GlobalMessageType.MSG_TYPE_ERROR);
+      expect(component['logger'].error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::listenForCountryCode', err.error);
+      expect(component.loadingWidget$.getValue()).toBe(false);
+      expect(component.initializing$.getValue()).toBe(false);
+      expect(component.authorizing$.getValue()).toBe(false);
+      expect(component.hasFailed).toBeTrue();
     });
   });
 
   describe('klarnaIsReady', () => {
     beforeEach(() => {
-      component.billingAddressForm = billingAddressForm;
+      component.billingAddressForm = billingAddressFormService.getBillingAddressForm();
+      fixture.detectChanges()
     });
 
     it('should update currentCountryCode and klarnaShippingAddressData when shipping address is valid', () => {
-      const shippingAddress: Address = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        line1: '123 Street',
-        postalCode: '12345',
-        town: 'Town',
-        phone: '1234567890',
-        country: { isocode: 'US' },
-      };
-      component.billingAddressForm = billingAddressForm;
-      fixture.detectChanges();
-      spyOn(checkoutDeliveryFacade, 'getDeliveryAddress').and.returnValue(of(shippingAddress));
-      spyOn(checkoutComPaymentService, 'updatePaymentAddress').and.returnValue(of(shippingAddress));
+      getDeliveryAddressStateSpy.and.returnValue(of(billingAddress));
+      billingAddressFormService.setBillingAddress(billingAddress);
       // @ts-ignore
       component.klarnaIsReady();
       // @ts-ignore
-      expect(component.currentCountryCode.getValue()).toEqual('US');
+      expect(component['currentCountryCode'].getValue()).toEqual(billingAddress.country.isocode);
+      expect(component.klarnaBillingAddressData).toEqual(component.normalizeKlarnaAddress(billingAddress));
       expect(component.klarnaShippingAddressData).toEqual(component.normalizeKlarnaAddress(shippingAddress));
     });
 
     it('should not update currentCountryCode and klarnaShippingAddressData when shipping address is null', () => {
-      spyOn(checkoutDeliveryFacade, 'getDeliveryAddress').and.returnValue(of(null));
+      getDeliveryAddressStateSpy.and.returnValue(of(null));
+      billingAddressFormService.setBillingAddress(undefined);
       // @ts-ignore
       component.klarnaIsReady();
       // @ts-ignore
       expect(component.currentCountryCode.getValue()).toBeNull();
-      expect(component.klarnaShippingAddressData).toBeUndefined();
+      expect(component.klarnaBillingAddressData).toBeUndefined();
       expect(msgSrv.add).toHaveBeenCalledWith({ key: 'paymentForm.klarna.countryIsRequired' }, GlobalMessageType.MSG_TYPE_ERROR);
     });
 
     it('should handle error when updatePaymentAddress fails', () => {
-      const shippingAddress: Address = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        line1: '123 Street',
-        postalCode: '12345',
-        town: 'Town',
-        phone: '1234567890',
-        country: { isocode: 'US' },
-      };
-      spyOn(checkoutDeliveryFacade, 'getDeliveryAddress').and.returnValue(of(shippingAddress));
-      spyOn(checkoutComPaymentService, 'updatePaymentAddress').and.returnValue(throwError('error'));
+      getDeliveryAddressStateSpy.and.returnValue(of(shippingAddressState));
+      spyOn(checkoutComPaymentFacade, 'updatePaymentAddress').and.returnValue(throwError(() => 'error'));
       // @ts-ignore
       component.klarnaIsReady();
       expect(msgSrv.add).toHaveBeenCalledWith({ key: 'paymentForm.klarna.countryIsRequired' }, GlobalMessageType.MSG_TYPE_ERROR);
+    });
+
+    it('should log error when shipping address is not valid', () => {
+      billingAddressFormService.setBillingAddress(null);
+      getDeliveryAddressStateSpy.and.returnValue(of({
+        loading: false,
+        error: false,
+        data: {
+          ...shippingAddress,
+          country: null
+        }
+      }) as Observable<QueryState<Address>>);
+
+      component['klarnaIsReady']();
+
+      expect(component['logger'].error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::klarnaIsReady', 'Country is required');
+      expect(msgSrv.add).toHaveBeenCalledWith({ key: 'paymentForm.klarna.countryIsRequired' }, GlobalMessageType.MSG_TYPE_ERROR);
+      expect(component.loadingWidget$.getValue()).toBe(false);
+      expect(component.initializing$.getValue()).toBe(false);
+      expect(component.authorizing$.getValue()).toBe(false);
+      expect(component.hasFailed).toBeTrue();
     });
   });
 
@@ -520,10 +558,9 @@ describe('CheckoutComKlarnaComponent', () => {
         paymentContext: 'context',
         instanceId: 'id'
       };
-      spyOn(console, 'error');
       // @ts-ignore
       component.initKlarna(params);
-      expect(console.error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::initKlarna', jasmine.any(Error));
+      expect(component['logger'].error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::initKlarna', jasmine.any(Error));
     });
   });
 
@@ -562,7 +599,11 @@ describe('CheckoutComKlarnaComponent', () => {
   describe('loadWidget', () => {
     it('should load widget when Klarna is set', () => {
       const k = {
-        load: jasmine.createSpy().and.callFake((_, __, callback) => callback({}))
+        load: jasmine.createSpy().and.callFake((_, __, callback) => callback(() => {
+          {
+            component.loadingWidget$.next(false);
+          }
+        }))
       };
       // @ts-ignore
       spyOnWinref.and.returnValue({ Klarna: { Payments: k } });
@@ -586,10 +627,9 @@ describe('CheckoutComKlarnaComponent', () => {
       };
       // @ts-ignore
       spyOnWinref.and.returnValue({ Klarna: { Payments: k } });
-      spyOn(console, 'error');
       // @ts-ignore
       component.loadWidget();
-      expect(console.error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::loadWidget', jasmine.any(Error));
+      expect(component['logger'].error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::loadWidget', jasmine.any(Error));
       expect(component.loadingWidget$.getValue()).toBe(false);
     });
 
@@ -599,10 +639,9 @@ describe('CheckoutComKlarnaComponent', () => {
       };
       // @ts-ignore
       spyOnWinref.and.returnValue({ Klarna: { Payments: k } });
-      spyOn(console, 'error');
       // @ts-ignore
       component.loadWidget();
-      expect(console.error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::loadWidget::response', { invalid_fields: ['field'] });
+      expect(component['logger'].error).toHaveBeenCalledWith('CheckoutComKlarnaComponent::loadWidget::response', { invalid_fields: ['field'] });
       expect(component.loadingWidget$.getValue()).toBe(false);
     });
   });

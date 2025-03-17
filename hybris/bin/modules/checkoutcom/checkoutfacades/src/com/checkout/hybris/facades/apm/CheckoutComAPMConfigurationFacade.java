@@ -42,4 +42,14 @@ public interface CheckoutComAPMConfigurationFacade {
      * @return List of {@link CheckoutComAPMConfigurationData} which are available for the cart
      */
     List<CheckoutComAPMConfigurationData> getAvailableApms();
+
+
+    /**
+     * Returns a list of available apms for the session cart for a specific country code
+     *
+     * @param countryCode the country code
+     * @return List of {@link CheckoutComAPMConfigurationData} which are available for the cart for the country code provided
+     */
+    List<CheckoutComAPMConfigurationData> getAvailableApmsByCountryCode(final String countryCode);
+
 }

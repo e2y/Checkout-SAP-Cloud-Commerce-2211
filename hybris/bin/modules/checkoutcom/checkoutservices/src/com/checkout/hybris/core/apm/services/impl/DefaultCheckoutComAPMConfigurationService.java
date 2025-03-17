@@ -8,17 +8,19 @@ import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurati
 import com.checkout.hybris.core.model.CheckoutComAPMConfigurationModel;
 import com.checkout.hybris.core.model.CheckoutComGlobalAPMConfigurationModel;
 import com.google.common.collect.ImmutableMap;
+import de.hybris.platform.core.model.c2l.CountryModel;
+import de.hybris.platform.core.model.c2l.CurrencyModel;
 import de.hybris.platform.core.model.media.MediaModel;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.order.CartService;
 import de.hybris.platform.servicelayer.internal.dao.GenericDao;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -68,8 +70,8 @@ public class DefaultCheckoutComAPMConfigurationService implements CheckoutComAPM
         }
 
         final CheckoutComGlobalAPMConfigurationModel globalAPMConfig = globalAPMConfigurationDao.find().stream()
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("No CheckoutComAPMConfiguration has been found in the system"));
+            .findAny()
+            .orElseThrow(() -> new IllegalStateException("No CheckoutComAPMConfiguration has been found in the system"));
 
         final Collection<CheckoutComAPMConfigurationModel> allowedAPMs = globalAPMConfig.getNasAPMs();
 
@@ -78,10 +80,12 @@ public class DefaultCheckoutComAPMConfigurationService implements CheckoutComAPM
         }
 
         final boolean countryMatch = isEmpty(apmConfiguration.getRestrictedCountries()) ||
-                apmConfiguration.getRestrictedCountries().stream().anyMatch(country -> countryCode.equalsIgnoreCase(country.getIsocode()));
+            apmConfiguration.getRestrictedCountries().stream()
+                .anyMatch(country -> countryCode.equalsIgnoreCase(country.getIsocode()));
 
         final boolean currencyMatch = isEmpty(apmConfiguration.getRestrictedCurrencies()) ||
-                apmConfiguration.getRestrictedCurrencies().stream().anyMatch(currency -> currencyCode.equalsIgnoreCase(currency.getIsocode()));
+            apmConfiguration.getRestrictedCurrencies().stream()
+                .anyMatch(currency -> currencyCode.equalsIgnoreCase(currency.getIsocode()));
 
         return countryMatch && currencyMatch;
     }
@@ -128,13 +132,13 @@ public class DefaultCheckoutComAPMConfigurationService implements CheckoutComAPM
         final CartModel sessionCart = cartService.getSessionCart();
         if (Objects.nonNull(sessionCart.getPaymentAddress()) || Objects.nonNull(sessionCart.getDeliveryAddress())) {
             final AddressModel address = sessionCart.getPaymentAddress() != null ? sessionCart.getPaymentAddress() : sessionCart.getDeliveryAddress();
+            final String countryCode = Optional.ofNullable(address)
+                .map(AddressModel::getCountry)
+                .map(CountryModel::getIsocode)
+                .orElse(StringUtils.EMPTY);
+            final String currencyIsocode = getCurrencyIsocodeFromCart(sessionCart);
 
-            return checkoutComApmComponentDao.find().stream()
-                    .filter(CheckoutComAPMComponentModel::getVisible)
-                    .map(CheckoutComAPMComponentModel::getApmConfiguration)
-                    .filter(apm -> isApmAvailable(apm, address.getCountry().getIsocode(), sessionCart.getCurrency().getIsocode()))
-                    .distinct()
-                    .collect(Collectors.toList());
+            return findAvailableApms(currencyIsocode, countryCode);
         }
         return Collections.emptyList();
     }
@@ -143,10 +147,43 @@ public class DefaultCheckoutComAPMConfigurationService implements CheckoutComAPM
      * {@inheritDoc}
      */
     @Override
+    public List<CheckoutComAPMConfigurationModel> getAvailableApmsByCountryCode(final String countryCode) {
+        final CartModel sessionCart = cartService.getSessionCart();
+        if (StringUtils.isNotBlank(countryCode)) {
+            final String currencyIsocode = getCurrencyIsocodeFromCart(sessionCart);
+
+            return findAvailableApms(currencyIsocode, countryCode);
+        }
+
+        return Collections.emptyList();
+    }
+
+    private String getCurrencyIsocodeFromCart(final CartModel cart) {
+        return Optional.ofNullable(cart)
+            .map(CartModel::getCurrency)
+            .map(CurrencyModel::getIsocode)
+            .orElse(StringUtils.EMPTY);
+    }
+
+    private List<CheckoutComAPMConfigurationModel> findAvailableApms(final String currencyIsocode,
+                                                                     final String countryCode) {
+
+        return checkoutComApmComponentDao.find().stream()
+            .filter(CheckoutComAPMComponentModel::getVisible)
+            .map(CheckoutComAPMComponentModel::getApmConfiguration)
+            .filter(apm -> isApmAvailable(apm, countryCode, currencyIsocode))
+            .distinct()
+            .toList();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Optional<MediaModel> getApmConfigurationMedia(final CheckoutComAPMConfigurationModel apmConfigurationModel) {
         return checkoutComApmComponentDao.find(ImmutableMap.of(CheckoutComAPMComponentModel.APMCONFIGURATION, apmConfigurationModel))
-                .stream()
-                .findAny()
-                .map(CheckoutComPaymentMethodComponentModel::getMedia);
+            .stream()
+            .findAny()
+            .map(CheckoutComPaymentMethodComponentModel::getMedia);
     }
 }

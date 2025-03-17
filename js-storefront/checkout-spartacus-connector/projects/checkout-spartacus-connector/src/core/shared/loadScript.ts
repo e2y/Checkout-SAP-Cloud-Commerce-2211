@@ -1,10 +1,14 @@
 import { WindowRef } from '@spartacus/core';
 
-export const loadScript = (windowRef: WindowRef, script: string, onloadCallback?: any, idScript?: string): void => {
-  let isFound = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const loadScript: (windowRef: WindowRef, script: string, onloadCallback?: any, idScript?: string) => void =
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(windowRef: WindowRef, script: string, onloadCallback?: any, idScript?: string): void => {
+  let isFound: boolean = false;
+  // eslint-disable-next-line @typescript-eslint/typedef
   const scripts = windowRef.document.getElementsByTagName('script');
   /* tslint:disable */
-  for (let i = 0; i < scripts.length; ++i) {
+  for (let i: number = 0; i < scripts.length; ++i) {
     if (
       scripts[i].getAttribute('src') != null &&
       scripts[i].getAttribute('src') === script
@@ -15,9 +19,10 @@ export const loadScript = (windowRef: WindowRef, script: string, onloadCallback?
   /* tslint:enable */
 
   if (!isFound) {
+    // eslint-disable-next-line @typescript-eslint/typedef
     const node = windowRef.document.createElement('script');
     node.src = script;
-    node.id = idScript
+    node.id = idScript;
     node.type = 'text/javascript';
     node.async = true;
     if (onloadCallback) {

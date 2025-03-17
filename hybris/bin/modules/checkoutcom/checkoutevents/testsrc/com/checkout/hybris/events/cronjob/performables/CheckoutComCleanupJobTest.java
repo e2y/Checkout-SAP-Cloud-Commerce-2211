@@ -10,18 +10,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
 public class CheckoutComCleanupJobTest {
-
-    private static final int AGE_IN_SECONDS = 864000;
-    private static final String ITEM_TYPE_CODE = "ACHConsent";
 
     @InjectMocks
     private CheckoutComCleanupJob testObj;

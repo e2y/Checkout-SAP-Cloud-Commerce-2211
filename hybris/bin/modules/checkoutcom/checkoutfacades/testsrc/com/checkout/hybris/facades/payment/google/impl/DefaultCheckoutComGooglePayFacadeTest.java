@@ -8,7 +8,6 @@ import com.checkout.hybris.facades.merchant.CheckoutComMerchantConfigurationFaca
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commercefacades.order.CartFacade;
 import de.hybris.platform.commercefacades.order.data.DeliveryModeData;
-import de.hybris.platform.commerceservices.customer.DuplicateUidException;
 import de.hybris.platform.commerceservices.delivery.DeliveryService;
 import de.hybris.platform.core.model.c2l.CountryModel;
 import de.hybris.platform.core.model.order.CartModel;
@@ -20,7 +19,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,7 +144,7 @@ public class DefaultCheckoutComGooglePayFacadeTest {
     }
 
     @Test
-    public void getGooglePayDeliveryInfo_WhenDeliveryModeSelected_ShouldUpdateDeliveryModeAndDeliveryAddress() throws DuplicateUidException {
+    public void getGooglePayDeliveryInfo_WhenDeliveryModeSelected_ShouldUpdateDeliveryModeAndDeliveryAddress() {
         testObj.getGooglePayDeliveryInfo(googlePayIntermediatePaymentData);
 
         final InOrder inOrder = inOrder(checkoutComWalletAddressFacadeMock, checkoutComCheckoutFlowFacadeMock, testObj);
@@ -155,7 +154,7 @@ public class DefaultCheckoutComGooglePayFacadeTest {
     }
 
     @Test
-    public void getGooglePayDeliveryInfo_WhenNoDeliveryMode_ShouldUpdateDeliveryModeAndDeliveryAddress() throws DuplicateUidException {
+    public void getGooglePayDeliveryInfo_WhenNoDeliveryMode_ShouldUpdateDeliveryModeAndDeliveryAddress() {
         googlePayIntermediatePaymentData.setShippingOptionData(null);
 
         testObj.getGooglePayDeliveryInfo(googlePayIntermediatePaymentData);

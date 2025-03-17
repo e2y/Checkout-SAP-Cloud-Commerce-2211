@@ -6,7 +6,6 @@
     "types": []
   },
   "angularCompilerOptions": {
-    "enableIvy": true,
     "strictInputTypes": false
   },
   "files": [

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface FramesLocalization {
-  cardNumberPlaceholder: string;
-  expiryMonthPlaceholder: string;
-  expiryYearPlaceholder: string;
-  cvvPlaceholder: string;
+  cardNumberPlaceholder?: string;
+  expiryMonthPlaceholder?: string;
+  expiryYearPlaceholder?: string;
+  cvvPlaceholder?: string;
 }
 
 export type FramesLanguages =
@@ -95,65 +96,65 @@ export enum FrameElementIdentifier {
 }
 
 export interface FrameElement {
-  element: FrameElementIdentifier;
+  element?: FrameElementIdentifier;
 }
 
 export interface FramesElementsValidity {
-  cardNumber: boolean;
-  expiryDate: boolean;
-  cvv: boolean;
+  cardNumber?: boolean;
+  expiryDate?: boolean;
+  cvv?: boolean;
 }
 
 export interface FrameCardValidationChangedEvent {
-  isValid: boolean;
-  isElementValid: FramesElementsValidity;
+  isValid?: boolean;
+  isElementValid?: FramesElementsValidity;
 }
 
 export interface FrameValidationChangedEvent {
-  element: FrameElementIdentifier;
-  isValid: boolean;
-  isEmpty: boolean;
+  element?: FrameElementIdentifier;
+  isValid?: boolean;
+  isEmpty?: boolean;
 }
 
 export interface FramePaymentMethodChangedEvent {
-  isValid: boolean;
-  paymentMethod: PaymentMethod;
+  isValid?: boolean;
+  paymentMethod?: PaymentMethod;
 }
 
 export interface FrameCardTokenizedEvent {
-  type: string;
-  token: string;
-  expires_on: string;
-  expiry_month: string;
-  expiry_year: string;
-  scheme?: Scheme;
-  last4: string;
-  bin: string;
-  card_type?: CardType;
+  billing_address?: GatewayBillingAddress;
+  bin?: string;
   card_category?: CardCategory;
+  card_type?: CardType;
+  expires_on?: string;
+  expiry_month?: string;
+  expiry_year?: string;
   issuer?: string;
   issuer_country?: string;
+  last4?: string;
+  name?: string;
+  phone?: GatewayPhone;
+  preferred_scheme?: string;
   product_id?: string;
   product_type?: string;
-  billing_address?: GatewayBillingAddress;
-  phone?: GatewayPhone;
-  name?: string;
-  preferred_scheme?: string;
+  scheme?: Scheme;
+  token?: string;
+  type?: string;
 }
 
 export interface FrameCardTokenizationFailedEvent {
-  errorCode: string;
-  message: string;
+  errorCode?: string;
+  message?: string;
 }
 
 export interface FrameCardBindChangedEvent {
-  bin: string;
-  isCoBadged: boolean;
-  scheme: string;
+  bin?: string;
+  isCoBadged?: boolean;
+  scheme?: string;
 }
 
 export interface FramesConfig {
-  publicKey: string;
+  publicKey?: string;
   debug?: boolean;
   style?: FramesStyle;
   cardholder?: FramesCardholder;
@@ -186,7 +187,7 @@ export interface FramesConfig {
   cardSubmitted?: () => void;
 
   // Triggered after a card is tokenized.
-  cardTokenized: (e: FrameCardTokenizedEvent) => void;
+  cardTokenized?: (e: FrameCardTokenizedEvent) => void;
 
   // Triggered if the card tokenization fails.
   cardTokenizationFailed?: (e: FrameCardTokenizationFailedEvent) => void;
@@ -196,9 +197,4 @@ export interface FramesConfig {
   schemeChoice?: boolean;
 
   modes?: Array<FramesModes>;
-}
-
-export interface FrameCardTokenizationFailedEvent {
-  errorCode: string;
-  message: string;
 }

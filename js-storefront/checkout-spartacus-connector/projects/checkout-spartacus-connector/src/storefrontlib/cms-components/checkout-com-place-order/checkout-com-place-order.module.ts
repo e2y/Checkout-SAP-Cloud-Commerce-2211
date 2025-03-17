@@ -1,9 +1,9 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CheckoutComPlaceOrderComponent } from './checkout-com-place-order.component';
-import { UrlModule, I18nModule, CmsConfig, provideConfig } from '@spartacus/core';
-import { RouterModule } from '@angular/router';
+import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { CmsConfig, I18nModule, provideConfig, UrlModule } from '@spartacus/core';
+import { CheckoutComPlaceOrderComponent } from './checkout-com-place-order.component';
 
 @NgModule({
   declarations: [CheckoutComPlaceOrderComponent],
@@ -24,4 +24,5 @@ import { ReactiveFormsModule } from '@angular/forms';
     } as CmsConfig),
   ],
 })
-export class CheckoutComPlaceOrderModule {}
+export class CheckoutComPlaceOrderModule {
+}

@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-
+import { OccConfig } from '@spartacus/core';
+import { ApmData, OccApmData } from '../model/ApmData';
 import { ApmDataNormalizer } from './apm-data-normalizer';
-import {ApmData, OccApmData} from '../model/ApmData';
-import {OccConfig} from '@spartacus/core';
 
 const MockOccModuleConfig: OccConfig = {
   backend: {
@@ -22,7 +21,8 @@ describe('ApmDataNormalizer', () => {
           provide: OccConfig,
           useValue: MockOccModuleConfig
         }
-      ]});
+      ]
+    });
     service = TestBed.inject(ApmDataNormalizer);
   });
 
@@ -32,8 +32,13 @@ describe('ApmDataNormalizer', () => {
 
   it('should populate media', () => {
     const source: OccApmData = {
-      name: 'tst-apm', code: 'tst-123',
-      media: {url: '/image-url', code: 'test-image', mime: 'jpeg'}
+      name: 'tst-apm',
+      code: 'tst-123',
+      media: {
+        url: '/image-url',
+        code: 'test-image',
+        mime: 'jpeg'
+      }
     };
 
     const target = {} as ApmData;
@@ -44,7 +49,8 @@ describe('ApmDataNormalizer', () => {
 
   it('should populate properties', () => {
     const source: OccApmData = {
-      name: 'tst-apm', code: 'tst-123',
+      name: 'tst-apm',
+      code: 'tst-123',
       isRedirect: false,
       isUserDataRequired: true
     };
@@ -56,5 +62,5 @@ describe('ApmDataNormalizer', () => {
     expect(target.code).toEqual(source.code);
     expect(target.isUserDataRequired).toEqual(source.isUserDataRequired);
     expect(target.isRedirect).toEqual(source.isRedirect);
-  })
+  });
 });

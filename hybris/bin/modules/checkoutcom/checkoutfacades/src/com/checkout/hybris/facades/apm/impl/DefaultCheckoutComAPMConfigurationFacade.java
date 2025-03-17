@@ -66,4 +66,13 @@ public class DefaultCheckoutComAPMConfigurationFacade implements CheckoutComAPMC
     public List<CheckoutComAPMConfigurationData> getAvailableApms() {
         return Converters.convertAll(checkoutComAPMConfigurationService.getAvailableApms(), checkoutComAPMConfigurationConverter);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<CheckoutComAPMConfigurationData> getAvailableApmsByCountryCode(final String countryCode) {
+        return Converters.convertAll(checkoutComAPMConfigurationService.getAvailableApmsByCountryCode(countryCode),
+            checkoutComAPMConfigurationConverter);
+    }
 }

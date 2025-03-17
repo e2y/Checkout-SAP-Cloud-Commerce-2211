@@ -1,6 +1,5 @@
 package com.checkout.hybris.occ.strategies;
 
-import com.checkout.hybris.core.payment.request.strategies.impl.CheckoutPaymentRequestServicesWrapper;
 import com.checkout.hybris.core.url.services.CheckoutComUrlService;
 import com.checkout.sdk.payments.PaymentRequest;
 import com.checkout.sdk.payments.RequestSource;
@@ -10,7 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.mockito.Mockito.verify;

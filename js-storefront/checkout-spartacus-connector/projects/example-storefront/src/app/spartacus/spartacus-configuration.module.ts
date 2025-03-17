@@ -1,13 +1,31 @@
 import { NgModule } from '@angular/core';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { translationChunksConfig, translations } from '@spartacus/assets';
-import { CmsConfig, FeaturesConfig, I18nConfig, OccConfig, provideConfig, SiteContextConfig } from '@spartacus/core';
+import { CheckoutConfig, DeliveryModePreferences } from '@spartacus/checkout/base/root';
+import { defaultOccConfig, FeaturesConfig, I18nConfig, OccConfig, provideConfig, RoutingConfig, SiteContextConfig } from '@spartacus/core';
 import { defaultCmsContentProviders, layoutConfig, mediaConfig } from '@spartacus/storefront';
-import { checkoutComTranslationChunkConfig, checkoutComTranslations } from 'checkout-spartacus-translations';
+import { CheckoutComComponentsModule } from '../../../../checkout-spartacus-connector/checkout-com-components.module';
+import { checkoutComTranslationChunkConfig, checkoutComTranslations } from '../../../../checkout-spartacus-translations/src/translations';
 import { environment } from '../../environments/environment';
-import { CheckoutConfig } from '@spartacus/checkout/root';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const devImports: any[] = [];
+if (!environment.production) {
+  devImports.push(
+    StoreDevtoolsModule.instrument({
+      logOnly: !environment.production && environment.enableStoreDevTools,
+      maxAge: 120,
+      connectInZone: true
+    }),
+  );
+}
 
 @NgModule({
   declarations: [],
+  imports: [
+    ...devImports,
+    CheckoutComComponentsModule
+  ],
   providers: [
     provideConfig(layoutConfig),
     provideConfig(mediaConfig),
@@ -21,12 +39,20 @@ import { CheckoutConfig } from '@spartacus/checkout/root';
     } as OccConfig),
     provideConfig({
       context: {
-        baseSite: ['electronics-spa'],
-        currency: [
-          'USD', 'PLN', 'MXN', 'NZD', 'BHD', 'AUD', 'QAR', 'JPY', 'BRL', 'EUR', 'GBP', 'EGP', 'KWD'
-        ],
+        ...environment?.context
       },
     } as SiteContextConfig),
+    provideConfig({
+      // custom routing configuration for e2e testing
+      routing: {
+        routes: {
+          product: {
+            paths: ['product/:productCode/:name', 'product/:productCode'],
+            paramsMapping: { name: 'slug' },
+          },
+        },
+      },
+    } as RoutingConfig),
     provideConfig({
       i18n: {
         resources: translations,
@@ -35,44 +61,25 @@ import { CheckoutConfig } from '@spartacus/checkout/root';
       },
     } as I18nConfig),
     provideConfig({
+      features: {
+        level: '2211.31'
+      }
+    } as FeaturesConfig),
+    provideConfig({
+      checkout: {
+        defaultDeliveryMode: [DeliveryModePreferences.FREE],
+        guest: true,
+      },
+    } as CheckoutConfig),
+    provideConfig(defaultOccConfig),
+    provideConfig({
       i18n: {
         resources: checkoutComTranslations,
         chunks: checkoutComTranslationChunkConfig,
         fallbackLang: 'en'
       },
     } as I18nConfig),
-    provideConfig({
-      features: {
-        level: '3.2'
-      }
-    } as FeaturesConfig),
-    provideConfig({
-      featureModules: {
-        CheckoutComComponentsModule: {
-          module: () => import('checkout-spartacus-connector').then(m => m.CheckoutComComponentsModule),
-          cmsComponents: [
-            'CheckoutPaymentDetails',
-            'CheckoutPlaceOrder',
-            'OrderConfirmationThankMessageComponent',
-            'OrderConfirmationOverviewComponent',
-            'OrderConfirmationItemsComponent',
-            'OrderConfirmationShippingComponent',
-            'OrderConfirmationTotalsComponent',
-            'OrderConfirmationContinueButtonComponent',
-            'CheckoutReviewOrder',
-            'AccountOrderDetailsItemsComponent',
-            'AccountOrderDetailsShippingComponent',
-            'GuestRegisterFormComponent',
-            'AccountPaymentDetailsComponent',
-          ],
-        }
-      }
-    } as CmsConfig),
-    provideConfig({
-      checkout: {
-        guest: true
-      }
-    } as CheckoutConfig)]
+  ]
 })
 export class SpartacusConfigurationModule {
 }

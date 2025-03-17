@@ -4,7 +4,7 @@ import { CheckoutComApmFawryComponent } from './checkout-com-apm-fawry.component
 import { ReactiveFormsModule } from '@angular/forms';
 import { I18nModule } from '@spartacus/core';
 import { FormErrorsModule } from '@spartacus/storefront';
-import { CheckoutComBillingAddressModule } from '../../checkout-com-billing-address/checkout-com-billing-address.module';
+import { CheckoutComBillingAddressFormModule } from '@checkout-components/checkout-com-billing-address-form/checkout-com-billing-address-form.module';
 
 
 
@@ -16,7 +16,7 @@ import { CheckoutComBillingAddressModule } from '../../checkout-com-billing-addr
     ReactiveFormsModule,
     I18nModule,
     FormErrorsModule,
-    CheckoutComBillingAddressModule
+    CheckoutComBillingAddressFormModule
   ]
 })
 export class CheckoutComApmFawryModule { }

@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
@@ -41,8 +41,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 
@@ -52,7 +52,6 @@ public class DefaultCheckoutComPaymentServiceTest {
 
     private static final String SITE_ID = "siteId";
     private static final String PAYMENT_ID = "PAYMENT_ID";
-    private static final String PAYMENT_REFERENCE = "PAYMENT-REFERENCE";
 
     @Spy
     @InjectMocks

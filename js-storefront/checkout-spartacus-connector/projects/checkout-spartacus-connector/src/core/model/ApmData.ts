@@ -1,16 +1,16 @@
-import {MediaContainer} from '@spartacus/storefront';
+import { MediaContainer } from '@spartacus/storefront';
 
 export interface AvailableApmResponseData {
   availableApmConfigurations?: OccApmData[];
 }
 
 export interface OccApmData {
-  name: string;
-  code: string;
+  name?: string;
+  code?: string;
   media?: {
-    code: string;
+    code?: string;
     mime?: string;
-    url: string
+    url?: string
   };
   isRedirect?: boolean;
   isUserDataRequired?: boolean;
@@ -25,14 +25,12 @@ export enum PaymentType {
   Sepa = 'SEPA',
   Klarna = 'KLARNA',
   Oxxo = 'OXXO',
-  Sofort = 'SOFORT',
   ApplePay = 'APPLEPAY',
   GooglePay = 'GOOGLE_PAY',
-  Ach = 'ACH',
 }
 
 export interface ApmData {
-  code: PaymentType;
+  code?: PaymentType;
   name?: string;
   media?: MediaContainer;
   isRedirect?: boolean;

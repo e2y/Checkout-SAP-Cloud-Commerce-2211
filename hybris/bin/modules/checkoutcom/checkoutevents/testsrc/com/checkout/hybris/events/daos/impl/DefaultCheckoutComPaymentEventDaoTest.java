@@ -13,7 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.*;
 
@@ -21,7 +21,6 @@ import static com.checkout.hybris.events.enums.CheckoutComPaymentEventStatus.FAI
 import static com.checkout.hybris.events.enums.CheckoutComPaymentEventType.PAYMENT_APPROVED;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,7 +58,7 @@ public class DefaultCheckoutComPaymentEventDaoTest {
     public void findPaymentEventToProcessForTypes_WhenEventTypePopulatedAndThereAreEvents_ShouldReturnTheEvents() {
         final List<CheckoutComPaymentEventModel> result = testObj.findPaymentEventToProcessForTypes(EVENT_TYPES);
 
-        assertTrue(result.size() == 1);
+        assertEquals(1, result.size());
         assertEquals(checkoutComPaymentEventModelMock, result.get(0));
 
         verify(flexibleSearchServiceMock).search(queryArgumentCaptor.capture());
@@ -82,7 +81,7 @@ public class DefaultCheckoutComPaymentEventDaoTest {
         final Date creationDate = new Date();
         final List<CheckoutComPaymentEventModel> result = testObj.findPaymentEventsByStatusCreatedBeforeDate(FAILED, creationDate);
 
-        assertTrue(result.size() == 1);
+        assertEquals(1, result.size());
         assertEquals(checkoutComPaymentEventModelMock, result.get(0));
 
         verify(flexibleSearchServiceMock).search(queryArgumentCaptor.capture());

@@ -1,24 +1,18 @@
 /* Angular */
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { CheckoutComOccModule } from '@checkout-core/occ/checkout-com-occ.module';
+import { CheckoutComApmModule } from '@checkout-components/checkout-com-apm-component/checkout-com-apm.module';
+import { CheckoutComBillingAddressFormModule } from '@checkout-components/checkout-com-billing-address-form/checkout-com-billing-address-form.module';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { CheckoutPaymentFormModule, CheckoutPaymentMethodModule } from '@spartacus/checkout/base/components';
 /* Spartacus */
-import { I18nModule } from '@spartacus/core';
-import {
-  CardModule,
-  IconModule,
-  SpinnerModule,
-  FormErrorsModule,
-} from '@spartacus/storefront';
-import { PaymentFormModule, PaymentMethodModule } from '@spartacus/checkout/components';
+import { FeaturesConfigModule, I18nModule } from '@spartacus/core';
+import { CardModule, FormErrorsModule, IconModule, NgSelectA11yModule, SpinnerModule, } from '@spartacus/storefront';
 /* CheckoutCom */
-import { CheckoutComStoreModule } from '../../../core/store/checkout-com-store.module';
 import { CheckoutComFramesFormModule } from '../checkout-com-frames-form/checkout-com-frames-form.module';
-import { CheckoutComOccModule } from '../../../core/adapters/occ/checkout-com-occ.module';
 import { CheckoutComPaymentFormComponent } from './checkout-com-payment-form.component';
-import { CheckoutComApmModule } from '../checkout-com-apm-component/checkout-com-apm.module';
-import { CheckoutComBillingAddressModule } from '../checkout-com-billing-address/checkout-com-billing-address.module';
 
 @NgModule({
   declarations: [CheckoutComPaymentFormComponent],
@@ -34,14 +28,16 @@ import { CheckoutComBillingAddressModule } from '../checkout-com-billing-address
     IconModule,
     SpinnerModule,
     FormErrorsModule,
-    PaymentMethodModule,
-    PaymentFormModule,
+    CheckoutPaymentMethodModule,
+    CheckoutPaymentFormModule,
     /* CheckoutCom modules */
-    CheckoutComStoreModule,
     CheckoutComOccModule,
     CheckoutComFramesFormModule,
     CheckoutComApmModule,
-    CheckoutComBillingAddressModule,
+    CheckoutComBillingAddressFormModule,
+    NgSelectA11yModule,
+    FeaturesConfigModule,
   ],
 })
-export class CheckoutComPaymentFormModule { }
+export class CheckoutComPaymentFormModule {
+}

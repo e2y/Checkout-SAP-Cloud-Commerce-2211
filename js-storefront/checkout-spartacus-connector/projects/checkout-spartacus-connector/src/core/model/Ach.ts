@@ -1,5 +1,6 @@
-import { HttpErrorModel, Order } from '@spartacus/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorModel } from '@spartacus/core';
+import { Order } from '@spartacus/order/root';
 
 export interface AchLinkToken {
   SERIALIZED_NAME_LINK_TOKEN?: string;
@@ -20,20 +21,20 @@ export interface AchSuccessPopup {
 export interface AchSuccessMetadata {
   status?: string;
   link_session_id?: string;
-  institution?: institutionMeta;
-  accounts?: accountMeta[];
-  account?: accountMeta;
+  institution?: InstitutionMeta;
+  accounts?: AccountMeta[];
+  account?: AccountMeta;
   account_id?: string;
   transfer_status?: string;
   public_token?: string;
 }
 
-interface institutionMeta {
+export interface InstitutionMeta {
   name?: string;
   institution_id?: string;
 }
 
-export interface accountMeta {
+export interface AccountMeta {
   id?: string;
   name?: string;
   mask?: string;
@@ -46,5 +47,5 @@ export interface accountMeta {
 export interface AchSuccessOrder {
   order?: Order,
   error?: HttpErrorModel
-};
+}
 

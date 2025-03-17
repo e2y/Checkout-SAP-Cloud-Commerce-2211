@@ -1,20 +1,22 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { CheckoutComExpressButtonsModule } from '@checkout-components/checkout-com-express-buttons/checkout-com-express-buttons.module';
+import { CartSharedModule } from '@spartacus/cart/base/components';
+import { MultiCartService } from '@spartacus/cart/base/core';
+import { FeaturesConfigModule, I18nModule, provideConfig, UrlModule } from '@spartacus/core';
 import {
-  CartSharedModule,
   IconModule,
   ItemCounterModule,
   KeyboardFocusModule,
-  ModalModule,
+  LaunchDialogModule, ProductListItemContext, ProductListItemContextSource,
+  //ProductListItemContext,
+  //ProductListItemContextSource,
   PromotionsModule,
   SpinnerModule
 } from '@spartacus/storefront';
-import { FeaturesConfigModule, I18nModule, provideConfig, UrlModule } from '@spartacus/core';
-import { RouterModule } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
 import { ExpressAddToCartComponent } from './express-add-to-cart.component';
-
-import { CheckoutComExpressButtonsModule } from 'checkout-spartacus-connector';
 
 @NgModule({
   declarations: [
@@ -33,11 +35,16 @@ import { CheckoutComExpressButtonsModule } from 'checkout-spartacus-connector';
     I18nModule,
     ItemCounterModule,
     KeyboardFocusModule,
-    ModalModule,
-
+    LaunchDialogModule,
     CheckoutComExpressButtonsModule,
   ],
   providers: [
+    MultiCartService,
+    ProductListItemContextSource,
+    {
+      provide: ProductListItemContext,
+      useExisting: ProductListItemContextSource,
+    },
     provideConfig(
       {
         cmsComponents: {

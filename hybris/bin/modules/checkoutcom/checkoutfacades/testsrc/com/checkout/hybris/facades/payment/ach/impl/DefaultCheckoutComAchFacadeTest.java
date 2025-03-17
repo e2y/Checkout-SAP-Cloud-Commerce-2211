@@ -4,12 +4,11 @@ import com.checkout.hybris.facades.beans.AchBankInfoDetailsData;
 import com.checkout.hybris.facades.beans.AchPaymentInfoData;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import de.hybris.bootstrap.annotations.UnitTest;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;

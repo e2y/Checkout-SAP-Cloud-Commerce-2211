@@ -5,7 +5,6 @@ import com.checkout.hybris.core.authorisation.AuthorizeResponse;
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
 import com.checkout.sdk.payments.PaymentPending;
-import com.google.common.collect.ImmutableMap;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import org.junit.Before;
@@ -13,7 +12,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.Map;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.MULTIBANCO;
 import static org.junit.Assert.*;
@@ -44,7 +45,7 @@ public class CheckoutComMultibancoPaymentResponseStrategyTest {
     @Before
     public void setUp() {
         when(apmPaymentInfoMock.getUserDataRequired()).thenReturn(false);
-        when(pendingResponseMock.getLinks()).thenReturn(ImmutableMap.of(MULTIBANCO_REDIRECT_LINK_KEY, linkMock));
+        when(pendingResponseMock.getLinks()).thenReturn(Map.of(MULTIBANCO_REDIRECT_LINK_KEY, linkMock));
         when(linkMock.getHref()).thenReturn(REDIRECT_LINK);
         when(pendingResponseMock.getId()).thenReturn(PAYMENT_ID);
         doNothing().when(paymentInfoServiceMock).addPaymentId(PAYMENT_ID, apmPaymentInfoMock);

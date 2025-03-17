@@ -39,14 +39,10 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
 
         where:
         format | APM        | currency          | billingCountry | paymentInfoPostBody                      | billingAddressPostBody       | redirectKey
-        JSON   | GIROPAY    | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_GIROPAY_PAYMENT_JSON    | DEFAULT_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.giropay.sandbox'
-        XML    | GIROPAY    | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_GIROPAY_PAYMENT_JSON    | DEFAULT_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.giropay.sandbox'
         JSON   | P24        | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON  | 'checkoutocctests.checkout.p24.sandbox'
         XML    | P24        | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON  | 'checkoutocctests.checkout.p24.sandbox'
         JSON   | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON      | 'checkoutocctests.checkout.ideal.sandbox'
         XML    | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON      | 'checkoutocctests.checkout.ideal.sandbox '
-        JSON   | EPS        | EUR_CURRENCY_CODE | 'Austria'      | DEFAULT_CHECKOUT_EPS_PAYMENT_JSON        | AT_BILLING_ADDRESS_JSON      | 'checkoutocctests.checkout.eps.sandbox'
-        XML    | EPS        | EUR_CURRENCY_CODE | 'Austria'      | DEFAULT_CHECKOUT_EPS_PAYMENT_JSON        | AT_BILLING_ADDRESS_JSON      | 'checkoutocctests.checkout.eps.sandbox'
         JSON   | BANCONTACT | EUR_CURRENCY_CODE | 'Belgium'      | DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON | BELGIUM_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.bancontact.sandbox'
         XML    | BANCONTACT | EUR_CURRENCY_CODE | 'Belgium'      | DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON | BELGIUM_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.bancontact.sandbox'
         JSON   | MULTIBANCO | EUR_CURRENCY_CODE | 'Portugal'     | DEFAULT_CHECKOUT_MULTIBANCO_PAYMENT_JSON | PORTUGAL_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.multibanco.sandbox'

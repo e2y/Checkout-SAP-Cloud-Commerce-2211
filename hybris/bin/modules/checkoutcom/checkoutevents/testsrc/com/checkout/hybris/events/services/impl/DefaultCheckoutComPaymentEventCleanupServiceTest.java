@@ -10,7 +10,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -18,8 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.checkout.hybris.events.enums.CheckoutComPaymentEventStatus.FAILED;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,6 +57,6 @@ public class DefaultCheckoutComPaymentEventCleanupServiceTest {
         long diffInMillies = Math.abs(new Date().getTime() - dateInPast.getTime());
         long diff = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
 
-        assertEquals(diff, EVENT_AGE_IN_DAYS);
+        assertEquals(EVENT_AGE_IN_DAYS, diff);
     }
 }

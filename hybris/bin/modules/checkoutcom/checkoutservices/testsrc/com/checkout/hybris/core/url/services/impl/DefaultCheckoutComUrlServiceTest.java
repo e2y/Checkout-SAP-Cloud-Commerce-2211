@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
@@ -31,7 +31,7 @@ public class DefaultCheckoutComUrlServiceTest {
     private BaseSiteModel currentBaseSiteMock;
 
     @Test
-    public void testGetFullUrlSecure() throws Exception {
+    public void testGetFullUrlSecure() {
         when(baseSiteServiceMock.getCurrentBaseSite()).thenReturn(currentBaseSiteMock);
         when(siteBaseUrlResolutionServiceMock.getWebsiteUrlForSite(currentBaseSiteMock, true, URL)).thenReturn(FULL_SITE_URL);
 
@@ -41,7 +41,7 @@ public class DefaultCheckoutComUrlServiceTest {
     }
 
     @Test
-    public void testGetFullUrlUnSecure() throws Exception {
+    public void testGetFullUrlUnSecure() {
         when(baseSiteServiceMock.getCurrentBaseSite()).thenReturn(currentBaseSiteMock);
         when(siteBaseUrlResolutionServiceMock.getWebsiteUrlForSite(currentBaseSiteMock, false, URL)).thenReturn(FULL_SITE_URL);
 

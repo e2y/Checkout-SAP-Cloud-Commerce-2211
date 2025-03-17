@@ -24,7 +24,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
 
@@ -92,7 +92,7 @@ public class CheckoutComAchPlaidLinkOrderControllerTest {
     }
 
     @Test
-    public void authorisePlaceOrderAndRedirectToResultPage_shouldThrowPaymentAuthorizationExceptionWhenAuthorizeIsNotSuccessful() throws PlaceOrderException, PaymentAuthorizationException {
+    public void authorisePlaceOrderAndRedirectToResultPage_shouldThrowPaymentAuthorizationExceptionWhenAuthorizeIsNotSuccessful() {
         callAuthorizePaymentWithSuccessAs(false);
 
         assertThatThrownBy(() -> testObj.authorisePlaceOrderAndRedirectToResultPage()).isInstanceOf(

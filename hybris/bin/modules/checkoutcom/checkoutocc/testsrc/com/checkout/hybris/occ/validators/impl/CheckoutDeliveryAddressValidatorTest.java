@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
@@ -94,7 +94,7 @@ public class CheckoutDeliveryAddressValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), FIELD_REQUIRED);
+        assertEquals(FIELD_REQUIRED, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class CheckoutDeliveryAddressValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), FIELD_REQUIRED);
+        assertEquals(FIELD_REQUIRED, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -115,7 +115,7 @@ public class CheckoutDeliveryAddressValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), DELIVERY_ADDRESS_INVALID);
+        assertEquals(DELIVERY_ADDRESS_INVALID, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -126,7 +126,7 @@ public class CheckoutDeliveryAddressValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), DELIVERY_ADDRESS_INVALID);
+        assertEquals(DELIVERY_ADDRESS_INVALID, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -137,7 +137,7 @@ public class CheckoutDeliveryAddressValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), DELIVERY_ADDRESS_INVALID);
+        assertEquals(DELIVERY_ADDRESS_INVALID, errors.getAllErrors().get(0).getCode());
     }
 
     @Test

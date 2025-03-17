@@ -34,6 +34,7 @@
           class="com.checkout.hybris.facades.order.converters.populators.CheckoutComAbstractOrderPopulator">
         <constructor-arg name="checkoutComPaymentTypeResolver" ref="checkoutComPaymentTypeResolver"/>
         <constructor-arg name="checkoutComApmPaymentInfoPopulatorMapper" ref="checkoutComApmPaymentInfoPopulatorMapper"/>
+        <constructor-arg name="modelService" ref="defaultModelService"/>
     </bean>
 
     <alias name="defaultCheckoutComCreditCardPaymentInfoPopulator" alias="checkoutComCreditCardPaymentInfoPopulator"/>

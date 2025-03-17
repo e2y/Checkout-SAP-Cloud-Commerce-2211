@@ -12,13 +12,15 @@ import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commercefacades.order.data.AbstractOrderData;
 import de.hybris.platform.converters.Populator;
 import de.hybris.platform.core.model.order.AbstractOrderModel;
+import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.core.model.user.CustomerModel;
+import de.hybris.platform.servicelayer.model.ModelService;
 import de.hybris.platform.store.BaseStoreModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -30,7 +32,6 @@ public class CheckoutComAbstractOrderPopulatorTest {
     private static final String QR_CODE_DATA = "qrCodeData";
     private static final String ACCOUNT_MASK = "accountMask";
     private static final String BASE_STORE_NAME = "Base Store Name";
-    private static final String EMAIL_TEST_VALUE = "email@test.com";
 
     @InjectMocks
     private CheckoutComAbstractOrderPopulator testObj;
@@ -41,6 +42,8 @@ public class CheckoutComAbstractOrderPopulatorTest {
     private CheckoutComApmPaymentInfoPopulatorMapper checkoutComApmPaymentInfoPopulatorMapperMock;
     @Mock
     private Populator<CheckoutComAPMPaymentInfoModel, CheckoutComPaymentInfoData> checkoutComPaymentInfoPopulatorMock;
+    @Mock
+    private ModelService modelServiceMock;
 
     @Mock
     private CustomerModel customerMock;
@@ -58,6 +61,8 @@ public class CheckoutComAbstractOrderPopulatorTest {
     private CheckoutComPaymentInfoData checkoutComPaymentInfoDataMock;
     @Mock
     private CheckoutComBenefitPayPaymentInfoModel checkoutComApmPaymentInfoMock;
+    @Mock
+    private AddressModel addressMock;
 
     @Captor
     private ArgumentCaptor<CheckoutComPaymentInfoData> paymentInfoDataArgumentCaptor;
@@ -93,6 +98,7 @@ public class CheckoutComAbstractOrderPopulatorTest {
         final CheckoutComPaymentInfoData infoDataValue = paymentInfoDataArgumentCaptor.getValue();
         inOrder.verify(targetMock).setCheckoutComPaymentInfo(infoDataValue);
         inOrder.verify(targetMock).setBaseStoreName(BASE_STORE_NAME);
+        verifyNoInteractions(modelServiceMock);
     }
 
     @Test
@@ -103,10 +109,33 @@ public class CheckoutComAbstractOrderPopulatorTest {
         testObj.populate(sourceMock, targetMock);
 
         verify(targetMock).setPaymentType(CheckoutComPaymentType.CARD.name());
-        verifyZeroInteractions(checkoutComApmPaymentInfoPopulatorMapperMock);
-        verifyZeroInteractions(checkoutComPaymentInfoPopulatorMock);
+        verifyNoInteractions(checkoutComApmPaymentInfoPopulatorMapperMock);
+        verifyNoInteractions(checkoutComPaymentInfoPopulatorMock);
+        verifyNoInteractions(modelServiceMock);
         verify(targetMock).setBaseStoreName(BASE_STORE_NAME);
         verifyNoMoreInteractions(targetMock);
+    }
+
+    @Test
+    public void populate_WhenPaymentInfoDoesNotContainBillingAddressNorTheSourceObjectContainsPaymentAddress_ModelServiceShouldNotBeInvoked() {
+        when(sourceMock.getPaymentInfo()).thenReturn(ccPaymentInfoMock);
+        when(checkoutComPaymentTypeResolverMock.resolvePaymentType(ccPaymentInfoMock)).thenReturn(CheckoutComPaymentType.CARD);
+
+        testObj.populate(sourceMock, targetMock);
+
+        verifyNoInteractions(modelServiceMock);
+    }
+
+    @Test
+    public void populate_WhenPaymentInfoDoesNotContainBillingAddressButTheSourceObjectContainsPaymentAddress_ModelServiceShouldBeInvoked() {
+        when(sourceMock.getPaymentInfo()).thenReturn(ccPaymentInfoMock);
+        when(checkoutComPaymentTypeResolverMock.resolvePaymentType(ccPaymentInfoMock)).thenReturn(CheckoutComPaymentType.CARD);
+        when(sourceMock.getPaymentAddress()).thenReturn(addressMock);
+        when(modelServiceMock.clone(addressMock)).thenReturn(addressMock);
+
+        testObj.populate(sourceMock, targetMock);
+
+        verify(modelServiceMock).clone(addressMock);
     }
 
     @Test
@@ -119,6 +148,7 @@ public class CheckoutComAbstractOrderPopulatorTest {
         testObj.populate(sourceMock, targetMock);
 
         verify(targetMock).setCheckoutComPaymentInfo(paymentInfoDataArgumentCaptor.capture());
+        verifyNoInteractions(modelServiceMock);
         final CheckoutComPaymentInfoData paymentData = paymentInfoDataArgumentCaptor.getValue();
         assertThat(paymentData.getAccountNumber()).isEqualTo(ACCOUNT_MASK);
     }
@@ -129,6 +159,7 @@ public class CheckoutComAbstractOrderPopulatorTest {
 
         testObj.populate(sourceMock, targetMock);
 
+        verifyNoInteractions(modelServiceMock);
         verify(targetMock).setPaymentType(CheckoutComPaymentType.BENEFITPAY.name());
         verify(targetMock).setQrCodeData(QR_CODE_DATA);
     }

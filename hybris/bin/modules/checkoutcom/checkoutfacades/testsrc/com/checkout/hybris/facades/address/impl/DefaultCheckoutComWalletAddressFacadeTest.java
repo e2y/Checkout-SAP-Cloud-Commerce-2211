@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.mockito.Mockito.*;
@@ -99,7 +99,7 @@ public class DefaultCheckoutComWalletAddressFacadeTest {
     public void placeWalletOrder_WhenNotInstanceOfGoogleOrAppleBillingWallet_ShouldPlaceOrder() {
         testObj.handleAndSaveBillingAddress(walletPaymentContactMock);
 
-        verifyZeroInteractions(checkoutCustomerStrategyMock);
+        verifyNoInteractions(checkoutCustomerStrategyMock);
         verify(googlePayAddressDataMock, never()).setEmail(any());
         verify(userFacadeMock).addAddress(null);
         verify(checkoutComAddressFacadeMock).setCartBillingDetails(null);

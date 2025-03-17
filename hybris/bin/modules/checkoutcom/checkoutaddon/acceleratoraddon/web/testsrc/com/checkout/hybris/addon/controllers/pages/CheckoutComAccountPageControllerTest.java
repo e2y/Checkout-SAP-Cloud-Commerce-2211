@@ -14,7 +14,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Stubber;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
@@ -58,7 +58,7 @@ public class CheckoutComAccountPageControllerTest {
 
 	private CreditCardDataForm creditCardDataForm = new CreditCardDataForm();
 	private RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
-	private CheckoutComPaymentIntegrationException checkoutComPaymentIntegrationException = new CheckoutComPaymentIntegrationException("Something went wrong when calling Checkout API");;
+	private CheckoutComPaymentIntegrationException checkoutComPaymentIntegrationException = new CheckoutComPaymentIntegrationException("Something went wrong when calling Checkout API");
 
 	@Test
 	public void getEditPaymentDetails_shouldReturnThePageReturnedByGetModelViewForPage() throws CMSItemNotFoundException {

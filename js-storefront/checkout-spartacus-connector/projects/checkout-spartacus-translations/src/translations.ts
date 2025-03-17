@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+// eslint-disable-next-line @typescript-eslint/typedef
 export const checkoutComTranslations = {
   en: {
     payment: {
@@ -49,6 +51,10 @@ export const checkoutComTranslations = {
           },
           initializationFailed: 'Klarna initialization failed',
           countryIsRequired: 'Klarna can not be initialized - country is not selected',
+          isNotSet: 'Klarna can not be initialized - Klarna is not set',
+          klarnaResponseError: 'Klarna can not be initialized - Klarna is not set. {{error}}',
+          loadWidgetError: 'Klarna can not be initialized - failed to load widget',
+          authoriseErrorResponse: 'Klarna can not be initialized - failed to authorize payment',
         },
 
         fawry: {
@@ -84,7 +90,6 @@ export const checkoutComTranslations = {
       paymentCard: {
         apm: 'Payment with {{ apm }}'
       },
-
       sepaForm: {
         firstName: {
           label: 'First name',
@@ -143,6 +148,7 @@ export const checkoutComTranslations = {
         initialPaymentRequestFailed: 'Failed to process your payment',
         challengeFailed: 'Your payment was refused. Please try again with a different card',
         paymentAuthorizationError: 'Payment authorization was not successful',
+        validationError: 'We were unable to process your order at this time due to a validation error. Please try again later. If the issue persists, contact customer support.'
       },
 
       checkoutOrderConfirmation: {
@@ -160,7 +166,8 @@ export const checkoutComTranslations = {
           invalid: {
             cardType: {
               code: 'The card type that was provided is currently not supported'
-            }
+            },
+            sessionCart: 'There was an issue with your cart. Please review the items and try again. If the problem persists, contact customer support for assistance.'
           }
         }
       }
@@ -168,8 +175,11 @@ export const checkoutComTranslations = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/typedef
 export const checkoutComTranslationChunkConfig = {
-  payment: ['paymentForm',
+  payment: [
+    'paymentForm',
+    'paymentMessages',
     'paymentMethods',
     'paymentCard',
     'paymentTypes',

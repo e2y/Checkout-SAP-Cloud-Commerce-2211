@@ -1,28 +1,28 @@
-import { Order } from '@spartacus/core';
+import { Order } from '@spartacus/order/root';
 
 export interface ApplePayPaymentRequest {
-  currencyCode: string;
-  countryCode: string;
-  supportedNetworks: string[];
-  merchantCapabilities: string[];
-  total: {
-    type: string;
-    label: string;
-    amount: string;
+  currencyCode?: string;
+  countryCode?: string;
+  supportedNetworks?: string[];
+  merchantCapabilities?: string[];
+  total?: {
+    type?: string;
+    label?: string;
+    amount?: string;
   };
-  requiredBillingContactFields: string[];
+  requiredBillingContactFields?: string[];
   requiredShippingContactFields?: string[];
 }
 
 export interface ApplePayAuthorization {
-  status: string;
-  orderData: Order;
+  status?: string;
+  orderData?: Order;
 }
 
 export interface ApplePayPaymentMethod {
-  displayName: string;
-  network: string;
-  type: string;
+  displayName?: string;
+  network?: string;
+  type?: string;
   billingContact?: ApplePayPaymentContact;
 }
 
@@ -51,27 +51,38 @@ export interface ApplePayPaymentContact {
 }
 
 export interface ApplePayShippingMethod {
-  label: string;
-  detail: string;
-  identifier: string;
-  amount: string;
-  dateComponentsRange: any;
+  label?: string;
+  detail?: string;
+  identifier?: string;
+  amount?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dateComponentsRange?: any;
 }
 
 export interface ApplePayShippingContactUpdate {
-  newTotal: ApplePayLineItem;
+  newTotal?: ApplePayLineItem;
   newLineItems?: ApplePayLineItem[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errors?: any;
   newShippingMethods?: ApplePayShippingMethod[];
 }
 
 export interface ApplePayShippingMethodUpdate {
-  newTotal: ApplePayLineItem;
+  newTotal?: ApplePayLineItem;
   newLineItems?: ApplePayLineItem[];
 }
 
 export interface ApplePayLineItem {
-  type: string;
-  label: string;
-  amount: string;
+  type?: string;
+  label?: string;
+  amount?: string;
+}
+
+export interface ApplepaySession {
+  applePayPaymentRequest?: ApplePayPaymentRequest;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  applePayMerchantSession?: any;
+  applePayAuthorization?: ApplePayAuthorization;
+  applePayShippingContactUpdate?: ApplePayShippingContactUpdate;
+  applePayShippingMethodUpdate?: ApplePayShippingMethodUpdate;
 }

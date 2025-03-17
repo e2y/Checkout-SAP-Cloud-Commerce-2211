@@ -1,40 +1,73 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { accountMeta, AchSuccessMetadata } from '../../../../../core/model/Ach';
-import { ModalService } from '@spartacus/storefront';
-import { FormBuilder, Validators } from '@angular/forms';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { AccountMeta, AchSuccessMetadata } from '@checkout-model/Ach';
+import { LoggerService } from '@spartacus/core';
+import { LaunchDialogService } from '@spartacus/storefront';
+import { take, tap } from 'rxjs/operators';
 
 @Component({
-  selector: 'y-checkout-com-apm-ach-account-list-modal',
+  selector: 'lib-checkout-com-apm-ach-account-list-modal',
   templateUrl: './checkout-com-apm-ach-account-list-modal.component.html',
   styleUrls: ['./checkout-com-apm-ach-account-list-modal.component.scss'],
 })
 export class CheckoutComApmAchAccountListModalComponent implements OnInit {
-  @Input() achMetadata: AchSuccessMetadata;
-  achAccountListForm = this.fb.group({
+  achMetadata: AchSuccessMetadata;
+  achAccountListForm: UntypedFormGroup = this.fb.group({
     account_id: ['', Validators.required],
   });
-  achAccountList: any = {} as { [key: string]: accountMeta[] };
-  Object = Object;
+  achAccountList: { [key: string]: AccountMeta[] } = {};
+  Object: ObjectConstructor = Object;
+  protected destroyRef: DestroyRef = inject(DestroyRef);
+  protected logger: LoggerService = inject(LoggerService);
+
+  /**
+   * Constructor for the CheckoutComApmAchAccountListModalComponent.
+   *
+   * @param {LaunchDialogService} launchDialogService - Service to handle dialog operations.
+   * @param {UntypedFormBuilder} fb - Form builder service to create forms.
+   */
   constructor(
-    protected modalService: ModalService,
-    protected fb: FormBuilder
+    protected launchDialogService: LaunchDialogService,
+    protected fb: UntypedFormBuilder
   ) {
   }
 
   ngOnInit(): void {
-    this.achMetadata.accounts.map((account: accountMeta) => {
-      if (this.achAccountList[account.subtype]) {
-        this.achAccountList[account.subtype].push(account);
-      } else {
-        this.achAccountList[account.subtype] = [account];
-      }
-    });
-    this.achAccountListForm.patchValue({ account_id: this.achMetadata.account_id });
+    this.launchDialogService.data$
+      .pipe(
+        take(1),
+        tap(({ achMetadata }: { achMetadata: AchSuccessMetadata }): void => {
+          this.achMetadata = achMetadata;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ achMetadata }: { achMetadata: AchSuccessMetadata }): void => {
+          achMetadata.accounts.map((account: AccountMeta): void => {
+            if (this.achAccountList[account.subtype]) {
+              this.achAccountList[account.subtype].push(account);
+            } else {
+              this.achAccountList[account.subtype] = [account];
+            }
+          });
+          this.achAccountListForm.patchValue({ account_id: this.achMetadata.account_id });
+        }
+      });
   }
 
+  /**
+   * Submits the form data to the parent component.
+   * Retrieves the selected account based on the account ID from the form.
+   * If the account is found, it closes the dialog with the selected account data.
+   * If the account is not found, logs an error message.
+   *
+   * @return {void}
+   */
   onSubmit(): void {
-    const account_id = this.achAccountListForm.get('account_id').value;
-    const selectedAccount = this.achMetadata.accounts.filter(account => account.id === account_id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const account_id: any = this.achAccountListForm.get('account_id').value;
+    const selectedAccount: AccountMeta[] = this.achMetadata.accounts.filter((account: AccountMeta): boolean => account.id === account_id);
 
     if (selectedAccount.length) {
       const parameters: AchSuccessMetadata = {
@@ -42,16 +75,22 @@ export class CheckoutComApmAchAccountListModalComponent implements OnInit {
         account_id,
         account: selectedAccount[0]
       };
-      this.modalService.closeActiveModal({
+      this.launchDialogService.closeDialog({
         type: 'submit',
         parameters
       });
     } else {
-      console.log('Account Id Not found');
+      this.logger.error('Account Id Not found');
     }
   }
 
-  close(reason: string) {
-    this.modalService.closeActiveModal({ type: reason });
+  /**
+   * Closes the dialog with the specified reason.
+   *
+   * @param {string} reason - The reason for closing the dialog.
+   * @return {void}
+   */
+  close(reason: string): void {
+    this.launchDialogService.closeDialog({ type: reason });
   }
 }

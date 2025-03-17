@@ -1,53 +1,69 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ApmPaymentDetails } from '../../../interfaces';
+import { ChangeDetectionStrategy, Component, EventEmitter, OnDestroy, Output } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import { CheckoutComBillingAddressFormComponent } from '@checkout-components/checkout-com-billing-address-form/checkout-com-billing-address-form.component';
+import { ApmPaymentDetails } from '@checkout-core/interfaces';
+import { PaymentType } from '@checkout-model/ApmData';
 import { Address } from '@spartacus/core';
-import { PaymentType } from '../../../../core/model/ApmData';
 import { BehaviorSubject } from 'rxjs';
-import { makeFormErrorsVisible } from '../../../../core/shared/make-form-errors-visible';
 
 @Component({
   selector: 'lib-checkout-com-apm-ideal',
   templateUrl: './checkout-com-apm-ideal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CheckoutComApmIdealComponent implements OnDestroy {
-  @Input() billingAddressForm: FormGroup = new FormGroup({});
-  @Output() setPaymentDetails = new EventEmitter<{ paymentDetails: ApmPaymentDetails, billingAddress: Address }>();
+export class CheckoutComApmIdealComponent extends CheckoutComBillingAddressFormComponent implements OnDestroy {
+  @Output() setPaymentDetails: EventEmitter<{ paymentDetails: ApmPaymentDetails, billingAddress: Address }> =
+    new EventEmitter<{ paymentDetails: ApmPaymentDetails, billingAddress: Address }>();
 
-  public submitting$ = new BehaviorSubject<boolean>(false);
-  public sameAsShippingAddress: boolean = true;
+  public submitting$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  public sameAsShippingAddress: boolean = this.billingAddressFormService.isBillingAddressSameAsDeliveryAddress();
+  idealForm: UntypedFormGroup = this.fb.group({});
 
-  idealForm = this.fb.group({});
-
-  constructor(protected fb: FormBuilder) {
+  constructor(protected fb: UntypedFormBuilder) {
+    super();
   }
 
-  next() {
-    const {invalid: billingInvalid, value: billingValue} = this.billingAddressForm;
+  /**
+   * Authorizes the payment using iDeal.
+   * Retrieves the merchant configuration and creates a full payment request.
+   * If the billing address form is not valid, it makes form errors visible and returns.
+   * Loads the payment data and authorizes the order.
+   * Logs an error message if the authorization fails.
+   *
+   * @return {void}
+   * @since 4.2.7
+   */
+  next(): void {
+    this.sameAsShippingAddress = this.billingAddressFormService.isBillingAddressSameAsDeliveryAddress();
+    this.billingAddress$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (address: Address): void => {
+        const paymentDetails: ApmPaymentDetails = {
+          type: PaymentType.iDeal
+        };
+        this.submitting$.next(true);
 
-    if (!this.sameAsShippingAddress && billingInvalid) {
-      makeFormErrorsVisible(this.billingAddressForm);
-      return;
-    }
+        let billingAddress: Address = null;
+        if (!this.sameAsShippingAddress) {
+          billingAddress = address;
+        }
 
-    const paymentDetails: ApmPaymentDetails = {
-      type: PaymentType.iDeal
-    };
-
-    this.submitting$.next(true);
-
-    let billingAddress = null;
-    if (!this.sameAsShippingAddress) {
-      billingAddress = billingValue;
-    }
-
-    this.setPaymentDetails.emit({
-      paymentDetails,
-      billingAddress
+        this.setPaymentDetails.emit({
+          paymentDetails,
+          billingAddress
+        });
+      }
     });
   }
 
+  /**
+   * Cleans up resources when the component is destroyed.
+   * Sets the submitting state to false.
+   *
+   * @return {void}
+   */
   ngOnDestroy(): void {
     this.submitting$.next(false);
   }

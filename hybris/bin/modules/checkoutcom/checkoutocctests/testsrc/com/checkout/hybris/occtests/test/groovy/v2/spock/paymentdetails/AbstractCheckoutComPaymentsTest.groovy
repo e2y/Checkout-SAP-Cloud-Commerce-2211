@@ -64,12 +64,6 @@ abstract class AbstractCheckoutComPaymentsTest extends AbstractCartTest {
     protected static final String DEFAULT_CHECKOUT_POLI_PAYMENT_JSON = "{\"type\" : \"POLI\"}"
     protected static final String DEFAULT_CHECKOUT_POLI_PAYMENT_XML = "<paymentDetails><type>POLI</type></paymentDetails>"
 
-    protected static final String DEFAULT_CHECKOUT_GIROPAY_PAYMENT_JSON = "{\"type\" : \"GIROPAY\"}"
-    protected static final String DEFAULT_CHECKOUT_GIROPAY_PAYMENT_XML = "<paymentDetails><type>GIROPAY</type></paymentDetails>"
-
-    protected static final String DEFAULT_CHECKOUT_SOFORT_PAYMENT_JSON = "{\"type\" : \"SOFORT\"}"
-    protected static final String DEFAULT_CHECKOUT_SOFORT_PAYMENT_XML = "<paymentDetails><type>SOFORT</type></paymentDetails>"
-
     protected static final String DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON = "{\"type\" : \"BANCONTACT\"}"
     protected static final String DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_XML = "<paymentDetails><type>BANCONTACT</type></paymentDetails>"
 

@@ -17,23 +17,11 @@ span.form-control.frame--invalid, span.form-control.ng-invalid {
   border-color: var(--cx-color-danger);
 }
 
-.form-control-wrapper {
-  position: relative;
-
-  .form-icon {
-    width: 48px;
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-  }
-}
-
 .form-icon {
   background-image: url("data:image/svg+xml;charset=utf8,%3Csvg class='icon-action-card' xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cg fill='%23acb2bf'%3E%3Cpath d='M13.5,3H2.5A1.5,1.5,0,0,0,1,4.5v7A1.5,1.5,0,0,0,2.5,13h11A1.5,1.5,0,0,0,15,11.5v-7A1.5,1.5,0,0,0,13.5,3Zm.5,8.5a.5.5,0,0,1-.5.5H2.5a.5.5,0,0,1-.5-.5V7H14ZM14,5H2V4.5A.5.5,0,0,1,2.5,4h11a.5.5,0,0,1,.5.5Z'/%3E%3C/g%3E%3C/svg%3E");
-  background-position: center;
-  background-size: 24px;
   background-repeat: no-repeat;
+  background-size: 24px;
+  background-position: center;
 
   &.american-express {
     background-image: url("data:image/svg+xml;charset=utf8,%3Csvg id='Visa' xmlns='http://www.w3.org/2000/svg' width='26' height='16' viewBox='0 0 26 16'%3E%3Ctitle%3Eicon-amex-small%3C/title%3E%3Crect width='26' height='16' rx='2' ry='2' style='fill:%23007ecd'/%3E%3Cpath d='M16.6,8.86h1.94v.46H17.19v.4H18.5v.41H17.19v.42h1.35V11H16.6Zm5.67.84c.73,0,.79.36.79.7a.67.67,0,0,1-.72.62H21.06v-.46h1c.17,0,.41,0,.41-.21s0-.16-.22-.18l-.4,0c-.66,0-.81-.31-.81-.66a.64.64,0,0,1,.64-.63H23v.47H22c-.21,0-.43,0-.43.18s.11.16.25.17h.41Zm-2.22,0c.72,0,.79.36.79.7a.68.68,0,0,1-.73.62H18.84v-.46h1c.17,0,.41,0,.41-.21s0-.16-.21-.18l-.41,0c-.66,0-.81-.31-.81-.66a.64.64,0,0,1,.64-.63h1.31v.47h-.91c-.21,0-.43,0-.43.18s.11.16.25.17h.41Zm-7-.84H11l-.67.67-.66-.67H7.29V11H9.54l.71-.71L11,11h1.13v-.73h.8a.72.72,0,0,0,.85-.54.86.86,0,0,0,0-.23.64.64,0,0,0-.61-.66Zm-3.8,1.69H7.87v-.42h1.3V9.72H7.87v-.4H9.31l.57.58Zm2.27.25-.85-.89.85-.84Zm1.33-1h-.74V9.32h.74a.27.27,0,0,1,.32.2.27.27,0,0,1-.2.32Zm3.06.19a.57.57,0,0,0,.41-.59.63.63,0,0,0-.65-.59h-1.6V11h.59v-.76h.78a.33.33,0,0,1,.29.35v0l0,.39h.57l0-.44A.44.44,0,0,0,16,10Zm-.51-.22h-.74V9.32h.74a.27.27,0,0,1,.32.21s0,0,0,0-.09.24-.33.24Zm-.27-1.67V6h-.6V8.14ZM9.62,6h2v.46H10.22v.4h1.32v.41H10.22v.42h1.36v.46h-2Zm4.17,1.17a.58.58,0,0,0,.41-.6A.62.62,0,0,0,13.55,6H11.93V8.14h.6V7.38h.78a.32.32,0,0,1,.3.34v.42h.58l0-.44a.43.43,0,0,0-.3-.53Zm-.51-.23h-.75V6.45h.75a.27.27,0,0,1,.32.21s0,0,0,0-.09.25-.34.25ZM8.25,6,7.51,7.43,6.78,6H5.84V8.06L4.8,6H4L2.94,8.14h.63l.24-.48H5l.23.48H6.44V6.55l.8,1.59h.54L8.6,6.57V8.14h.59V6H8.25ZM4,7.19l.36-.75.37.75H4ZM21.28,6V7.47L20.28,6h-.89V8l-1-2h-.79l-.82,1.66h-.39A.44.44,0,0,1,16,7.15h0V7c0-.5.31-.54.71-.54h.37V6H16.3a1.08,1.08,0,0,0-.88,1.26,1.1,1.1,0,0,0,.94.89h.79l.23-.48h1.2l.23.48H20V6.57l1.08,1.57h.81V6Zm-3.67,1.2L18,6.44l.37.75Z' style='fill:%23fff'/%3E%3C/svg%3E");
@@ -65,5 +53,17 @@ span.form-control.frame--invalid, span.form-control.ng-invalid {
 
   &.visa {
     background-image: url("data:image/svg+xml;charset=utf8,%3Csvg id='Visa' xmlns='http://www.w3.org/2000/svg' width='26' height='16' viewBox='0 0 26 16'%3E%3Ctitle%3Eicon-visa%3C/title%3E%3Crect width='26' height='16' rx='2' ry='2' style='fill:%23224dba'/%3E%3Cpath d='M7.91,10.88H6.4L5.26,6.35a.74.74,0,0,0-.33-.48A4.51,4.51,0,0,0,3.55,5.4V5.22H6a.65.65,0,0,1,.63.57L7.2,9.05,8.71,5.22h1.47Zm3.11,0H9.59l1.17-5.66h1.43Zm3-4.09a.55.55,0,0,1,.59-.48A2.64,2.64,0,0,1,16,6.57l.25-1.22A3.43,3.43,0,0,0,15,5.09c-1.38,0-2.39.78-2.39,1.87a1.83,1.83,0,0,0,1.21,1.52c.55.26.76.44.72.7a.72.72,0,0,1-.84.57h0a3.41,3.41,0,0,1-1.47-.34l-.25,1.21a3.94,3.94,0,0,0,1.55.31C15,11,16,10.18,16,9c0-1.48-2-1.57-2-2.22h0Zm7,4.09L19.87,5.22H18.66a.63.63,0,0,0-.59.44L16,10.88h1.47l.29-.83h1.81l.16.83ZM18.87,6.74l.42,2.13H18.11Z' style='fill:%23fff'/%3E%3C/svg%3E");
+  }
+}
+
+.form-control-wrapper {
+  position: relative;
+
+  .form-icon {
+    width: 48px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    position: absolute;
   }
 }

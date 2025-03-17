@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, HostListener, Input, OnInit } from '@angular/core';
-import {ApmData} from '../../../../core/model/ApmData';
-import {Observable} from 'rxjs';
-import {CheckoutComApmService} from '../../../../core/services/checkout-com-apm.service';
+import { ChangeDetectionStrategy, Component, HostListener, Input } from '@angular/core';
+import { ApmData } from '@checkout-model/ApmData';
+import { CheckoutComApmService } from '@checkout-services/apm/checkout-com-apm.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'lib-checkout-com-apm-tile',

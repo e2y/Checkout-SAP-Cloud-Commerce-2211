@@ -12,9 +12,8 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.*;
 
 @UnitTest
@@ -74,10 +73,10 @@ public class CheckoutComPaymentDetailsControllerTest {
     }
 
     private void ensureDataMapperDoesNotFail() {
-        doNothing().when(dataMapperMock).map(anyObject(), anyObject(), anyObject(), anyBoolean());
+        doNothing().when(dataMapperMock).map(any(), any(), any(), anyBoolean());
     }
 
     private void ensureValidationDoesNotFail() {
-        doNothing().when(testObj).validate(anyObject(), anyObject(), anyObject());
+        doNothing().when(testObj).validate(any(), any(), any());
     }
 }

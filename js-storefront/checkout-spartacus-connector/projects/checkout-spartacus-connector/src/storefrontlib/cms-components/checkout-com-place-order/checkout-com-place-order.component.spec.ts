@@ -1,22 +1,19 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { ViewContainerRef } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, UntypedFormGroup } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import {
-  DaysOfWeek,
-  I18nTestingModule,
-  ORDER_TYPE,
-  recurrencePeriod,
-  RoutingService,
-  ScheduleReplenishmentForm,
-} from '@spartacus/core';
-import { CheckoutService } from '@spartacus/checkout/core'
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { CheckoutComOrderResult } from '@checkout-core/interfaces';
+import { CheckoutComOrderFacade } from '@checkout-facades/checkout-com-order.facade';
+import { generateOrder } from '@checkout-tests/fake-data/order.mock';
+import { MockUrlPipe } from '@checkout-tests/pipes';
+import { CheckoutStepService } from '@spartacus/checkout/base/components';
+import { CheckoutReplenishmentFormService } from '@spartacus/checkout/scheduled-replenishment/components';
+import { GlobalMessageService, GlobalMessageType, I18nTestingModule, RoutingService, Translatable, WindowRef, } from '@spartacus/core';
+import { DaysOfWeek, ORDER_TYPE, recurrencePeriod, ReplenishmentOrder, ScheduledReplenishmentOrderFacade, ScheduleReplenishmentForm } from '@spartacus/order/root';
+import { LAUNCH_CALLER, LaunchDialogService } from '@spartacus/storefront';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { CheckoutComPlaceOrderComponent } from './checkout-com-place-order.component';
-import { LaunchDialogService } from '@spartacus/storefront';
-import { CheckoutComCheckoutService } from '../../../core/services/checkout-com-checkout.service';
-import { CheckoutReplenishmentFormService, CheckoutStepService } from '@spartacus/checkout/components';
-import { CheckoutFacade } from '@spartacus/checkout/root';
 
 const mockReplenishmentOrderFormData: ScheduleReplenishmentForm = {
   numberOfDays: 'test-number-days',
@@ -27,19 +24,37 @@ const mockReplenishmentOrderFormData: ScheduleReplenishmentForm = {
   daysOfWeek: [DaysOfWeek.FRIDAY],
 };
 
+const successResponse = {
+  successful: true,
+  redirectUrl: 'http://example.com'
+};
+
 const mockReplenishmentOrderFormData$ = new BehaviorSubject<ScheduleReplenishmentForm>(
   mockReplenishmentOrderFormData
 );
 
-let clearedPlaceOrderStatus = new BehaviorSubject<boolean>(false);
+const order = generateOrder();
 
-class MockCheckoutService {
-  placeOrder(): void {}
+const errorResponse = {
+  error: {
+    errors: [
+      {
+        message: 'error',
+        type: 'error'
+      }
+    ]
+  },
+  details: [
+    {
+      message: 'error',
+      type: 'error'
+    }
+  ],
+};
 
-  scheduleReplenishmentOrder(
-    _scheduleReplenishmentForm: ScheduleReplenishmentForm,
-    _termsChecked: boolean
-  ): void {}
+class MockOrderFacade {
+  placeOrder(): void {
+  }
 
   getPlaceOrderLoading(): Observable<boolean> {
     return of();
@@ -57,27 +72,32 @@ class MockCheckoutService {
     return of();
   }
 
-  clearPlaceOrderState(): void {clearedPlaceOrderStatus.next(true)}
-
   getOrderResultFromState() {
     return of({});
   }
 }
 
 class MockCheckoutReplenishmentFormService {
+  getOrderType(): Observable<ORDER_TYPE> {
+    return of();
+  }
+
   getScheduleReplenishmentFormData(): Observable<ScheduleReplenishmentForm> {
     return mockReplenishmentOrderFormData$.asObservable();
   }
 
   setScheduleReplenishmentFormData(
     _formData: ScheduleReplenishmentForm
-  ): void {}
+  ): void {
+  }
 
-  resetScheduleReplenishmentFormData(): void {}
+  resetScheduleReplenishmentFormData(): void {
+  }
 }
 
 class MockRoutingService {
-  go(): void {}
+  go(): void {
+  }
 
   getRouterState() {
     return of({});
@@ -86,51 +106,104 @@ class MockRoutingService {
 
 class MockCheckoutStepService {
   steps = {};
+
+  getPreviousCheckoutStepUrl() {
+
+  }
 }
 
 class MockLaunchDialogService {
-  launch() {}
-  clear() {}
+  launch() {
+  }
+
+  clear() {
+  }
+
+  openDialogAndSubscribe() {
+  }
 }
 
-@Pipe({
-  name: 'cxUrl',
-})
-class MockUrlPipe implements PipeTransform {
-  transform(): any {}
+const mockComponent = { destroy: jasmine.createSpy('destroy') };
+
+class MockScheduledReplenishmentOrderFacade implements Partial<ScheduledReplenishmentOrderFacade> {
+  scheduleReplenishmentOrder() {
+    return of();
+  };
 }
 
 describe('CheckoutComPlaceOrderComponent', () => {
   let component: CheckoutComPlaceOrderComponent;
   let fixture: ComponentFixture<CheckoutComPlaceOrderComponent>;
-  let controls: FormGroup['controls'];
+  let controls: UntypedFormGroup['controls'];
 
-  let checkoutFacade: CheckoutFacade;
-  let checkoutComCheckoutService: CheckoutComCheckoutService;
+  let orderFacade: jasmine.SpyObj<CheckoutComOrderFacade>;
   let checkoutReplenishmentFormService: CheckoutReplenishmentFormService;
   let routingService: RoutingService;
   let stepsService: CheckoutStepService;
   let launchDialogService: LaunchDialogService;
+  let scheduledReplenishmentOrderFacade: jasmine.SpyObj<ScheduledReplenishmentOrderFacade>;
+  let globalMessageService: jasmine.SpyObj<GlobalMessageService>;
+  let windowRef: jasmine.SpyObj<WindowRef>;
+  let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
 
   beforeEach(
     waitForAsync(() => {
+      const globalMessageServiceSpy = jasmine.createSpyObj('GlobalMessageService', ['add']);
+      const windowRefSpy = jasmine.createSpyObj('WindowRef', [], {
+        nativeWindow: {
+          location: { href: '' },
+          history: { back: jasmine.createSpy('back') },
+        },
+      });
+      const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
+        params: of({ shopId: 'exampleId' }),
+        fragment: of(null),
+      });
+      const scheduledReplenishmentOrderFacadeSpy = jasmine.createSpyObj('ScheduledReplenishmentOrderFacade', ['scheduleReplenishmentOrder']);
+      const checkoutComOrderFacadeSpy = jasmine.createSpyObj('CheckoutComOrderFacade', ['placeOrder', 'clearPlacedOrder', 'getOrderResultFromState']);
       TestBed.configureTestingModule({
         imports: [ReactiveFormsModule, RouterTestingModule, I18nTestingModule],
         declarations: [MockUrlPipe, CheckoutComPlaceOrderComponent],
         providers: [
-          { provide: CheckoutFacade, useClass: MockCheckoutService },
-          { provide: CheckoutComCheckoutService, useClass: MockCheckoutService },
+          {
+            provide: CheckoutComOrderFacade,
+            useValue: checkoutComOrderFacadeSpy
+          },
+          {
+            provide: RoutingService,
+            useClass: MockRoutingService
+          },
+          {
+            provide: LaunchDialogService,
+            useClass: MockLaunchDialogService
+          },
+          ViewContainerRef,
           {
             provide: CheckoutReplenishmentFormService,
             useClass: MockCheckoutReplenishmentFormService,
           },
-          { provide: RoutingService, useClass: MockRoutingService },
-          { provide: CheckoutStepService, useClass: MockCheckoutStepService },
-          { provide: LaunchDialogService, useClass: MockLaunchDialogService },
+          {
+            provide: ScheduledReplenishmentOrderFacade,
+            useValue: scheduledReplenishmentOrderFacadeSpy
+          },
+          {
+            provide: GlobalMessageService,
+            useValue: globalMessageServiceSpy
+          },
+          {
+            provide: WindowRef,
+            useValue: windowRefSpy
+          },
+          {
+            provide: CheckoutStepService,
+            useClass: MockCheckoutStepService
+          },
+          {
+            provide: ActivatedRoute,
+            useValue: activatedRouteSpy
+          },
         ],
       }).compileComponents();
-
-      clearedPlaceOrderStatus = new BehaviorSubject<boolean>(false);
     })
   );
 
@@ -140,68 +213,143 @@ describe('CheckoutComPlaceOrderComponent', () => {
 
     controls = component.checkoutSubmitForm.controls;
 
-    checkoutFacade = TestBed.inject(CheckoutFacade);
-    checkoutComCheckoutService = TestBed.inject(CheckoutComCheckoutService);
+    orderFacade = TestBed.inject(CheckoutComOrderFacade) as jasmine.SpyObj<CheckoutComOrderFacade>;
+    scheduledReplenishmentOrderFacade = TestBed.inject(ScheduledReplenishmentOrderFacade) as jasmine.SpyObj<ScheduledReplenishmentOrderFacade>;
     checkoutReplenishmentFormService = TestBed.inject(
       CheckoutReplenishmentFormService
     );
     routingService = TestBed.inject(RoutingService);
     stepsService = TestBed.inject(CheckoutStepService);
     launchDialogService = TestBed.inject(LaunchDialogService);
-
-    spyOn(checkoutComCheckoutService, 'placeOrder').and.callThrough();
-    spyOn(checkoutFacade, 'scheduleReplenishmentOrder').and.callThrough();
-    spyOn(
-      checkoutReplenishmentFormService,
-      'setScheduleReplenishmentFormData'
-    ).and.callThrough();
-    spyOn(
-      checkoutReplenishmentFormService,
-      'resetScheduleReplenishmentFormData'
-    ).and.callThrough();
-
+    globalMessageService = TestBed.inject(GlobalMessageService) as jasmine.SpyObj<GlobalMessageService>;
+    windowRef = TestBed.inject(WindowRef) as jasmine.SpyObj<WindowRef>;
+    activatedRoute = TestBed.inject(ActivatedRoute) as jasmine.SpyObj<ActivatedRoute>;
+    spyOn(checkoutReplenishmentFormService, 'setScheduleReplenishmentFormData').and.callThrough();
+    spyOn(checkoutReplenishmentFormService, 'resetScheduleReplenishmentFormData').and.callThrough();
+    spyOn(launchDialogService, 'clear').and.callThrough();
+    // @ts-ignore
+    spyOn(launchDialogService, 'launch').and.returnValue(of(mockComponent));
+    orderFacade.placeOrder.and.returnValue(of(order));
+    orderFacade.getOrderResultFromState.and.returnValue(of(successResponse));
   });
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should clear place order status', () => {
-    expect(clearedPlaceOrderStatus.getValue()).toBeTrue();
-  });
-
   describe('when order type is PLACE_ORDER', () => {
     it('should not place order when checkbox not checked', () => {
       submitForm(ORDER_TYPE.PLACE_ORDER, false);
 
-      expect(checkoutComCheckoutService.placeOrder).not.toHaveBeenCalled();
-      expect(checkoutFacade.scheduleReplenishmentOrder).not.toHaveBeenCalled();
+      expect(orderFacade.placeOrder).not.toHaveBeenCalled();
+      expect(scheduledReplenishmentOrderFacade.scheduleReplenishmentOrder).not.toHaveBeenCalled();
     });
 
-    it('should place order when checkbox checked', () => {
-      submitForm(ORDER_TYPE.PLACE_ORDER, true);
+    describe('place order error', () => {
+      beforeEach(() => {
+        component.currentOrderType = ORDER_TYPE.PLACE_ORDER;
+        component.checkoutSubmitForm.setControl('termsAndConditions', new FormControl(true));
+        orderFacade.placeOrder.and.returnValue(throwError(() => errorResponse));
+      });
 
-      expect(checkoutComCheckoutService.placeOrder).toHaveBeenCalled();
-      expect(checkoutFacade.scheduleReplenishmentOrder).not.toHaveBeenCalled();
-    });
+      it('should clear and destroy component if placedOrder is defined', (doneFn) => {
+        component.submitForm();
+        // @ts-ignore
+        expect(launchDialogService.clear).toHaveBeenCalledWith(LAUNCH_CALLER.PLACE_ORDER_SPINNER);
+        // @ts-ignore
+        component.placedOrder.subscribe((): void => {
+          expect(mockComponent.destroy).toHaveBeenCalled();
+          doneFn();
+        });
 
-    it('should NOT change page and reset form data when there is no successful place order', () => {
-      spyOn(routingService, 'go').and.stub();
+      });
 
-      component.currentOrderType = ORDER_TYPE.PLACE_ORDER;
-      component.onSuccess(false);
+      it('should not throw error if placedOrder is undefined', () => {
+        component['placedOrder'] = undefined;
 
-      expect(routingService.go).not.toHaveBeenCalled();
-    });
+        expect(() => {
+          if (component['placedOrder']) {
+            component['placedOrder'].subscribe((component) => {
+              launchDialogService.clear(LAUNCH_CALLER.PLACE_ORDER_SPINNER);
+              if (component) {
+                component.destroy();
+              }
+            }).unsubscribe();
+          }
+        }).not.toThrow();
+      });
 
-    it('should change page and reset form data on a successful place order', () => {
-      spyOn(routingService, 'go').and.stub();
+      it('should add global message with error type and message if error object is valid', () => {
+        const errorTypeResponse = {
+          error: {
+            errors: [
+              {
+                message: 'Error message',
+                type: 'ErrorType'
+              }
+            ]
+          },
+          details: []
+        };
+        orderFacade.placeOrder.and.returnValue(throwError(() => errorTypeResponse));
+        component.submitForm();
+        expect(globalMessageService.add).toHaveBeenCalledWith({ key: 'checkoutReview.errorType' }, GlobalMessageType.MSG_TYPE_ERROR);
+      });
 
-      component.currentOrderType = ORDER_TYPE.PLACE_ORDER;
-      component.onSuccess(true);
+      it('should add global message with raw error message if error type is not a string', () => {
+        const rawErrorMessage = {
+          details: [
+            {
+              message: 'Something went wrong',
+              type: 'ErrorType'
+            }
+          ]
+        };
 
-      expect(routingService.go).toHaveBeenCalledWith({
-        cxRoute: 'orderConfirmation',
+        orderFacade.placeOrder.and.returnValue(throwError(() => rawErrorMessage));
+        component.submitForm();
+
+        expect(globalMessageService.add).toHaveBeenCalledWith({ raw: 'Something went wrong: ErrorType' }, GlobalMessageType.MSG_TYPE_ERROR);
+      });
+
+      it('should add global message with raw error message if error object is null', () => {
+        const nullErrorresponse = {
+          error: {
+            errors: [null]
+          },
+          details: []
+        };
+
+        orderFacade.placeOrder.and.returnValue(throwError(() => nullErrorresponse));
+        component.submitForm();
+        expect(globalMessageService.add).toHaveBeenCalledWith({ raw: 'undefined: undefined' }, GlobalMessageType.MSG_TYPE_ERROR);
+      });
+
+      it('should add global message with raw error message if error type is null', () => {
+        const errorException = {
+          error: {
+            errors: [
+              {
+                message: 'Error message',
+                type: null
+              }
+            ]
+          },
+          details: []
+        };
+        orderFacade.placeOrder.and.returnValue(throwError(() => errorException));
+
+        component.submitForm();
+        expect(globalMessageService.add).toHaveBeenCalledWith({ raw: 'Error message' }, GlobalMessageType.MSG_TYPE_ERROR);
+      });
+
+      it('should add global message with raw error message if response is null', () => {
+        const errorException = null ;
+
+        orderFacade.placeOrder.and.returnValue(throwError(() => errorException));
+
+        component.submitForm();
+        expect(globalMessageService.add).toHaveBeenCalledWith({ raw: 'undefined: undefined' }, GlobalMessageType.MSG_TYPE_ERROR);
       });
     });
   });
@@ -210,34 +358,47 @@ describe('CheckoutComPlaceOrderComponent', () => {
     it('should not schedule a replenishment order when checkbox not checked', () => {
       submitForm(ORDER_TYPE.SCHEDULE_REPLENISHMENT_ORDER, false);
 
-      expect(checkoutComCheckoutService.placeOrder).not.toHaveBeenCalled();
-      expect(checkoutFacade.scheduleReplenishmentOrder).not.toHaveBeenCalled();
+      expect(orderFacade.placeOrder).not.toHaveBeenCalled();
+      expect(scheduledReplenishmentOrderFacade.scheduleReplenishmentOrder).not.toHaveBeenCalled();
     });
 
-    it('should NOT change page and reset form data when there is no successful replenishment order', () => {
-      spyOn(routingService, 'go').and.stub();
+    it('should schedule a replenishment order when checkbox checked', () => {
+      scheduledReplenishmentOrderFacade.scheduleReplenishmentOrder.and.returnValue(of(order as ReplenishmentOrder));
+      orderFacade.getOrderResultFromState.and.returnValue(of({
+        order: order,
+        successful: true
+      }));
+      submitForm(ORDER_TYPE.SCHEDULE_REPLENISHMENT_ORDER, true);
 
-      component.currentOrderType = ORDER_TYPE.SCHEDULE_REPLENISHMENT_ORDER;
-      component.onSuccess(false);
-
-      expect(routingService.go).not.toHaveBeenCalled();
-      expect(
-        checkoutReplenishmentFormService.resetScheduleReplenishmentFormData
-      ).not.toHaveBeenCalled();
+      expect(orderFacade.placeOrder).not.toHaveBeenCalled();
+      expect(scheduledReplenishmentOrderFacade.scheduleReplenishmentOrder).toHaveBeenCalled();
     });
 
     it('should change page and reset form data on a successful replenishment order', () => {
-      spyOn(routingService, 'go').and.stub();
-
+      spyOn(routingService, 'go');
       component.currentOrderType = ORDER_TYPE.SCHEDULE_REPLENISHMENT_ORDER;
-      component.onSuccess(true);
+      component.onSuccess();
 
       expect(routingService.go).toHaveBeenCalledWith({
         cxRoute: 'replenishmentConfirmation',
       });
-      expect(
-        checkoutReplenishmentFormService.resetScheduleReplenishmentFormData
-      ).toHaveBeenCalled();
+      expect(checkoutReplenishmentFormService.resetScheduleReplenishmentFormData).toHaveBeenCalled();
+    });
+  });
+
+  describe('when order was successfully placed', () => {
+    it('should open popover dialog', () => {
+      spyOnProperty(component.checkoutSubmitForm, 'valid').and.returnValue(
+        true
+      );
+      component.currentOrderType = ORDER_TYPE.PLACE_ORDER;
+
+      component.submitForm();
+
+      expect(launchDialogService.launch).toHaveBeenCalledWith(
+        LAUNCH_CALLER.PLACE_ORDER_SPINNER,
+        component['vcr'] as ViewContainerRef
+      );
     });
   });
 
@@ -245,6 +406,7 @@ describe('CheckoutComPlaceOrderComponent', () => {
     beforeEach(() => {
       component.ngOnInit();
       controls.termsAndConditions.setValue(true);
+      fixture.detectChanges();
     });
 
     it('should have button DISABLED when a checkbox for weekday in WEEKLY view is NOT checked and terms and condition checked', () => {
@@ -267,4 +429,118 @@ describe('CheckoutComPlaceOrderComponent', () => {
     controls.termsAndConditions.setValue(isTermsCondition);
     component.submitForm();
   }
+
+  describe('submitForm', () => {
+    it('should mark all fields as touched if form is invalid', () => {
+      spyOn(component.checkoutSubmitForm, 'markAllAsTouched');
+      spyOnProperty(component.checkoutSubmitForm, 'valid').and.returnValue(false);
+
+      component.submitForm();
+
+      expect(component.checkoutSubmitForm.markAllAsTouched).toHaveBeenCalled();
+    });
+
+    it('should handle error when order placement fails', () => {
+      const errorResponse = {
+        details: [{
+          message: 'Error message',
+          type: 'Error type'
+        }]
+      };
+      orderFacade.placeOrder.and.returnValue(throwError(() => errorResponse));
+      spyOnProperty(component.checkoutSubmitForm, 'valid').and.returnValue(true);
+      component.currentOrderType = ORDER_TYPE.PLACE_ORDER;
+
+      component.submitForm();
+
+      expect(globalMessageService.add).toHaveBeenCalledWith({ raw: 'Error message: Error type' }, GlobalMessageType.MSG_TYPE_ERROR);
+    });
+
+    it('should handle error when scheduled replenishment order placement fails', () => {
+      const errorResponse = {
+        details: [{
+          message: 'Error message',
+          type: 'Error type'
+        }]
+      };
+      scheduledReplenishmentOrderFacade.scheduleReplenishmentOrder.and.returnValue(throwError(() => errorResponse));
+      spyOnProperty(component.checkoutSubmitForm, 'valid').and.returnValue(true);
+      component.currentOrderType = ORDER_TYPE.SCHEDULE_REPLENISHMENT_ORDER;
+
+      component.submitForm();
+
+      expect(globalMessageService.add).toHaveBeenCalledWith({ raw: 'Error message: Error type' }, GlobalMessageType.MSG_TYPE_ERROR);
+    });
+
+    it('should redirect to the correct URL on successful order placement', () => {
+      orderFacade.placeOrder.and.returnValue(of(order));
+      orderFacade.getOrderResultFromState.and.returnValue(of(successResponse));
+      spyOnProperty(component.checkoutSubmitForm, 'valid').and.returnValue(true);
+      windowRef.nativeWindow.location.href = successResponse.redirectUrl;
+      component.currentOrderType = ORDER_TYPE.PLACE_ORDER;
+
+      component.submitForm();
+
+      expect(windowRef.nativeWindow.location.href).toBe('http://example.com');
+    });
+
+    it('should navigate to the previous checkout step on unsuccessful order placement', () => {
+      const orderResult = { successful: false };
+      orderFacade.getOrderResultFromState.and.returnValue(of(orderResult));
+      orderFacade.placeOrder.and.returnValue(of(order));
+      spyOnProperty(component.checkoutSubmitForm, 'valid').and.returnValue(true);
+      spyOn(routingService, 'go');
+      component.currentOrderType = ORDER_TYPE.PLACE_ORDER;
+
+      component.submitForm();
+
+      // @ts-ignore
+      expect(routingService.go).toHaveBeenCalledWith(stepsService.getPreviousCheckoutStepUrl(component.activatedRoute));
+    });
+  });
+
+  describe('orderResults', () => {
+    it('should redirect to the correct URL if redirectUrl is present', () => {
+      const result = {
+        redirect: { redirectUrl: 'http://example.com' },
+        successful: true
+      } as CheckoutComOrderResult;
+      orderFacade.getOrderResultFromState.and.returnValue(of(result));
+      component.orderResults();
+
+      expect(windowRef.nativeWindow.location.href).toBe('http://example.com');
+    });
+
+    it('should navigate to the previous checkout step if order is not successful', () => {
+      const result = { successful: false } as CheckoutComOrderResult;
+      orderFacade.getOrderResultFromState.and.returnValue(of(result));
+      spyOn(routingService, 'go');
+
+      component.orderResults();
+
+      // @ts-ignore
+      expect(routingService.go).toHaveBeenCalledWith(stepsService.getPreviousCheckoutStepUrl(component.activatedRoute));
+    });
+
+    it('should call onSuccess if order is successful and no redirectUrl is present', () => {
+      const result = { successful: true } as CheckoutComOrderResult;
+      orderFacade.getOrderResultFromState.and.returnValue(of(result));
+      spyOn(component, 'onSuccess');
+
+      component.orderResults();
+
+      expect(component.onSuccess).toHaveBeenCalled();
+    });
+
+    it('should log an error if getOrderResultFromState throws an error', () => {
+      const error = new Error('error');
+      orderFacade.getOrderResultFromState.and.returnValue(throwError(() => error));
+      spyOn(component['logger'], 'error');
+
+      component.orderResults();
+
+      expect(component['logger'].error).toHaveBeenCalledWith('getOrderResultFromState with error', { err: error });
+    });
+  });
+
 });

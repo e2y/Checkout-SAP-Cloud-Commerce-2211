@@ -7,12 +7,12 @@ This [Checkout.com](https://www.checkout.com/) library adds necessary translatio
 This library is tailored to the [Spartacus](https://sap.github.io/spartacus-docs/) Storefront:
 
 This release is compatible with:
-* Spartacus: version 4.2
-* Node module `checkout-spartacus-connector` v4.2.8
-* SAP Commerce Cloud: version 2011/2105/2205/2211
-* Angular CLI: Version 12.0.5 or later, < 13.
-* Node.js: Version 14.15 is required. Version 12.x reached end-of-life on April 30, 2022, and is no longer supported by Spartacus. It is strongly recommended that you migrate any existing Spartacus storefronts to Node.js 14 as soon as possible. If there are any issues with Spartacus and Node.js 14, please upgrade to the latest releases. If you continue to experience issues with Node.js 14, create a support ticket with SAP.
-* Yarn: Version 1.15 or later.
+* Spartacus: version 2211.32.1
+* Node module `@checkout.com/checkout-spartacus-connector` v2211.32.1
+* SAP Commerce Cloud: version 2211
+* [Angular CLI](https://angular.dev/): Version 17.0.0 is the minimum required. The most recent 17.x version is strongly recommended.
+* [Node.js](https://nodejs.org/en): Version 20.9.0 is the minimum required. The most recent 20.x version is strongly recommended.
+* [yarn](https://yarnpkg.com/): Version 1.15 or later. or [npm](https://www.npmjs.com/): Version 10.2.4 or newer.
 
 ## Release notes
 ### Release 4.2.8
@@ -62,7 +62,6 @@ Use this release if you are using Spartacus 4.2.x
   * Benefit Pay
   * EPS
   * Fawry
-  * Giropay
   * GooglePay
   * iDeal
   * Klarna
@@ -75,7 +74,6 @@ Use this release if you are using Spartacus 4.2.x
   * Przelewy24
   * QPay
   * Sepa
-  * Sofort
 * Credit card form placeholder localisation
 * Display card payment icon
 * Made OCC endpoints configurable

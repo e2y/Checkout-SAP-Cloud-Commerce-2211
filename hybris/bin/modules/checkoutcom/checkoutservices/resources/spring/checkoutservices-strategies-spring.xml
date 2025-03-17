@@ -92,11 +92,6 @@
         <constructor-arg ref="addressService"/>
     </bean>
 
-    <alias name="defaultCheckoutComGiropayPaymentRequestStrategy" alias="checkoutComGiropayPaymentRequestStrategy"/>
-    <bean id="defaultCheckoutComGiropayPaymentRequestStrategy"
-          class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComGiropayPaymentRequestStrategy"
-          parent="checkoutComAbstractApmPaymentRequestStrategy"/>
-
     <alias name="defaultCheckoutComEpsPaymentRequestStrategy" alias="checkoutComEpsPaymentRequestStrategy"/>
     <bean id="defaultCheckoutComEpsPaymentRequestStrategy"
           class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComEpsPaymentRequestStrategy"
@@ -131,12 +126,6 @@
     <bean id="defaultCheckoutComPoliPaymentRequestStrategy"
           class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComPoliPaymentRequestStrategy"
           parent="checkoutComAbstractApmPaymentRequestStrategy"/>
-
-    <alias name="defaultCheckoutComSofortPaymentRequestStrategy" alias="checkoutComSofortPaymentRequestStrategy"/>
-    <bean id="defaultCheckoutComSofortPaymentRequestStrategy"
-          class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComSofortPaymentRequestStrategy"
-          parent="checkoutComAbstractApmPaymentRequestStrategy"/>
-
     <alias name="defaultCheckoutComPayPalPaymentRequestStrategy" alias="checkoutComPayPalPaymentRequestStrategy"/>
     <bean id="defaultCheckoutComPayPalPaymentRequestStrategy"
           class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComPayPalPaymentRequestStrategy"

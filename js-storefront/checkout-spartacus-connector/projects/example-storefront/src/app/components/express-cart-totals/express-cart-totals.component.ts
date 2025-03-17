@@ -1,48 +1,47 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { CheckoutComApplepayService, CheckoutComGooglepayService, getUserIdCartId } from 'checkout-spartacus-connector';
-import { CartTotalsComponent } from '@spartacus/storefront';
-import {ActiveCartService, UserIdService, WindowRef} from '@spartacus/core';
-import { takeUntil } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { createApplePaySession } from '@checkout-core/services/applepay/applepay-session';
+import { CheckoutComApplepayService } from '@checkout-core/services/applepay/checkout-com-applepay.service';
+import { CheckoutComGooglepayService } from '@checkout-core/services/googlepay/checkout-com-googlepay.service';
+import { CartProceedToCheckoutComponent } from '@spartacus/cart/base/components';
+import { ActiveCartService } from '@spartacus/cart/base/core';
+import { UserIdService, WindowRef } from '@spartacus/core';
 import { Subject } from 'rxjs';
-import {
-  createApplePaySession
-} from "../../../../../checkout-spartacus-connector/src/core/services/applepay/applepay-session";
 
 @Component({
-  selector: 'app-express-cart-totals',
+  selector: 'lib-checkout-com-express-cart-totals',
   templateUrl: './express-cart-totals.component.html',
 })
-export class ExpressCartTotalsComponent extends CartTotalsComponent implements OnInit, OnDestroy {
-  applePay = false;
-  private drop = new Subject<void>();
+export class ExpressCartTotalsComponent extends CartProceedToCheckoutComponent implements OnInit, OnDestroy {
+  applePay: boolean = false;
+  private drop: Subject<void> = new Subject<void>();
 
   constructor(
-    activeCartService: ActiveCartService,
+    protected override router: Router,
+    protected activeCartService: ActiveCartService,
     protected userIdService: UserIdService,
     protected checkoutComApplepayService: CheckoutComApplepayService,
     protected checkoutComGooglePayService: CheckoutComGooglepayService,
     protected windowRef?: WindowRef
   ) {
-    super(activeCartService);
+    super(router);
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     super.ngOnInit();
     this.showApplePay();
-    getUserIdCartId(this.userIdService, this.activeCartService)
-      .pipe(takeUntil(this.drop))
-      .subscribe(({userId, cartId}) => {
-        this.checkoutComGooglePayService.requestMerchantConfiguration(userId, cartId);
-        this.checkoutComApplepayService.requestApplePayPaymentRequest(userId, cartId);
-      }, err => console.log('getUserIdCartId with errors', {err}));
+    this.checkoutComGooglePayService.requestMerchantConfiguration();
+    this.checkoutComApplepayService.requestApplePayPaymentRequest();
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
     this.drop.next();
   }
 
-  showApplePay() {
-    const ApplePaySession = createApplePaySession(this.windowRef);
+  showApplePay(): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ApplePaySession: any = createApplePaySession(this.windowRef);
     this.applePay = !!(ApplePaySession && ApplePaySession.canMakePayments());
   }
 }

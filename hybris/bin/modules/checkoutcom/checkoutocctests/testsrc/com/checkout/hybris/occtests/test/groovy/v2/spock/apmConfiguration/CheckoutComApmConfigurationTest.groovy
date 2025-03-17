@@ -30,10 +30,10 @@ class CheckoutComApmConfigurationTest extends AbstractCheckoutComPaymentsTest {
             if (isNotEmpty(data) && isNotEmpty(data.errors)) println(data)
             status == SC_OK
             CollectionUtils.isNotEmpty(responseData.availableApmConfigurations)
-            def apm = responseData.availableApmConfigurations.find { it.code == "GIROPAY" }
-            apm.name == "Giropay"
-            apm.isRedirect == true
-            apm.isUserDataRequired == false
+            def apm = responseData.availableApmConfigurations.find { it.code == "KLARNA" }
+            apm.name == "Klarna"
+            apm.isRedirect == false
+            apm.isUserDataRequired == true
             apm.media != null
         }
     }

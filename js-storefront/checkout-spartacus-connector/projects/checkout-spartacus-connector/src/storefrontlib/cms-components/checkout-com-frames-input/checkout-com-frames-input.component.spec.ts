@@ -1,34 +1,36 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReactiveFormsModule, UntypedFormGroup } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { CheckoutComTooltipContainerModule } from '@checkout-components/checkout-com-tooltip-container/checkout-com-tooltip-container.module';
+import { CheckoutComTooltipDirectiveModule } from '@checkout-core/directives/checkout-com-tooltip-directive.module';
+import { CheckoutComTooltipDirective } from '@checkout-core/directives/checkout-com-tooltip.directive';
+import { MockCxIconComponent } from '@checkout-tests/components';
+import { StoreModule } from '@ngrx/store';
+import { I18nTestingModule } from '@spartacus/core';
+import { FrameElementIdentifier } from '../checkout-com-frames-form/interfaces';
 
 import { CheckoutComFramesInputComponent } from './checkout-com-frames-input.component';
-import { StoreModule } from '@ngrx/store';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { FrameElementIdentifier } from '../checkout-com-frames-form/interfaces';
 import { CSS_CLASS_CARD_NUMBER, CSS_CLASS_CVV, CSS_CLASS_EXPIRY_DATE } from './interfaces';
-import { I18nTestingModule } from '@spartacus/core';
-import { Component, Input } from '@angular/core';
-import { ICON_TYPE } from '@spartacus/storefront';
-
-@Component({
-  selector: 'cx-icon',
-  template: '',
-})
-class MockCxIconComponent {
-  @Input() type: ICON_TYPE;
-  @Input() tooltip;
-}
 
 describe('CheckoutComFramesInputComponent', () => {
   let component: CheckoutComFramesInputComponent;
   let fixture: ComponentFixture<CheckoutComFramesInputComponent>;
+  let onMouseEnterSpy: jasmine.Spy;
+  let onMouseLeaveSpy: jasmine.Spy;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [
         CheckoutComFramesInputComponent,
-        MockCxIconComponent
+        MockCxIconComponent,
       ],
-      imports: [StoreModule.forRoot({}), ReactiveFormsModule, I18nTestingModule],
+      imports: [
+        StoreModule.forRoot({}),
+        ReactiveFormsModule,
+        I18nTestingModule,
+        CheckoutComTooltipDirectiveModule,
+        CheckoutComTooltipContainerModule
+      ],
     }).compileComponents();
   });
 
@@ -45,7 +47,7 @@ describe('CheckoutComFramesInputComponent', () => {
   });
 
   it('should add ctrl to the existing form', () => {
-    component.form = new FormGroup({});
+    component.form = new UntypedFormGroup({});
     fixture.detectChanges();
     expect(component.form.controls[component.fieldName]).toBeTruthy();
   });
@@ -63,15 +65,27 @@ describe('CheckoutComFramesInputComponent', () => {
   });
 
   [
-    {cssClass: CSS_CLASS_CARD_NUMBER, fieldType: FrameElementIdentifier.CardNumber},
-    {cssClass: CSS_CLASS_CVV, fieldType: FrameElementIdentifier.Cvv},
-    {cssClass: CSS_CLASS_EXPIRY_DATE, fieldType: FrameElementIdentifier.ExpiryDate},
-    {cssClass: null, fieldType: null},
+    {
+      cssClass: CSS_CLASS_CARD_NUMBER,
+      fieldType: FrameElementIdentifier.CardNumber
+    },
+    {
+      cssClass: CSS_CLASS_CVV,
+      fieldType: FrameElementIdentifier.Cvv
+    },
+    {
+      cssClass: CSS_CLASS_EXPIRY_DATE,
+      fieldType: FrameElementIdentifier.ExpiryDate
+    },
+    {
+      cssClass: null,
+      fieldType: null
+    },
   ].forEach((parameters) => {
     it(`should map field type ${parameters.fieldType} to css class ${parameters.cssClass}`, () => {
       component.fieldType = parameters.fieldType;
       expect(component.cssClassByFieldType).toEqual(parameters.cssClass);
-    })
+    });
   });
 
   it('should show multiple brands tooltip', () => {
@@ -82,5 +96,50 @@ describe('CheckoutComFramesInputComponent', () => {
     const tooltipWrapper = fixture.nativeElement.querySelector('.cobadgedTooltip');
     expect(tooltipWrapper).toBeTruthy();
     expect(tooltipWrapper.innerText.includes('tooltipLabel')).toBeTrue();
+  });
+
+  describe('UI Elements', () => {
+    beforeEach(() => {
+      component.showTooltip = true;
+      component.tooltipLabel = 'tooltipLabel';
+      component.tooltipText = 'tooltipTex';
+      fixture.detectChanges();
+      const directive = fixture.debugElement.query(By.directive(CheckoutComTooltipDirective)).injector.get(CheckoutComTooltipDirective);
+      onMouseEnterSpy = spyOn(directive, 'onMouseEnter');
+      onMouseLeaveSpy = spyOn(directive, 'onMouseLeave');
+    });
+    it('should trigger mouse enter event for tooltip directive', () => {
+      const tooltipWrapper = fixture.nativeElement.querySelector('.cobadgedTooltip');
+      expect(tooltipWrapper).toBeTruthy();
+      expect(tooltipWrapper.innerText.includes('tooltipLabel')).toBeTrue();
+
+      const event = new Event('mouseenter');
+      tooltipWrapper.querySelector('cx-icon').dispatchEvent(event);
+      fixture.detectChanges();
+
+      expect(onMouseEnterSpy).toHaveBeenCalled();
+    });
+
+    it('should trigger mouse leave event for tooltip directive', () => {
+      component.showTooltip = true;
+      component.tooltipLabel = 'tooltipLabel';
+      component.tooltipText = 'tooltipTex';
+      fixture.detectChanges();
+      const directive = fixture.debugElement.query(By.directive(CheckoutComTooltipDirective)).injector.get(CheckoutComTooltipDirective);
+
+      const tooltipWrapper = fixture.nativeElement.querySelector('.cobadgedTooltip');
+      expect(tooltipWrapper).toBeTruthy();
+      expect(tooltipWrapper.innerText.includes('tooltipLabel')).toBeTrue();
+
+      const mouseEnterEvent = new Event('mouseenter');
+      tooltipWrapper.querySelector('cx-icon').dispatchEvent(mouseEnterEvent);
+      fixture.detectChanges();
+
+      const mouseLeaveEvent = new Event('mouseleave');
+      tooltipWrapper.querySelector('cx-icon').dispatchEvent(mouseLeaveEvent);
+      fixture.detectChanges();
+
+      expect(onMouseLeaveSpy).toHaveBeenCalled();
+    });
   });
 });

@@ -1,5 +1,5 @@
-import {CmsComponent} from '@spartacus/core';
-import { MediaContainer} from '@spartacus/storefront';
+import { CmsComponent } from '@spartacus/core';
+import { MediaContainer } from '@spartacus/storefront';
 
 export interface OccCmsComponentWithMedia extends CmsComponent {
   media?: {

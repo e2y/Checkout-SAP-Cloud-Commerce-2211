@@ -1,75 +1,197 @@
-import { Component, ChangeDetectionStrategy, ViewContainerRef, OnDestroy } from '@angular/core';
-import {
-  CheckoutReplenishmentFormService,
-  CheckoutStepService,
-  PlaceOrderComponent
-} from '@spartacus/checkout/components';
-import { RoutingService, ORDER_TYPE, WindowRef } from '@spartacus/core';
-import { FormBuilder } from '@angular/forms';
-import { CheckoutComCheckoutService } from '../../../core/services/checkout-com-checkout.service';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, ComponentRef, DestroyRef, inject, OnDestroy, ViewContainerRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UntypedFormBuilder } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { makeFormErrorsVisible } from '../../../core/shared/make-form-errors-visible';
-import { LaunchDialogService } from '@spartacus/storefront';
+import { CheckoutComOrderResult } from '@checkout-core/interfaces';
+import { CheckoutComOrderFacade } from '@checkout-facades/checkout-com-order.facade';
+import { CheckoutStepService } from '@spartacus/checkout/base/components';
+import { CheckoutReplenishmentFormService, CheckoutScheduledReplenishmentPlaceOrderComponent } from '@spartacus/checkout/scheduled-replenishment/components';
+import { GlobalMessageService, GlobalMessageType, HttpErrorModel, LoggerService, RoutingService, Translatable, WindowRef } from '@spartacus/core';
+import { ORDER_TYPE, ScheduledReplenishmentOrderFacade } from '@spartacus/order/root';
+import { LAUNCH_CALLER, LaunchDialogService } from '@spartacus/storefront';
+import { merge } from 'rxjs';
 
 @Component({
-  selector: 'cx-place-order',
+  selector: 'lib-checkout-com-place-order',
   templateUrl: './checkout-com-place-order.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CheckoutComPlaceOrderComponent extends PlaceOrderComponent implements OnDestroy {
+export class CheckoutComPlaceOrderComponent extends CheckoutScheduledReplenishmentPlaceOrderComponent implements OnDestroy {
+  protected logger: LoggerService = inject(LoggerService);
+  private destroyRef: DestroyRef = inject(DestroyRef);
 
-  private drop = new Subject<void>();
-
+  /**
+   * Constructor for the CheckoutComPlaceOrderComponent.
+   * Initializes the component with the provided services and clears any placed orders.
+   *
+   * @param {CheckoutComOrderFacade} orderFacade - The order facade service.
+   * @param {RoutingService} routingService - The routing service.
+   * @param {UntypedFormBuilder} fb - The form builder service.
+   * @param {LaunchDialogService} launchDialogService - The launch dialog service.
+   * @param {ViewContainerRef} vcr - The view container reference.
+   * @param {CheckoutReplenishmentFormService} checkoutReplenishmentFormService - The checkout replenishment form service.
+   * @param {ScheduledReplenishmentOrderFacade} scheduledReplenishmentOrderFacade - The scheduled replenishment order facade.
+   * @param {GlobalMessageService} globalMessageService - The global message service.
+   * @param {WindowRef} windowRef - The window reference.
+   * @param {CheckoutStepService} stepService - The checkout step service.
+   * @param {ActivatedRoute} activatedRoute - The activated route.
+   * @since 2211.31.1
+   */
   constructor(
-    protected checkoutService: CheckoutComCheckoutService,
-    protected routingService: RoutingService,
-    protected fb: FormBuilder,
-    protected checkoutReplenishmentFormService: CheckoutReplenishmentFormService,
-    protected launchDialogService: LaunchDialogService,
-    protected vcr: ViewContainerRef,
+    protected override orderFacade: CheckoutComOrderFacade,
+    protected override routingService: RoutingService,
+    protected override fb: UntypedFormBuilder,
+    protected override launchDialogService: LaunchDialogService,
+    protected override vcr: ViewContainerRef,
+    protected override checkoutReplenishmentFormService: CheckoutReplenishmentFormService,
+    protected override scheduledReplenishmentOrderFacade: ScheduledReplenishmentOrderFacade,
+    protected globalMessageService: GlobalMessageService,
+    protected windowRef: WindowRef,
     protected stepService: CheckoutStepService,
     protected activatedRoute: ActivatedRoute,
-    protected windowRef: WindowRef,
   ) {
-    super(checkoutService, routingService, fb, checkoutReplenishmentFormService, launchDialogService, vcr);
+    super(
+      orderFacade,
+      routingService,
+      fb,
+      launchDialogService,
+      vcr,
+      checkoutReplenishmentFormService,
+      scheduledReplenishmentOrderFacade
+    );
 
-    this.checkoutService.clearPlaceOrderState();
+    this.orderFacade.clearPlacedOrder();
   }
 
-  submitForm(): void {
-    if (this.checkoutSubmitForm.valid && Boolean(this.currentOrderType)) {
-      switch (this.currentOrderType) {
-        case ORDER_TYPE.PLACE_ORDER: {
-          this.checkoutService.placeOrder(this.checkoutSubmitForm.valid);
-          this.checkoutService.getOrderResultFromState().pipe(takeUntil(this.drop)).subscribe((result) => {
-            if (result.redirect?.redirectUrl) {
-              this.windowRef.nativeWindow.location.href = result.redirect.redirectUrl;
-              return;
-            }
-            if (result.successful === false) {
-              this.routingService.go(this.stepService.getPreviousCheckoutStepUrl(this.activatedRoute));
-            }
-          }, err => console.error('getOrderResultFromState with error', {err}));
-          break;
-        }
-
-        case ORDER_TYPE.SCHEDULE_REPLENISHMENT_ORDER: {
-          this.checkoutService.scheduleReplenishmentOrder(
+  /**
+   * Submits the checkout form.
+   * If the form is valid, launches a spinner dialog and places the order.
+   * Handles the order result, including redirection and error handling.
+   * If the form is invalid, marks all fields as touched.
+   *
+   * @override
+   * @returns {void}
+   * @since 2211.31.1
+   */
+  override submitForm(): void {
+    if (this.checkoutSubmitForm.valid && !!this.currentOrderType) {
+      this.placedOrder = this.launchDialogService.launch(
+        LAUNCH_CALLER.PLACE_ORDER_SPINNER,
+        this.vcr
+      );
+      merge(
+        this.currentOrderType === ORDER_TYPE.PLACE_ORDER
+          ? this.orderFacade.placeOrder(this.checkoutSubmitForm.valid)
+          : this.scheduledReplenishmentOrderFacade.scheduleReplenishmentOrder(
             this.scheduleReplenishmentFormData,
             this.checkoutSubmitForm.valid
-          );
-          break;
-        }
-      }
+          )
+      ).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        error: (response: unknown): void => {
+          const httpErrorModel: HttpErrorModel = response as HttpErrorModel;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const errorModel: any = httpErrorModel?.details?.[0];
+          const message: string = errorModel?.message;
+          const type: string = errorModel?.type;
+          let text: Translatable = {
+            raw: `${message}: ${type}`
+          };
+
+          this.clearPlaeOrder();
+
+          try {
+            const httpErrorResponse: HttpErrorResponse = response as HttpErrorResponse;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const errObj: any = httpErrorResponse?.error?.errors?.[0];
+            if (errObj != null && typeof errObj === 'object') {
+              text = {};
+              if (errObj.type && typeof errObj.type === 'string') {
+                // eslint-disable-next-line @typescript-eslint/typedef
+                const symbols = errObj.type.split('');
+                symbols[0] = symbols[0].toLowerCase();
+                text.key = 'checkoutReview.' + symbols.join('');
+              }
+              if (!text.key) {
+                if (errObj.message && typeof errObj.message === 'string') {
+                  text.raw = errObj.message;
+                }
+              }
+              if (text.key || text.raw) {
+                this.globalMessageService.add(text, GlobalMessageType.MSG_TYPE_ERROR);
+              }
+            } else {
+              this.globalMessageService.add(text, GlobalMessageType.MSG_TYPE_ERROR);
+            }
+          } catch (e) {
+            this.logger.error(e);
+            this.globalMessageService.add(text, GlobalMessageType.MSG_TYPE_ERROR);
+          }
+        },
+        next: (): void => {
+          this.orderResults();
+        },
+      });
     } else {
-      makeFormErrorsVisible(this.checkoutSubmitForm);
+      this.checkoutSubmitForm.markAllAsTouched();
     }
   }
 
-  ngOnDestroy() {
-    this.drop.next();
-    super.ngOnDestroy();
+  /**
+   * Retrieves the order result from the state and handles redirection or error scenarios.
+   * If the order result contains a redirect URL, navigates to that URL.
+   * If the order is not successful, navigates to the previous checkout step.
+   * Otherwise, calls the onSuccess method.
+   *
+   * @returns {void}
+   * @since 2211.31.1
+   */
+  orderResults(): void {
+    this.orderFacade.getOrderResultFromState().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next:
+        (result: CheckoutComOrderResult): void => {
+          if (result.redirect?.redirectUrl) {
+            this.windowRef.nativeWindow.location.href = result.redirect.redirectUrl;
+            return;
+          }
+          if (result.successful === false) {
+            this.routingService.go(this.stepService.getPreviousCheckoutStepUrl(this.activatedRoute));
+            return;
+          }
+          this.onSuccess();
+        },
+      error: (err: unknown): void => this.logger.error('getOrderResultFromState with error', { err })
+    });
+  }
+
+  /**
+   * Clears the placed order if it exists.
+   * Unsubscribes from the placed order observable and destroys the component if it exists.
+   *
+   * @returns {void}
+   * @since 2211.31.1
+   */
+  clearPlaeOrder(): void {
+    if (this.placedOrder) {
+      this.placedOrder.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        next: (component: ComponentRef<any>): void => {
+          this.launchDialogService.clear(
+            LAUNCH_CALLER.PLACE_ORDER_SPINNER
+          );
+          if (component) {
+            component.destroy();
+          }
+        },
+        error: (error: unknown): void => this.logger.error('placedOrder with errors', { error })
+      }).unsubscribe();
+    }
   }
 }

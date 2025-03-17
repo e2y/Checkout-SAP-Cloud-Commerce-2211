@@ -16,7 +16,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.CARD;
@@ -62,7 +62,7 @@ public class CheckoutComCardUpdatePaymentInfoStrategyTest {
         testObj.processPaymentResponse(paymentResponseMock);
 
         verifyNoMoreInteractions(cartServiceMock);
-        verifyZeroInteractions(paymentInfoServiceMock);
+        verifyNoInteractions(paymentInfoServiceMock);
     }
 
     @Test

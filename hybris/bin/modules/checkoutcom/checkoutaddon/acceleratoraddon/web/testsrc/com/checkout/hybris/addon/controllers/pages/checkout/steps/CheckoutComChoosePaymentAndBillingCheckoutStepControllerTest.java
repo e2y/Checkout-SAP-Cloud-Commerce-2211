@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.MapBindingResult;
@@ -38,7 +38,7 @@ public class CheckoutComChoosePaymentAndBillingCheckoutStepControllerTest {
 	final MapBindingResult bindingResult = new MapBindingResult(Map.of(), "errors");
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		ensureHandleAndSaveAddressesDoesNothing();
 		paymentDetailsForm.setPaymentMethod(PAYMENT_METHOD);
 	}

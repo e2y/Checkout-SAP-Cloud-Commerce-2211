@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ModalService } from '@spartacus/storefront';
+import { Component } from '@angular/core';
+import { LaunchDialogService } from '@spartacus/storefront';
 
 @Component({
   selector: 'y-checkout-com-apm-ach-consents',
@@ -7,10 +7,22 @@ import { ModalService } from '@spartacus/storefront';
 })
 export class CheckoutComApmAchConsentsComponent  {
 
-  constructor(protected modalService: ModalService) { }
+  /**
+   * Constructor for the CheckoutComApmAchConsentsComponent.
+   *
+   * @param launchDialogService The service used to manage dialog operations.
+   * @since 5.2.0
+   */
+  constructor(protected launchDialogService: LaunchDialogService) { }
 
-  close() {
-    this.modalService.dismissActiveModal();
+  /**
+   * Closes the dialog using the LaunchDialogService.
+   *
+   * @since 5.2.0
+   * @return void
+   */
+  close(): void {
+    this.launchDialogService.closeDialog('');
   }
 
 }

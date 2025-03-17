@@ -16,13 +16,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.lang.reflect.InvocationTargetException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -39,7 +38,7 @@ public class DefaultCheckoutComACHConsentPlaceOrderHookTest {
 	private final CheckoutComACHConsentModel consent = new CheckoutComACHConsentModel();
 	private PaymentInfoModel paymentInfo;
 	private final OrderModel order = new OrderModel();
-	
+
 	@Test
 	public void afterPlaceOrder_shouldDoNothing_WhenPaymentInfoIsNotOfClassCheckoutComAchPaymentInfoModel() throws InvocationTargetException, NoSuchMethodException, InstantiationException,
 			IllegalAccessException {
@@ -50,7 +49,7 @@ public class DefaultCheckoutComACHConsentPlaceOrderHookTest {
 
 		testObj.afterPlaceOrder(commerceCheckoutParameter, commerceOrderResult);
 
-		verifyZeroInteractions(modelServiceMock);
+        verifyNoInteractions(modelServiceMock);
 	}
 
 	@Test
@@ -92,7 +91,7 @@ public class DefaultCheckoutComACHConsentPlaceOrderHookTest {
 
 		testObj.beforePlaceOrder(commerceCheckoutParameter);
 
-		verifyZeroInteractions(modelServiceMock);
+        verifyNoInteractions(modelServiceMock);
 	}
 
 	private void associateConsent(final AbstractOrderModel order, final CheckoutComACHConsentModel consent) {

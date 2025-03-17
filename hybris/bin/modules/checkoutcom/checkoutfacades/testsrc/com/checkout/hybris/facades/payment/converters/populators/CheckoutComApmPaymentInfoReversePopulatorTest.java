@@ -8,9 +8,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.GIROPAY;
+import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.PAYPAL;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
@@ -29,12 +29,12 @@ public class CheckoutComApmPaymentInfoReversePopulatorTest {
 
     @Test
     public void populate_ShouldPopulateTargetCorrectly() {
-        when(checkoutComAPMConfigurationServiceMock.isApmUserDataRequired(GIROPAY.name())).thenReturn(false);
-        source.setType(GIROPAY.name());
+        when(checkoutComAPMConfigurationServiceMock.isApmUserDataRequired(PAYPAL.name())).thenReturn(false);
+        source.setType(PAYPAL.name());
 
         testObj.populate(source, target);
 
-        assertEquals(GIROPAY.name(), target.getType());
+        assertEquals(PAYPAL.name(), target.getType());
         assertFalse(target.getUserDataRequired());
         assertTrue(target.getDeferred());
     }

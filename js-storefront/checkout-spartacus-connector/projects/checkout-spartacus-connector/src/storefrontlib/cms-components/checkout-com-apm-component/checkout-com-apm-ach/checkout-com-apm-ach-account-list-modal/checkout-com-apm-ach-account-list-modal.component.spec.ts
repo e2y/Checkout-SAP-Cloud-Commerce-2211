@@ -1,11 +1,12 @@
+import { DebugElement } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReactiveFormsModule, UntypedFormBuilder } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { I18nTestingModule } from '@spartacus/core';
+import { LaunchDialogService } from '@spartacus/storefront';
+import { of } from 'rxjs';
 
 import { CheckoutComApmAchAccountListModalComponent } from './checkout-com-apm-ach-account-list-modal.component';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { I18nTestingModule } from '@spartacus/core';
-import { By } from '@angular/platform-browser';
-import { ModalService } from '@spartacus/storefront';
-import { DebugElement } from '@angular/core';
 
 const institutionMeta = {
   name: 'Bank of America',
@@ -46,10 +47,15 @@ const achMetadata = {
 describe('CheckoutComApmAchAccountListModalComponent', () => {
   let component: CheckoutComApmAchAccountListModalComponent;
   let fixture: ComponentFixture<CheckoutComApmAchAccountListModalComponent>;
-  let modalService: ModalService;
+  let launchDialogService: jasmine.SpyObj<LaunchDialogService>;
   let formElement: DebugElement;
 
   beforeEach(async () => {
+    const launchDialogServiceSpy = jasmine.createSpyObj(
+      'LaunchDialogService',
+      ['closeDialog'],
+      { data$: of({ achMetadata }) },
+    );
     await TestBed.configureTestingModule({
         imports: [
           ReactiveFormsModule,
@@ -59,8 +65,11 @@ describe('CheckoutComApmAchAccountListModalComponent', () => {
           CheckoutComApmAchAccountListModalComponent,
         ],
         providers: [
-          FormBuilder,
-          ModalService,
+          UntypedFormBuilder,
+          {
+            provide: LaunchDialogService,
+            useValue: launchDialogServiceSpy
+          },
         ]
       })
       .compileComponents();
@@ -70,8 +79,7 @@ describe('CheckoutComApmAchAccountListModalComponent', () => {
     fixture = TestBed.createComponent(CheckoutComApmAchAccountListModalComponent);
     component = fixture.componentInstance;
     component.achMetadata = achMetadata;
-    modalService = TestBed.inject(ModalService);
-    spyOn(modalService, 'closeActiveModal').and.callThrough();
+    launchDialogService = TestBed.inject(LaunchDialogService) as jasmine.SpyObj<LaunchDialogService>;
     formElement = fixture.debugElement.query(By.css('form'));
     fixture.detectChanges();
   });
@@ -88,40 +96,93 @@ describe('CheckoutComApmAchAccountListModalComponent', () => {
     expect(component.achAccountListForm.get('account_id').value).toBe(achMetadata.account_id);
   });
 
-  describe('should update  form with selected value', () => {
+  it('should close dialog with specified reason', () => {
+    component.close('close');
+    expect(launchDialogService.closeDialog).toHaveBeenCalledWith({ type: 'close' });
+  });
 
-    beforeEach(() => {
-      expect(formElement).toBeTruthy();
-      const options = formElement.queryAll(By.css('form .cx-list-group-item'));
-      expect(options).toBeTruthy();
-      const newValue = achMetadata.accounts[1].id;
-      expect(component.achAccountListForm.get('account_id').value).toBe(achMetadata.account_id);
-      expect(options.length === achMetadata.accounts.length).toBeTrue();
-      options[1].query(By.css(`#input-${newValue}`)).nativeElement.click();
-      fixture.detectChanges();
-      expect(component.achAccountListForm.get('account_id').value).toBe(newValue);
-    });
+  it('should close dialog with different reason', () => {
+    component.close('cancel');
+    expect(launchDialogService.closeDialog).toHaveBeenCalledWith({ type: 'cancel' });
+  });
 
-    it('should submit form using selected id', () => {
-      const submitButton = formElement.query(By.css('button.btn-primary'));
-      expect(submitButton).toBeTruthy();
-      submitButton.nativeElement.click();
-      const parameters = {
+  it('should close dialog with selected account data on form submit', () => {
+    component.achAccountListForm.patchValue({ account_id: accountMeta2.id });
+    component.onSubmit();
+    expect(launchDialogService.closeDialog).toHaveBeenCalledWith({
+      type: 'submit',
+      parameters: {
         ...achMetadata,
-        account_id: '5QqJxWGn7zCBrqKv5jAMUk61aKmRDBtpNvwRq',
-        account: accountMeta2,
-      };
-      expect(modalService.closeActiveModal).toHaveBeenCalledWith({
-        type: 'submit',
-        parameters
+        account_id: accountMeta2.id,
+        account: accountMeta2
+      }
+    });
+  });
+
+  it('should log error message if selected account is not found on form submit', () => {
+    spyOn(component['logger'], 'error');
+    component.achAccountListForm.patchValue({ account_id: 'invalid_id' });
+    component.onSubmit();
+    expect(component['logger'].error).toHaveBeenCalledWith('Account Id Not found');
+  });
+
+  it('should add account to existing subtype group', () => {
+    component.achAccountList = { checking: [accountMeta1] };
+    const newAccount = {
+      ...accountMeta1,
+      id: 'new_id'
+    };
+    component['achAccountList'][newAccount.subtype].push(newAccount);
+    expect(component.achAccountList['checking'].length).toBe(2);
+    expect(component.achAccountList['checking'][1]).toEqual(newAccount);
+  });
+
+  it('should create new subtype group if it does not exist', () => {
+    component.achAccountList = {};
+    const newAccount = { ...accountMeta2 };
+    component['achAccountList'][newAccount.subtype] = [newAccount];
+    expect(component.achAccountList['savings'].length).toBe(1);
+    expect(component.achAccountList['savings'][0]).toEqual(newAccount);
+  });
+
+  describe('UI Components', () => {
+    describe('should update  form with selected value', () => {
+
+      beforeEach(() => {
+        expect(formElement).toBeTruthy();
+        const options = formElement.queryAll(By.css('form .cx-list-group-item'));
+        expect(options).toBeTruthy();
+        const newValue = achMetadata.accounts[1].id;
+        expect(component.achAccountListForm.get('account_id').value).toBe(achMetadata.account_id);
+        expect(options.length === achMetadata.accounts.length).toBeTrue();
+        options[1].query(By.css(`#input-${newValue}`)).nativeElement.click();
+        fixture.detectChanges();
+        expect(component.achAccountListForm.get('account_id').value).toBe(newValue);
+      });
+
+      it('should submit form using selected id', () => {
+        const submitButton = formElement.query(By.css('button.btn-primary'));
+        expect(submitButton).toBeTruthy();
+        submitButton.nativeElement.click();
+        const parameters = {
+          ...achMetadata,
+          account_id: '5QqJxWGn7zCBrqKv5jAMUk61aKmRDBtpNvwRq',
+          account: accountMeta2,
+        };
+        expect(launchDialogService.closeDialog).toHaveBeenCalledWith({
+          type: 'submit',
+          parameters
+        });
       });
     });
+
+    it('should close modal', () => {
+      const closeButton = formElement.query(By.css('.close'));
+      expect(closeButton).toBeTruthy();
+      closeButton.nativeElement.click();
+      expect(launchDialogService.closeDialog).toHaveBeenCalledWith({ type: 'close' });
+    });
   });
 
-  it('should close modal', () => {
-    const closeButton = formElement.query(By.css('.close'));
-    expect(closeButton).toBeTruthy();
-    closeButton.nativeElement.click();
-    expect(modalService.closeActiveModal).toHaveBeenCalledWith({ type: 'close' });
-  });
 });
+

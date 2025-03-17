@@ -3,14 +3,13 @@ package com.checkout.hybris.facades.cart.validators.impl;
 import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import de.hybris.bootstrap.annotations.UnitTest;
-import de.hybris.platform.acceleratorservices.enums.CheckoutPciOptionEnum;
 import de.hybris.platform.commercefacades.order.data.CartData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
@@ -20,6 +19,12 @@ import static org.mockito.Mockito.when;
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
 public class CheckoutComPlaceOrderCartValidatorTest {
+
+    private static final String DELIVERY_ADDRESS_ERROR_MESSAGE = "checkoutcom.occ.deliveryAddress.notSelected";
+    private static final String DELIVERY_METHOD_ERROR_MESSAGE = "checkoutcom.occ.deliveryMethod.notSelected";
+    private static final String PAYMENT_METHOD_ERROR_MESSAGE = "checkoutcom.occ.paymentMethod.notSelected";
+    private static final String MISSING_TAX_ERROR_MESSAGE = "checkoutcom.occ.error.tax.missing";
+    private static final String CART_NOT_CALCULATED_ERROR_MESSAGE = "checkoutcom.occ.error.cart.notcalculated";
 
     @InjectMocks
     private CheckoutComPlaceOrderCartValidator testObj;
@@ -53,7 +58,7 @@ public class CheckoutComPlaceOrderCartValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), "checkoutcom.occ.deliveryAddress.notSelected");
+        assertEquals(DELIVERY_ADDRESS_ERROR_MESSAGE, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -64,7 +69,7 @@ public class CheckoutComPlaceOrderCartValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), "checkoutcom.occ.deliveryMethod.notSelected");
+        assertEquals(DELIVERY_METHOD_ERROR_MESSAGE, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -75,7 +80,7 @@ public class CheckoutComPlaceOrderCartValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), "checkoutcom.occ.paymentMethod.notSelected");
+        assertEquals(PAYMENT_METHOD_ERROR_MESSAGE, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -86,7 +91,7 @@ public class CheckoutComPlaceOrderCartValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), "checkoutcom.occ.paymentMethod.notSelected");
+        assertEquals(PAYMENT_METHOD_ERROR_MESSAGE, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -97,7 +102,7 @@ public class CheckoutComPlaceOrderCartValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), "checkoutcom.occ.error.tax.missing");
+        assertEquals(MISSING_TAX_ERROR_MESSAGE, errors.getAllErrors().get(0).getCode());
     }
 
     @Test
@@ -108,7 +113,7 @@ public class CheckoutComPlaceOrderCartValidatorTest {
 
         assertTrue(errors.hasErrors());
         assertEquals(1, errors.getErrorCount());
-        assertEquals(errors.getAllErrors().get(0).getCode(), "checkoutcom.occ.error.cart.notcalculated");
+        assertEquals(CART_NOT_CALCULATED_ERROR_MESSAGE, errors.getAllErrors().get(0).getCode());
     }
 
     @Test

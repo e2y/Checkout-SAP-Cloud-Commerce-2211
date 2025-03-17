@@ -28,6 +28,17 @@
         <property name="paymentContextId" type="java.lang.String"/>
     </bean>
 
+    <bean class="com.checkout.dto.order.CheckoutComPaymentDetailsWsDTO">
+        <property name="type" type="java.lang.String"/>
+        <property name="qrCodeData" type="java.lang.String"/>
+        <property name="accountNumber" type="java.lang.String"/>
+        <property name="billingAddress" type="de.hybris.platform.commercefacades.user.data.AddressData"/>
+    </bean>
+
+    <bean class="de.hybris.platform.commercewebservicescommons.dto.order.CartWsDTO">
+        <property name="checkoutComPaymentInfo" type="com.checkout.dto.order.CheckoutComPaymentDetailsWsDTO"/>
+    </bean>
+
     <bean class="com.checkout.dto.apm.CheckoutComAPMConfigurationWsDTO">
         <property name="code" type="java.lang.String"/>
         <property name="name" type="java.lang.String"/>
@@ -46,6 +57,7 @@
         <property name="redirectUrl" type="java.lang.String"/>
         <property name="qrCodeData" type="java.lang.String"/>
         <property name="paymentType" type="java.lang.String"/>
+        <property name="checkoutComPaymentInfo" type="com.checkout.dto.order.CheckoutComPaymentDetailsWsDTO"/>
     </bean>
 
     <bean class="com.checkout.dto.order.PlaceWalletOrderWsDTO">

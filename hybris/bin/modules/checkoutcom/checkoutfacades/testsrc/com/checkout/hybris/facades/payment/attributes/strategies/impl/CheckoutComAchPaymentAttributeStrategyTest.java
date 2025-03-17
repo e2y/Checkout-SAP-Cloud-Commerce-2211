@@ -1,7 +1,6 @@
 package com.checkout.hybris.facades.payment.attributes.strategies.impl;
 
 import com.checkout.hybris.core.enums.AchAccountType;
-import com.google.common.collect.ImmutableList;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.enumeration.EnumerationService;
 import org.junit.Before;
@@ -10,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.ui.Model;
 
 import java.util.List;
@@ -46,7 +45,7 @@ public class CheckoutComAchPaymentAttributeStrategyTest {
 
     @Test
     public void addPaymentAttributeToModel() {
-        final ImmutableList<String> achAccountTypes = ImmutableList.of("Saving", "Checking");
+        final List<String> achAccountTypes = List.of("Saving", "Checking");
         doReturn(achAccountTypes).when(testObj).getAchAccountTypeCodes();
 
         testObj.addPaymentAttributeToModel(modelMock);

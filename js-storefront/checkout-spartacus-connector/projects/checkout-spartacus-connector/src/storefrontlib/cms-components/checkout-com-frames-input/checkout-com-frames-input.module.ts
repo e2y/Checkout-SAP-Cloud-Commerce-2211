@@ -1,10 +1,11 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CheckoutComFramesInputComponent } from './checkout-com-frames-input.component';
+import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { CheckoutComTooltipContainerModule } from '@checkout-components/checkout-com-tooltip-container/checkout-com-tooltip-container.module';
+import { CheckoutComTooltipDirectiveModule } from '@checkout-core/directives/checkout-com-tooltip-directive.module';
 import { I18nModule } from '@spartacus/core';
 import { IconModule } from '@spartacus/storefront';
-import { TooltipModule } from 'ng2-tooltip-directive';
+import { CheckoutComFramesInputComponent } from './checkout-com-frames-input.component';
 
 @NgModule({
   declarations: [CheckoutComFramesInputComponent],
@@ -16,7 +17,9 @@ import { TooltipModule } from 'ng2-tooltip-directive';
     ReactiveFormsModule,
     I18nModule,
     IconModule,
-    TooltipModule,
+    CheckoutComTooltipContainerModule,
+    CheckoutComTooltipDirectiveModule
   ]
 })
-export class CheckoutComFramesInputModule { }
+export class CheckoutComFramesInputModule {
+}

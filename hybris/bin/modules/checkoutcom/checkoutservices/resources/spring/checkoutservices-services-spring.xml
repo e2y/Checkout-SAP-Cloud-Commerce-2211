@@ -157,7 +157,6 @@
 
     <util:map id="checkoutComAPMConfigurationSettings" key-type="java.lang.String"
               value-type="com.checkout.hybris.core.apm.configuration.CheckoutComAPMConfigurationSettings">
-        <entry key="SOFORT" value-ref="sofortAPMConfigurationSetting"/>
         <entry key="PAYPAL" value-ref="paypalAPMConfigurationSetting"/>
         <entry key="POLI" value-ref="poliAPMConfigurationSetting"/>
         <entry key="IDEAL" value-ref="idealAPMConfigurationSetting"/>
@@ -165,7 +164,6 @@
         <entry key="ALIPAY" value-ref="alipayAPMConfigurationSetting"/>
         <entry key="BENEFITPAY" value-ref="benefitpayAPMConfigurationSetting"/>
         <entry key="BANCONTACT" value-ref="bancontactAPMConfigurationSetting"/>
-        <entry key="GIROPAY" value-ref="giropayAPMConfigurationSetting"/>
         <entry key="EPS" value-ref="epsAPMConfigurationSetting"/>
         <entry key="KNET" value-ref="knetAPMConfigurationSetting"/>
         <entry key="QPAY" value-ref="qpayAPMConfigurationSetting"/>
@@ -176,12 +174,6 @@
         <entry key="ACH" value-ref="achAPMConfigurationSetting"/>
         <entry key="FAWRY" value-ref="fawryAPMConfigurationSetting"/>
     </util:map>
-
-    <bean id="sofortAPMConfigurationSetting"
-          class="com.checkout.hybris.core.apm.configuration.CheckoutComAPMConfigurationSettings">
-        <property name="isApmRedirect" value="true"/>
-        <property name="isApmUserDataRequired" value="false"/>
-    </bean>
 
     <bean id="paypalAPMConfigurationSetting"
           class="com.checkout.hybris.core.apm.configuration.CheckoutComAPMConfigurationSettings">
@@ -220,12 +212,6 @@
     </bean>
 
     <bean id="bancontactAPMConfigurationSetting"
-          class="com.checkout.hybris.core.apm.configuration.CheckoutComAPMConfigurationSettings">
-        <property name="isApmRedirect" value="true"/>
-        <property name="isApmUserDataRequired" value="false"/>
-    </bean>
-
-    <bean id="giropayAPMConfigurationSetting"
           class="com.checkout.hybris.core.apm.configuration.CheckoutComAPMConfigurationSettings">
         <property name="isApmRedirect" value="true"/>
         <property name="isApmUserDataRequired" value="false"/>
