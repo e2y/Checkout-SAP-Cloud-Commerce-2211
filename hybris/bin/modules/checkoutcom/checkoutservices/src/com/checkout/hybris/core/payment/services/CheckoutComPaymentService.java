@@ -2,7 +2,8 @@ package com.checkout.hybris.core.payment.services;
 
 import com.checkout.hybris.core.authorisation.AuthorizeResponse;
 import com.checkout.hybris.events.model.CheckoutComPaymentEventModel;
-import com.checkout.sdk.payments.PaymentPending;
+import com.checkout.payments.PaymentAction;
+import com.checkout.payments.response.PaymentResponse;
 import de.hybris.platform.core.model.order.OrderModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.payment.PaymentService;
@@ -120,9 +121,9 @@ public interface CheckoutComPaymentService extends PaymentService {
     /**
      * Handles the pending payment response based on the APM payment type and returns the authorise response
      *
-     * @param paymentPendingResponse the pending payment response from checkout.com
+     * @param paymentAction the pending payment response from checkout.com
      * @param paymentInfo            the payment info model
      * @return the AuthorizeResponse with populated results
      */
-    AuthorizeResponse handlePendingPaymentResponse(PaymentPending paymentPendingResponse, PaymentInfoModel paymentInfo);
+    AuthorizeResponse handlePendingPaymentResponse(PaymentResponse paymentAction, PaymentInfoModel paymentInfo);
 }

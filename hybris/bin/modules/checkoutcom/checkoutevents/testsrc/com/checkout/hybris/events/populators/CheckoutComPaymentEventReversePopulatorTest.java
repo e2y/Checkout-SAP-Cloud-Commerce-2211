@@ -1,7 +1,19 @@
 package com.checkout.hybris.events.populators;
 
+import java.math.BigDecimal;
+
+import static com.checkout.hybris.events.constants.CheckouteventsConstants.EVENT_APPROVED_RESPONSE_CODE;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.core.currency.services.CheckoutComCurrencyService;
-import com.checkout.hybris.events.beans.*;
+import com.checkout.hybris.events.beans.CheckoutComPaymentEventDataObject;
+import com.checkout.hybris.events.beans.CheckoutComPaymentEventMetadataObject;
+import com.checkout.hybris.events.beans.CheckoutComPaymentEventObject;
+import com.checkout.hybris.events.beans.CheckoutComPaymentEventRiskObject;
+import com.checkout.hybris.events.beans.CheckoutComPaymentEventSourceObject;
 import com.checkout.hybris.events.enums.CheckoutComPaymentEventStatus;
 import com.checkout.hybris.events.model.CheckoutComPaymentEventModel;
 import com.google.gson.Gson;
@@ -15,13 +27,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.math.BigDecimal;
-
-import static com.checkout.hybris.events.constants.CheckouteventsConstants.EVENT_APPROVED_RESPONSE_CODE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -38,6 +43,8 @@ public class CheckoutComPaymentEventReversePopulatorTest {
     private static final String RESPONSE_SUMMARY = "Approved";
     private static final String SITE_ID = "electronics";
     private static final String SOURCE_TYPE = "card";
+
+    final Gson gson = new GsonBuilder().create();
 
     @InjectMocks
     private CheckoutComPaymentEventReversePopulator testObj;
@@ -64,7 +71,7 @@ public class CheckoutComPaymentEventReversePopulatorTest {
     @Before
     public void setUp() {
         when(commonI18NServiceMock.getCurrency(CURRENCY_CODE)).thenReturn(currencyModelMock);
-        when(checkoutComCurrencyServiceMock.convertAmountFromPennies(CURRENCY_CODE, CHECKOUTCOM_AMOUNT)).thenReturn(AUTHORISATION_AMOUNT);
+        when(checkoutComCurrencyServiceMock.addDecimalsToAmountForGivenCurrency(CURRENCY_CODE, CHECKOUTCOM_AMOUNT)).thenReturn(AUTHORISATION_AMOUNT);
         when(source.getData()).thenReturn(checkoutComPaymentEventDataObjectMock);
         when(checkoutComPaymentEventDataObjectMock.getMetadata()).thenReturn(checkoutComPaymentEventMetadataObjectMock);
         when(checkoutComPaymentEventDataObjectMock.getRisk()).thenReturn(checkoutComPaymentEventRiskObjectMock);
@@ -73,9 +80,11 @@ public class CheckoutComPaymentEventReversePopulatorTest {
         target = new CheckoutComPaymentEventModel();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void populate_WhenSourceNull_ShouldThrowException() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("CheckoutComPaymentEvent body cannot be null.");
     }
 
     @Test
@@ -84,7 +93,7 @@ public class CheckoutComPaymentEventReversePopulatorTest {
         when(source.getId()).thenReturn(ID);
         when(source.getType()).thenReturn(PAYMENT_APPROVED);
         when(checkoutComPaymentEventDataObjectMock.getCurrency()).thenReturn(CURRENCY_CODE);
-        when(checkoutComPaymentEventDataObjectMock.getAmount()).thenReturn(Double.valueOf(CHECKOUTCOM_AMOUNT) );
+        when(checkoutComPaymentEventDataObjectMock.getAmount()).thenReturn(Double.valueOf(CHECKOUTCOM_AMOUNT));
         when(checkoutComPaymentEventDataObjectMock.getId()).thenReturn(PAYMENT_ID_VALUE);
         when(checkoutComPaymentEventDataObjectMock.getReference()).thenReturn(REFERENCE);
         when(checkoutComPaymentEventDataObjectMock.getResponse_code()).thenReturn(EVENT_APPROVED_RESPONSE_CODE);
@@ -94,16 +103,14 @@ public class CheckoutComPaymentEventReversePopulatorTest {
         when(checkoutComPaymentEventRiskObjectMock.getFlagged()).thenReturn(false);
         when(checkoutComPaymentEventMetadataObjectMock.getSite_id()).thenReturn(SITE_ID);
         when(checkoutComPaymentEventSourceObjectMock.getType()).thenReturn(SOURCE_TYPE);
-        final Gson gson = new GsonBuilder().create();
         when(source.getPayLoad()).thenReturn(gson.toJson(source));
 
         testObj.populate(source, target);
 
-
         assertNotNull(target);
         assertEquals(currencyModelMock, target.getCurrency());
         assertEquals(ID, target.getEventId());
-        assertEquals( PAYMENT_APPROVED, target.getEventType());
+        assertEquals(PAYMENT_APPROVED, target.getEventType());
         assertEquals(PAYMENT_ID_VALUE, target.getPaymentId());
         assertEquals(REFERENCE, target.getPaymentReference());
         assertEquals(EVENT_APPROVED_RESPONSE_CODE, target.getResponseCode());
@@ -120,7 +127,6 @@ public class CheckoutComPaymentEventReversePopulatorTest {
     public void populate_WhenActionIdIsNull_ShouldPopulateActionIdWithPaymentId() {
         when(checkoutComPaymentEventDataObjectMock.getAction_id()).thenReturn(null);
         when(checkoutComPaymentEventDataObjectMock.getId()).thenReturn(PAYMENT_ID_VALUE);
-        final Gson gson = new GsonBuilder().create();
         when(source.getPayLoad()).thenReturn(gson.toJson(source));
         testObj.populate(source, target);
 
@@ -135,7 +141,6 @@ public class CheckoutComPaymentEventReversePopulatorTest {
     @Test
     public void populate_WhenResponseCodeIsNull_ShouldPopulateResponseCodeWithDefaultValue() {
         when(checkoutComPaymentEventDataObjectMock.getResponse_code()).thenReturn(null);
-        final Gson gson = new GsonBuilder().create();
         when(source.getPayLoad()).thenReturn(gson.toJson(source));
         testObj.populate(source, target);
 

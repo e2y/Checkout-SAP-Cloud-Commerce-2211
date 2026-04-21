@@ -8,9 +8,10 @@ import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentReques
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
 import com.checkout.hybris.core.url.services.CheckoutComUrlService;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.payments.ThreeDSRequest;
+import com.checkout.payments.ThreeDSRequest;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestCardSource;
+
 import de.hybris.platform.cms2.servicelayer.services.CMSSiteService;
 
 import java.util.Map;
@@ -27,12 +28,8 @@ public class CheckoutComMadaPaymentRequestStrategy extends CheckoutComCardPaymen
 
     protected static final String MADA_VALUE = "mada";
 
-    public CheckoutComMadaPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                 final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                 final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                 final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-            checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+    protected CheckoutComMadaPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
     }
 
     /**
@@ -57,7 +54,7 @@ public class CheckoutComMadaPaymentRequestStrategy extends CheckoutComCardPaymen
      * @param request the request payload
      */
     @Override
-    protected void populateRequestMetadata(final PaymentRequest<RequestSource> request) {
+    protected void populateRequestMetadata(final PaymentRequest request) {
         final Map<String, Object> metadataMap = createGenericMetadata();
         metadataMap.put(UDF1_KEY, MADA_VALUE);
         request.setMetadata(metadataMap);

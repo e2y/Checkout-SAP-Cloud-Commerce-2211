@@ -4,12 +4,14 @@ import com.checkout.dto.order.CheckoutPlaceOrderDto;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
 import com.checkout.hybris.facades.beans.AuthorizeResponseData;
+import com.checkout.hybris.facades.cart.validators.impl.CheckoutComPlaceOrderCartValidator;
+import com.checkout.hybris.facades.flow.CheckoutComFlowConfigurationFacade;
+import com.checkout.hybris.facades.flow.CheckoutComFlowPaymentInfoFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import com.checkout.hybris.occ.exceptions.NoCheckoutCartException;
 import com.checkout.hybris.occ.exceptions.PlaceOrderException;
-import com.checkout.hybris.facades.cart.validators.impl.CheckoutComPlaceOrderCartValidator;
-import com.checkout.sdk.payments.GetPaymentResponse;
+import com.checkout.payments.response.GetPaymentResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.acceleratorfacades.order.AcceleratorCheckoutFacade;
 import de.hybris.platform.commercefacades.order.CartFacade;
@@ -37,7 +39,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @UnitTest
@@ -69,6 +72,10 @@ public class CheckoutComOrdersControllerTest {
     private AcceleratorCheckoutFacade acceleratorCheckoutFacadeCheckoutFacadeMock;
     @Mock
     private CheckoutComPlaceOrderCartValidator checkoutComPlaceOrderCartValidatorMock;
+    @Mock
+    protected CheckoutComFlowConfigurationFacade checkoutComFlowConfigurationFacadeMock;
+    @Mock
+    protected CheckoutComFlowPaymentInfoFacade checkoutComFlowPaymentInfoFacadeMock;
 
     @Mock
     private CartData cartDataMock;
@@ -97,44 +104,49 @@ public class CheckoutComOrdersControllerTest {
         when(authorizeResponseDataMock.getIsRedirect()).thenReturn(Boolean.FALSE);
         when(acceleratorCheckoutFacadeCheckoutFacadeMock.placeOrder()).thenReturn(orderDataMock);
         when(dataMapperMock.map(orderDataMock, OrderWsDTO.class, DEFAULT_FIELD_SET)).thenReturn(orderWsDTOMock);
+        lenient().doNothing().when(checkoutComPlaceOrderCartValidatorMock).validate(eq(checkoutPlaceOrderDtoMock), any());
     }
 
-    @Test(expected = NoCheckoutCartException.class)
-    public void placeDirectOrder_WhenThereIsNoCheckoutCart_ShouldThrowException() throws InvalidCartException,
-            PaymentAuthorizationException, PlaceOrderException, NoCheckoutCartException {
+    @Test
+    public void placeDirectOrder_WhenThereIsNoCheckoutCart_ShouldThrowException() throws InvalidCartException {
         when(checkoutFacadeMock.hasCheckoutCart()).thenReturn(Boolean.FALSE);
 
-        testObj.placeDirectOrder(DEFAULT_FIELD_SET);
+        assertThatThrownBy(() -> testObj.placeDirectOrder(DEFAULT_FIELD_SET))
+                .isInstanceOf(NoCheckoutCartException.class)
+                .hasMessage("Cannot place order. There was no checkout cart created yet!");
 
         verify(acceleratorCheckoutFacadeCheckoutFacadeMock, never()).placeOrder();
     }
 
-    @Test(expected = InvalidCartException.class)
-    public void placeDirectOrder_WhenCheckoutCartCanNotBeCalculated_ShouldThrowException() throws InvalidCartException,
-            PaymentAuthorizationException, PlaceOrderException, NoCheckoutCartException, CommerceCartModificationException {
-        doThrow(CommerceCartModificationException.class).when(cartFacadeMock).validateCartData();
+    @Test
+    public void placeDirectOrder_WhenCheckoutCartCanNotBeCalculated_ShouldThrowException() throws InvalidCartException, CommerceCartModificationException {
+        doThrow(new CommerceCartModificationException("CommerceCartModificationExceptionMessage")).when(cartFacadeMock).validateCartData();
 
-        testObj.placeDirectOrder(DEFAULT_FIELD_SET);
+        assertThatThrownBy(() -> testObj.placeDirectOrder(DEFAULT_FIELD_SET))
+                .isInstanceOf(InvalidCartException.class)
+                .hasMessage("de.hybris.platform.commerceservices.order.CommerceCartModificationException: CommerceCartModificationExceptionMessage");
 
         verify(acceleratorCheckoutFacadeCheckoutFacadeMock, never()).placeOrder();
     }
 
-    @Test(expected = WebserviceValidationException.class)
-    public void placeDirectOrder_WhenCheckoutCartHasModifications_ShouldThrowException() throws InvalidCartException,
-            PaymentAuthorizationException, PlaceOrderException, NoCheckoutCartException, CommerceCartModificationException {
+    @Test
+    public void placeDirectOrder_WhenCheckoutCartHasModifications_ShouldThrowException() throws InvalidCartException, CommerceCartModificationException {
         when(cartFacadeMock.validateCartData()).thenReturn(List.of(commerceCartModificationMock));
 
-        testObj.placeDirectOrder(DEFAULT_FIELD_SET);
+        assertThatThrownBy(() -> testObj.placeDirectOrder(DEFAULT_FIELD_SET))
+                .isInstanceOf(WebserviceValidationException.class)
+                .hasMessage("Validation error");
 
         verify(acceleratorCheckoutFacadeCheckoutFacadeMock, never()).placeOrder();
     }
 
-    @Test(expected = PaymentAuthorizationException.class)
-    public void placeDirectOrder_WhenAuthorizationIsNotSuccessAndIsNotRedirect_ShouldThrowException() throws InvalidCartException,
-            PaymentAuthorizationException, PlaceOrderException, NoCheckoutCartException {
+    @Test
+    public void placeDirectOrder_WhenAuthorizationIsNotSuccessAndIsNotRedirect_ShouldThrowException() throws InvalidCartException {
         when(authorizeResponseDataMock.getIsSuccess()).thenReturn(Boolean.FALSE);
 
-        testObj.placeDirectOrder(DEFAULT_FIELD_SET);
+        assertThatThrownBy(() -> testObj.placeDirectOrder(DEFAULT_FIELD_SET))
+                .isInstanceOf(PaymentAuthorizationException.class)
+                .hasMessage("Payment authorization was not successful");
 
         verify(acceleratorCheckoutFacadeCheckoutFacadeMock, never()).placeOrder();
     }
@@ -172,15 +184,16 @@ public class CheckoutComOrdersControllerTest {
         verify(acceleratorCheckoutFacadeCheckoutFacadeMock).placeOrder();
     }
 
-    @Test(expected = PlaceOrderException.class)
-    public void placeDirectOrder_WhenPlaceOrderThrowsException_ShouldThrowException() throws InvalidCartException,
-            PaymentAuthorizationException, PlaceOrderException, NoCheckoutCartException {
-        doThrow(InvalidCartException.class).when(acceleratorCheckoutFacadeCheckoutFacadeMock).placeOrder();
+    @Test
+    public void placeDirectOrder_WhenPlaceOrderThrowsException_ShouldThrowException() throws InvalidCartException {
+        doThrow(new InvalidCartException("InvalidCartException")).when(acceleratorCheckoutFacadeCheckoutFacadeMock).placeOrder();
 
-        testObj.placeDirectOrder(DEFAULT_FIELD_SET);
+        assertThatThrownBy(() -> testObj.placeDirectOrder(DEFAULT_FIELD_SET))
+                .isInstanceOf(PlaceOrderException.class)
+                .hasMessage("Failed to place the order");
 
         verify(checkoutFlowFacadeMock).removePaymentInfoFromSessionCart();
-        verify(acceleratorCheckoutFacadeCheckoutFacadeMock, never()).placeOrder();
+        verify(acceleratorCheckoutFacadeCheckoutFacadeMock).placeOrder();
     }
 
     @Test
@@ -236,6 +249,7 @@ public class CheckoutComOrdersControllerTest {
 
     @Test
     public void placeRedirectOrder_WhenPlaceOrder_ShouldThrowException() throws InvalidCartException {
+        when(checkoutComFlowConfigurationFacadeMock.isFlowEnabled()).thenReturn(false);
         when(checkoutComPaymentFacadeMock.getPaymentDetailsByCkoSessionId(MOCK_CKO_SESSION_ID)).thenReturn(Optional.of(paymentResponseMock));
         when(checkoutComPaymentFacadeMock.doesSessionCartMatchAuthorizedCart(paymentResponseMock)).thenReturn(Boolean.TRUE);
         doThrow(InvalidCartException.class).when(checkoutFacadeMock).placeOrder();
@@ -247,13 +261,26 @@ public class CheckoutComOrdersControllerTest {
     }
 
     @Test
-    public void placeRedirectOrder_WhenEverythingIsCorrect_ShouldPlaceOrder() throws PlaceOrderException, InvalidCartException {
+    public void placeRedirectOrder_WhenEverythingIsCorrectAndNotFlow_ShouldPlaceOrder() throws PlaceOrderException, InvalidCartException {
+        when(checkoutComFlowConfigurationFacadeMock.isFlowEnabled()).thenReturn(false);
         when(checkoutComPaymentFacadeMock.getPaymentDetailsByCkoSessionId(MOCK_CKO_SESSION_ID)).thenReturn(Optional.of(paymentResponseMock));
         when(checkoutComPaymentFacadeMock.doesSessionCartMatchAuthorizedCart(paymentResponseMock)).thenReturn(Boolean.TRUE);
 
         testObj.placeRedirectOrder(CKO_SESSION_ID_JSON, DEFAULT_FIELD_SET);
 
         verify(checkoutComPaymentInfoFacadeMock).processPaymentDetails(paymentResponseMock);
+        verify(checkoutFacadeMock).placeOrder();
+    }
+
+    @Test
+    public void placeRedirectOrder_WhenEverythingIsCorrectAndIsFlow_ShouldPlaceOrder() throws PlaceOrderException, InvalidCartException {
+        when(checkoutComFlowConfigurationFacadeMock.isFlowEnabled()).thenReturn(true);
+        when(checkoutComPaymentFacadeMock.getPaymentDetailsByCkoSessionId(MOCK_CKO_SESSION_ID)).thenReturn(Optional.of(paymentResponseMock));
+        when(checkoutComPaymentFacadeMock.doesSessionCartMatchAuthorizedCart(paymentResponseMock)).thenReturn(Boolean.TRUE);
+
+        testObj.placeRedirectOrder(CKO_SESSION_ID_JSON, DEFAULT_FIELD_SET);
+
+        verify(checkoutComFlowPaymentInfoFacadeMock).addPaymentInfoToCart(paymentResponseMock);
         verify(checkoutFacadeMock).placeOrder();
     }
 

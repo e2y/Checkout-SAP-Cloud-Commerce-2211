@@ -1,15 +1,21 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.Address;
+import com.checkout.common.CountryCode;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
-import com.checkout.hybris.core.enums.PaymentTypes;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.merchantconfiguration.BillingDescriptor;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.common.Address;
-import com.checkout.sdk.payments.*;
-import com.checkout.sdk.sources.SourceProcessed;
+import com.checkout.instruments.create.CreateInstrumentResponse;
+import com.checkout.payments.PaymentType;
+import com.checkout.payments.RiskRequest;
+import com.checkout.payments.ShippingDetails;
+import com.checkout.payments.ThreeDSRequest;
+import com.checkout.payments.request.PaymentCustomerRequest;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.core.model.user.CustomerModel;
@@ -30,23 +36,26 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
     protected static final String SITE_ID_KEY = "site_id";
     protected static final String UDF1_KEY = "udf1";
 
-    protected CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy;
-    protected CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper;
-    protected CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter;
-    protected CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper;
+   protected CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy;
+   protected CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper;
+   protected CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter;
+   protected CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper;
+   protected CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService;
 
     protected CheckoutComAbstractPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
                                                         final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
                                                         final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                        final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper) {
+                                                        final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper,
+                                                        final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        // default empty constructor
         this.checkoutComPhoneNumberStrategy = checkoutComPhoneNumberStrategy;
         this.checkoutComPaymentRequestStrategyMapper = checkoutComPaymentRequestStrategyMapper;
         this.checkoutComCartModelToPaymentL2AndL3Converter = checkoutComCartModelToPaymentL2AndL3Converter;
         this.checkoutPaymentRequestServicesWrapper = checkoutPaymentRequestServicesWrapper;
+        this.checkoutComMerchantConfigurationService = checkoutComMerchantConfigurationService;
     }
 
     protected CheckoutComAbstractPaymentRequestStrategy() {
-        // default empty constructor
     }
 
     /**
@@ -68,14 +77,14 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
      * {@inheritDoc}
      */
     @Override
-    public PaymentRequest<RequestSource> createPaymentRequest(final CartModel cart) {
+    public PaymentRequest createPaymentRequest(final CartModel cart) {
         validateParameterNotNull(cart, "Cart model cannot be null");
 
         final String currencyIsoCode = cart.getCurrency().getIsocode();
         final Long amount = checkoutPaymentRequestServicesWrapper.checkoutComCurrencyService.
-            convertAmountIntoPennies(currencyIsoCode, cart.getTotalPrice());
+            removeDecimalsFromCurrencyAmount(currencyIsoCode, cart.getTotalPrice());
 
-        final PaymentRequest<RequestSource> request = getRequestSourcePaymentRequest(cart, currencyIsoCode, amount);
+        final PaymentRequest request = getRequestSourcePaymentRequest(cart, currencyIsoCode, amount);
 
         populatePaymentRequest(cart, request);
 
@@ -88,15 +97,15 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
      * @param cart    the cart
      * @param request the request
      */
-    protected void populatePaymentRequest(final CartModel cart, final PaymentRequest<RequestSource> request) {
+    protected void populatePaymentRequest(final CartModel cart, final PaymentRequest request) {
         request.setReference(cart.getCheckoutComPaymentReference());
-        request.setPaymentType(PaymentTypes.REGULAR.getCode());
+        request.setPaymentType(PaymentType.REGULAR);
         request.setCustomer(getCustomerRequest((CustomerModel) cart.getUser()));
-        request.setRisk(new RiskRequest(true));
+        request.setRisk(RiskRequest.builder().build());
         request.setShipping(createShippingDetails(cart.getDeliveryAddress()));
         createThreeDSRequest().ifPresent(request::setThreeDS);
         isCapture().ifPresent(request::setCapture);
-
+        Optional.ofNullable(checkoutComMerchantConfigurationService.getProcessingChannelId()).ifPresent(request::setProcessingChannelId);
         populateRedirectUrls(request);
         populateRequestMetadata(request);
         populateDynamicBillingDescriptor(request);
@@ -109,13 +118,13 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
      *
      * @param request the payment request
      */
-    protected void populateDynamicBillingDescriptor(final PaymentRequest<RequestSource> request) {
+    protected void populateDynamicBillingDescriptor(final PaymentRequest request) {
         final BillingDescriptor billingDescriptorMerchantConfiguration =
             checkoutPaymentRequestServicesWrapper.checkoutComMerchantConfigurationService.getBillingDescriptor();
         final Boolean includeBillingDescriptor = billingDescriptorMerchantConfiguration.getIncludeBillingDescriptor();
         if (Boolean.TRUE.equals(includeBillingDescriptor)) {
-            final com.checkout.sdk.payments.BillingDescriptor billingDescriptor =
-                    new com.checkout.sdk.payments.BillingDescriptor();
+            final com.checkout.payments.BillingDescriptor billingDescriptor =
+                    new com.checkout.payments.BillingDescriptor();
             billingDescriptor.setName(billingDescriptorMerchantConfiguration.getBillingDescriptorName());
             billingDescriptor.setCity(billingDescriptorMerchantConfiguration.getBillingDescriptorCity());
             request.setBillingDescriptor(billingDescriptor);
@@ -136,7 +145,7 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
      *
      * @param request the request to populate
      */
-    protected void populateRedirectUrls(final PaymentRequest<RequestSource> request) {
+    protected void populateRedirectUrls(final PaymentRequest request) {
         request.setSuccessUrl(checkoutPaymentRequestServicesWrapper.checkoutComUrlService
             .getFullUrl(checkoutPaymentRequestServicesWrapper.cmsSiteService
             .getCurrentSite().getCheckoutComSuccessRedirectUrl(), true));
@@ -153,7 +162,7 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
      * @param amount          the order amount
      * @return the payment request object
      */
-    protected abstract PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
+    protected abstract PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
                                                                                     final String currencyIsoCode,
                                                                                     final Long amount);
 
@@ -195,7 +204,7 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
         address.setAddressLine1(addressModel.getLine1());
         address.setAddressLine2(addressModel.getLine2());
         address.setCity(addressModel.getTown());
-        address.setCountry(addressModel.getCountry() != null ? addressModel.getCountry().getIsocode() : null);
+        address.setCountry(addressModel.getCountry() != null ? CountryCode.valueOf(addressModel.getCountry().getIsocode()) : null);
         address.setState(addressModel.getRegion() != null ? addressModel.getRegion().getName() : null);
         address.setZip(addressModel.getPostalcode());
         return address;
@@ -207,8 +216,8 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
      * @param customer session cart customer model
      * @return CustomerRequest the request object
      */
-    protected CustomerRequest getCustomerRequest(final CustomerModel customer) {
-        final CustomerRequest customerRequest = new CustomerRequest();
+    protected PaymentCustomerRequest getCustomerRequest(final CustomerModel customer) {
+        final PaymentCustomerRequest customerRequest = new PaymentCustomerRequest();
         customerRequest.setEmail(customer.getContactEmail());
         customerRequest.setName(customer.getDisplayName());
         return customerRequest;
@@ -228,20 +237,20 @@ public abstract class CheckoutComAbstractPaymentRequestStrategy implements Check
      *
      * @param request the request payload
      */
-    protected void populateRequestMetadata(final PaymentRequest<RequestSource> request) {
+    protected void populateRequestMetadata(final PaymentRequest request) {
         request.setMetadata(createGenericMetadata());
     }
 
     /**
      * Creates the customer request using the source response id from checkout.com
      *
-     * @param sourceProcessed the setup source response form checkout.com
+     * @param paymentResponse the setup source response form checkout.com
      * @return CustomerRequest the request object
      */
-    protected Optional<CustomerRequest> createCustomerRequestFromSource(final SourceProcessed sourceProcessed) {
-        if (sourceProcessed.getCustomer() != null && StringUtils.isNotBlank(sourceProcessed.getCustomer().getId())) {
-            final CustomerRequest customerRequest = new CustomerRequest();
-            customerRequest.setId(sourceProcessed.getCustomer().getId());
+    protected Optional<PaymentCustomerRequest> createCustomerRequestFromSource(final CreateInstrumentResponse paymentResponse) {
+        if (paymentResponse.getCustomer() != null && StringUtils.isNotBlank(paymentResponse.getCustomer().getId())) {
+            final PaymentCustomerRequest customerRequest = new PaymentCustomerRequest();
+            customerRequest.setId(paymentResponse.getCustomer().getId());
             return Optional.of(customerRequest);
         }
         return Optional.empty();

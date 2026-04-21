@@ -1,17 +1,25 @@
 package com.checkout.hybris.addon.converters.populators;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.ACCOUNT_HOLDER_NAME;
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.ACCOUNT_NUMBER;
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.ACCOUNT_TYPE_KEY;
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.BANK_CODE_KEY;
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.COMPANY_NAME_KEY;
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.CORP_SAVINGS_ACCOUNT_TYPE_VALUE;
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.PAYMENT_METHOD_KEY;
+import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.ROUTING_NUMBER_KEY;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.facades.beans.AchPaymentInfoData;
 import de.hybris.bootstrap.annotations.UnitTest;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.checkout.hybris.addon.converters.populators.CheckoutComAchPaymentInfoDataReversePopulator.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 @UnitTest
 public class CheckoutComAchPaymentInfoDataReversePopulatorTest {
@@ -24,10 +32,10 @@ public class CheckoutComAchPaymentInfoDataReversePopulatorTest {
     private static final String BANK_CODE_VALUE = "123";
     private static final String PAYMENT_METHOD_VALUE = "Payment Method";
 
-    private CheckoutComAchPaymentInfoDataReversePopulator testObj = new CheckoutComAchPaymentInfoDataReversePopulator();
+    private final CheckoutComAchPaymentInfoDataReversePopulator testObj = new CheckoutComAchPaymentInfoDataReversePopulator();
 
-    private PaymentDataForm source = new PaymentDataForm();
-    private AchPaymentInfoData target = new AchPaymentInfoData();
+    private final PaymentDataForm source = new PaymentDataForm();
+    private final AchPaymentInfoData target = new AchPaymentInfoData();
     private Map<String, Object> formAttributes;
 
     @Before
@@ -71,13 +79,17 @@ public class CheckoutComAchPaymentInfoDataReversePopulatorTest {
         assertEquals(PAYMENT_METHOD_VALUE, target.getPaymentMethod());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenSourceNull_ShouldThrowException() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("PaymentDataForm cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenTargetNull_ShouldThrowException() {
-        testObj.populate(source, null);
+        assertThatThrownBy(() -> testObj.populate(source, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("AchPaymentInfoData cannot be null.");
     }
 }

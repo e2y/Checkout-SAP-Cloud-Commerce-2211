@@ -1,5 +1,14 @@
 package com.checkout.hybris.events.payments.listeners;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.events.beans.CheckoutComPaymentEventObject;
 import com.checkout.hybris.events.enums.CheckoutComPaymentEventType;
 import com.checkout.hybris.events.model.CheckoutComPaymentEventModel;
@@ -14,12 +23,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-
-import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -50,26 +53,23 @@ public class CheckoutComPaymentEventListenerTest {
         when(checkoutComPaymentEventServiceMock.getSiteIdForTheEvent(source)).thenReturn(ELECTRONICS);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void onEvent_WhenEventBodyNull_ShouldThrowException() {
         final CheckoutComPaymentEvent event = new CheckoutComPaymentEvent(null);
 
-        testObj.onEvent(event);
+        assertThatThrownBy(() -> testObj.onEvent(event))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("CheckoutComPaymentEvent cannot be null or empty.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void onEvent_WhenEventBodyEmpty_ShouldThrowException() {
-        final CheckoutComPaymentEvent event = new CheckoutComPaymentEvent(null);
-
-        testObj.onEvent(event);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void onEvent_WhenEventTypeNull_ShouldThrowException() {
         when(source.getType()).thenReturn(null);
         final CheckoutComPaymentEvent event = new CheckoutComPaymentEvent(source);
 
-        testObj.onEvent(event);
+        assertThatThrownBy(() -> testObj.onEvent(event))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("type element of the CheckoutComPaymentEvent body cannot be null.");
     }
 
     @Test

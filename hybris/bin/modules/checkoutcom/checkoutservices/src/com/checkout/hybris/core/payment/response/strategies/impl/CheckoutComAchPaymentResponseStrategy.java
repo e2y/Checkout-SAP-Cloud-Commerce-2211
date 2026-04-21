@@ -6,7 +6,8 @@ import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.response.mappers.CheckoutComPaymentResponseStrategyMapper;
 import com.checkout.hybris.core.payment.response.strategies.CheckoutComPaymentResponseStrategy;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.PaymentPending;
+import com.checkout.payments.PaymentAction;
+import com.checkout.payments.response.PaymentResponse;
 import com.google.common.base.Preconditions;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 
@@ -34,11 +35,11 @@ public class CheckoutComAchPaymentResponseStrategy extends CheckoutComAbstractPa
      * {@inheritDoc}
      */
     @Override
-    public AuthorizeResponse handlePendingPaymentResponse(final PaymentPending paymentPendingResponse, final PaymentInfoModel paymentInfo) {
-        validateParameterNotNull(paymentPendingResponse, "Payment pending response cannot be null");
+    public AuthorizeResponse handlePendingPaymentResponse(final PaymentResponse paymentResponse, final PaymentInfoModel paymentInfo) {
+        validateParameterNotNull(paymentResponse, "Payment pending response cannot be null");
         Preconditions.checkArgument(paymentInfo instanceof CheckoutComAchPaymentInfoModel, "Payment info null or not valid for Ach.");
 
-        paymentInfoService.addPaymentId(paymentPendingResponse.getId(), paymentInfo);
+        paymentInfoService.addPaymentId(paymentResponse.getId(), paymentInfo);
 
         return populateAuthorizeResponse();
     }

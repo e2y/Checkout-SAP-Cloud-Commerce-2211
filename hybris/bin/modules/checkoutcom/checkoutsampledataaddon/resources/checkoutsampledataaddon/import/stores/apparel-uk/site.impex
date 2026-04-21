@@ -14,8 +14,9 @@ UPDATE GenericItem[processor = de.hybris.platform.commerceservices.impex.impl.Co
 $secretKey = $config-checkout.nas.secret.key
 $publicKey = $config-checkout.nas.public.key
 $privateSharedKey = $config-checkout.private.shared.key
-$nasSecretKey = Bearer $config-checkout.nas.secret.key
-$nasPublicKey = Bearer $config-checkout.nas.public.key
+$nasSecretKey =   $config-checkout.nas.secret.key
+$processingChannelId = $config-checkout.flow.processing.channel.id
+$nasPublicKey =   $config-checkout.nas.public.key
 $nasSignatureKey = $config-checkout.nas.signature.key
 $nasAuthorizationHeaderKey = $config-checkout.nas.authorization.header.key
 
@@ -23,11 +24,11 @@ INSERT_UPDATE CheckoutComKlarnaConfiguration; &klarnaConfigurationId; instanceId
                                             ; klarnaConfig          ; e2yCheckoutCom
 
 # Merchant configuration
-INSERT_UPDATE CheckoutComMerchantConfiguration; code[unique = true]            ; secretKey     ; publicKey     ; privateSharedKey  ; nasSecretKey  ; nasPublicKey  ; nasSignatureKey  ; nasAuthorisationHeaderKey  ; environment(code); paymentAction(code)   ; reviewTransactionsAtRisk; klarnaConfiguration(&klarnaConfigurationId); authorisationAmountValidationThreshold; threeDSEnabled; noThreeDSAttempt; checkoutComPaymentEventTypes(code)                                                                                                                                                                                                            ; includeBillingDescriptor; billingDescriptorName; billingDescriptorCity
-                                              ; merchantConfiguration-$siteUid ; $nasSecretKey ; $nasPublicKey ; $privateSharedKey ; $nasSecretKey ; $nasPublicKey ; $nasSignatureKey ; $nasAuthorizationHeaderKey ; test             ; authorize_and_capture ; true                    ; klarnaConfig                               ; 0.01                                  ; false         ; true            ; payment_approved, payment_voided, payment_void_declined, payment_captured, payment_capture_declined, payment_refunded, payment_refund_declined, payment_pending, payment_declined, payment_expired, payment_canceled, payment_capture_pending ; true                    ; $siteUid             ; INTERNET
+INSERT_UPDATE CheckoutComMerchantConfiguration; code[unique = true]            ; secretKey     ; publicKey     ; privateSharedKey  ; nasSecretKey;channelProcessingId  ; nasPublicKey  ; nasSignatureKey  ; nasAuthorisationHeaderKey  ; environment(code); paymentAction(code)   ; reviewTransactionsAtRisk; klarnaConfiguration(&klarnaConfigurationId); authorisationAmountValidationThreshold; threeDSEnabled; noThreeDSAttempt; checkoutComPaymentEventTypes(code)                                                                                                                                                                                                            ; includeBillingDescriptor; billingDescriptorName; billingDescriptorCity
+                                              ; merchantConfiguration-$siteUid ; $nasSecretKey ; $nasPublicKey ; $privateSharedKey ; $nasSecretKey ;$processingChannelId; $nasPublicKey ; $nasSignatureKey ; $nasAuthorizationHeaderKey ; test             ; authorize_and_capture ; true                    ; klarnaConfig                               ; 0.01                                  ; false         ; true            ; payment_approved, payment_voided, payment_void_declined, payment_captured, payment_capture_declined, payment_refunded, payment_refund_declined, payment_pending, payment_declined, payment_expired, payment_canceled, payment_capture_pending ; true                    ; $siteUid             ; INTERNET
 
 INSERT_UPDATE CheckoutComMerchantConfiguration; code[unique = true]            ; useNasAuthorisationKeyOnNotifications; useNasSignatureKeyOnNotifications;
                                               ; merchantConfiguration-$siteUid ; false                                ; false                            ;
 
-UPDATE BaseSite; uid[unique = true]; checkoutComMerchantConfiguration(code)
-               ; $siteUid          ; merchantConfiguration-$siteUid
+UPDATE BaseSite; uid[unique = true]; checkoutComMerchantConfiguration(code);flowUIConfiguration(code)
+               ; $siteUid          ; merchantConfiguration-$siteUid;Simplicity

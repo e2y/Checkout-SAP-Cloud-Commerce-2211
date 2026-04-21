@@ -62,7 +62,7 @@ public class CheckoutComKlarnaSessionRequestDtoPopulatorTest {
 
     @Before
     public void setUp() {
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(CURRENCY_CODE, CHECKOUTCOM_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_AMOUNT_LONG);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(CURRENCY_CODE, CHECKOUTCOM_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_AMOUNT_LONG);
         when(sourceMock.getTotalPrice()).thenReturn(CHECKOUTCOM_AMOUNT_DOUBLE);
         when(sourceMock.getCurrency()).thenReturn(currencyModelMock);
         when(currencyModelMock.getIsocode()).thenReturn(CURRENCY_CODE);

@@ -2,11 +2,15 @@ package com.checkout.hybris.core.payment.services;
 
 import com.checkout.hybris.core.klarna.session.request.KlarnaSessionRequestDto;
 import com.checkout.hybris.core.klarna.session.response.KlarnaSessionResponseDto;
-import com.checkout.sdk.payments.*;
-import com.checkout.sdk.sources.SourceRequest;
-import com.checkout.sdk.sources.SourceResponse;
-import com.checkout.sdk.tokens.TokenResponse;
-import com.checkout.sdk.tokens.WalletTokenRequest;
+import com.checkout.instruments.create.CreateInstrumentResponse;
+import com.checkout.instruments.create.CreateInstrumentSepaRequest;
+import com.checkout.instruments.create.CreateInstrumentSepaResponse;
+import com.checkout.payments.*;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.payments.response.PaymentResponse;
+import com.checkout.tokens.TokenResponse;
+import com.checkout.tokens.WalletTokenRequest;
 
 import java.util.concurrent.ExecutionException;
 
@@ -21,7 +25,7 @@ public interface CheckoutComPaymentIntegrationService {
      * @param paymentRequest the populated request
      * @return PaymentResponse the checkout.com response
      */
-    PaymentResponse authorizePayment(PaymentRequest<RequestSource> paymentRequest);
+    PaymentResponse authorizePayment(PaymentRequest paymentRequest);
 
     /**
      * Fetches and views relevant information and parameters related to a specific payment.
@@ -64,7 +68,7 @@ public interface CheckoutComPaymentIntegrationService {
      * @param sourceRequest the populated payment source request
      * @return SourceResponse the source payment response
      */
-    SourceResponse setUpPaymentSource(SourceRequest sourceRequest);
+    CreateInstrumentSepaResponse setUpSepaPaymentSource(CreateInstrumentSepaRequest sourceRequest);
 
     /**
      * Generates the wallet payment token with checkout.com

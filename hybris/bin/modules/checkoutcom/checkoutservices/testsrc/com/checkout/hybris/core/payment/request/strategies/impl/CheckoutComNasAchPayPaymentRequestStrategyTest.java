@@ -1,16 +1,16 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
-import com.checkout.sdk.common.AccountHolder;
-import com.checkout.sdk.common.AccountHolderType;
-import com.checkout.sdk.common.Phone;
+
+import com.checkout.common.*;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
 import com.checkout.hybris.core.currency.services.CheckoutComCurrencyService;
 import com.checkout.hybris.core.enums.AchAccountType;
 import com.checkout.hybris.core.model.CheckoutComAchPaymentInfoModel;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.payments.source.BankAccountSource;
+import com.checkout.payments.PaymentType;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestBankAccountSource;
+import com.checkout.payments.request.source.apm.RequestAchSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.c2l.CountryModel;
 import de.hybris.platform.core.model.c2l.CurrencyModel;
@@ -70,15 +70,14 @@ public class CheckoutComNasAchPayPaymentRequestStrategyTest {
 				"square garden", "NY500", "New York", "New York",
 				"mike.hammer@email.com", "0043928821", "00012332", "09123");
 
-		final PaymentRequest<RequestSource> paymentRequest = testObj.createPaymentRequest(cart);
+		final PaymentRequest paymentRequest = testObj.createPaymentRequest(cart);
 
-		final BankAccountSource source = (BankAccountSource) paymentRequest.getSource();
-		assertThat(source.getPaymentMethod()).isEqualTo("ach");
-		assertThat(source.getCountry()).isEqualTo("US");
+		final RequestAchSource source = (RequestAchSource) paymentRequest.getSource();
+		assertThat(source.getType()).isEqualTo(PaymentSourceType.ACH);
+		assertThat(source.getCountry()).isEqualTo(CountryCode.US);
 		assertThat(source.getBankCode()).isEqualTo("09123");
 		assertThat(source.getAccountNumber()).isEqualTo("00012332");
-		assertThat(source.getType()).isEqualTo("bank_account");
-		assertThat(source.getAccountType()).hasToString("CURRENT");
+		assertThat(source.getAccountType()).isEqualTo(AccountType.CURRENT);
 		final AccountHolder accountHolder = source.getAccountHolder();
 		assertThat(accountHolder.getFirstName()).isEqualTo("Mike");
 		assertThat(accountHolder.getLastName()).isEqualTo("Hammer");
@@ -92,15 +91,14 @@ public class CheckoutComNasAchPayPaymentRequestStrategyTest {
 				"square garden", "NY500", "New York", "New York",
 				"mike.hammer@email.com", "0043928821", "00012332", "09123");
 
-		final PaymentRequest<RequestSource> paymentRequest = testObj.createPaymentRequest(cart);
+		final PaymentRequest paymentRequest = testObj.createPaymentRequest(cart);
 
-		final BankAccountSource source = (BankAccountSource) paymentRequest.getSource();
-		assertThat(source.getPaymentMethod()).isEqualTo("ach");
-		assertThat(source.getCountry()).isEqualTo("US");
+        final RequestAchSource source = (RequestAchSource) paymentRequest.getSource();
+        assertThat(source.getType()).isEqualTo(PaymentSourceType.ACH);
+        assertThat(source.getCountry()).isEqualTo(CountryCode.US);
 		assertThat(source.getBankCode()).isEqualTo("09123");
 		assertThat(source.getAccountNumber()).isEqualTo("00012332");
-		assertThat(source.getType()).isEqualTo("bank_account");
-		assertThat(source.getAccountType()).hasToString("SAVINGS");
+		assertThat(source.getAccountType()).isEqualTo(AccountType.SAVINGS);
 		final AccountHolder accountHolder = source.getAccountHolder();
 		assertThat(accountHolder.getFirstName()).isEqualTo("Mike");
 		assertThat(accountHolder.getLastName()).isEqualTo("Hammer");
@@ -163,7 +161,7 @@ public class CheckoutComNasAchPayPaymentRequestStrategyTest {
 		checkoutPhone.setNumber(phone);
 
 		when(checkoutComPhoneNumberStrategyMock.createPhone(billingAddress)).thenReturn(Optional.of(checkoutPhone));
-		when(checkoutComCurrencyServiceMock.convertAmountIntoPennies("USD", 100D)).thenReturn(100000L);
+		when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount("USD", 100D)).thenReturn(100000L);
 
 		return cart;
 	}

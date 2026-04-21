@@ -1,37 +1,39 @@
 package com.checkout.hybris.core.payment.commands.impl;
 
-import com.checkout.sdk.CheckoutApiException;
-import com.checkout.sdk.common.ApiResponseInfo;
+import com.checkout.CheckoutApiException;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.core.payment.request.CheckoutComRequestFactory;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentTransactionService;
-import com.checkout.sdk.payments.VoidResponse;
+import com.checkout.payments.VoidResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.payment.commands.request.VoidRequest;
 import de.hybris.platform.payment.commands.result.VoidResult;
 import de.hybris.platform.payment.dto.TransactionStatus;
 import de.hybris.platform.payment.dto.TransactionStatusDetails;
 import de.hybris.platform.servicelayer.time.TimeService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CheckoutComVoidCommandTest {
 
     private static final String PAYMENT_ID = "PAYMENT_ID";
@@ -53,75 +55,69 @@ public class CheckoutComVoidCommandTest {
     @Mock
     private VoidRequest voidRequestMock;
     @Mock
-    private com.checkout.sdk.payments.VoidRequest voidRequest;
+    private com.checkout.payments.VoidRequest voidRequest;
     @Mock
     private VoidResponse voidResponseMock;
     @Mock
     private CheckoutComPaymentTransactionService checkoutComPaymentTransactionServiceMock;
 
-    @Before
+    @BeforeEach
     public void setUp() throws ExecutionException, InterruptedException {
         final Currency currency = Currency.getInstance(Locale.UK);
-        when(voidRequestMock.getCurrency()).thenReturn(currency);
-        when(voidRequestMock.getRequestId()).thenReturn(PAYMENT_ID);
-        when(voidRequestMock.getTotalAmount()).thenReturn(new BigDecimal(AMOUNT));
-        when(voidRequestMock.getMerchantTransactionCode()).thenReturn(MERCHANT_TRANSACTION_CODE);
-        when(checkoutComRequestFactoryMock.createVoidPaymentRequest(PAYMENT_REFERENCE)).thenReturn(voidRequest);
-        when(timeServiceMock.getCurrentTime()).thenReturn(DATE);
-        when(checkoutComPaymentIntegrationServiceMock.voidPayment(voidRequest, PAYMENT_ID)).thenReturn(voidResponseMock);
-        when(voidResponseMock.getActionId()).thenReturn(ACTION_ID);
-        when(checkoutComPaymentTransactionServiceMock.getPaymentReferenceFromTransactionEntryCode(MERCHANT_TRANSACTION_CODE)).thenReturn(PAYMENT_REFERENCE);
+        lenient().when(voidRequestMock.getCurrency()).thenReturn(currency);
+        lenient().when(voidRequestMock.getRequestId()).thenReturn(PAYMENT_ID);
+        lenient().when(voidRequestMock.getTotalAmount()).thenReturn(new BigDecimal(AMOUNT));
+        lenient().when(voidRequestMock.getMerchantTransactionCode()).thenReturn(MERCHANT_TRANSACTION_CODE);
+        lenient().when(checkoutComRequestFactoryMock.createVoidPaymentRequest(PAYMENT_REFERENCE)).thenReturn(voidRequest);
+        lenient().when(timeServiceMock.getCurrentTime()).thenReturn(DATE);
+        lenient().when(checkoutComPaymentIntegrationServiceMock.voidPayment(voidRequest, PAYMENT_ID)).thenReturn(voidResponseMock);
+        lenient().when(voidResponseMock.getActionId()).thenReturn(ACTION_ID);
+        lenient().when(checkoutComPaymentTransactionServiceMock.getPaymentReferenceFromTransactionEntryCode(MERCHANT_TRANSACTION_CODE)).thenReturn(PAYMENT_REFERENCE);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void perform_WhenRequestNull_ShouldThrowException() {
-        testObj.perform(null);
+        assertThatThrownBy(() -> testObj.perform(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void perform_WhenCurrencyNull_ShouldThrowException() {
         when(voidRequestMock.getCurrency()).thenReturn(null);
-
-        testObj.perform(voidRequestMock);
+        assertThatThrownBy(() -> testObj.perform(voidRequestMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void perform_WhenRequestId_ShouldThrowException() {
         when(voidRequestMock.getRequestId()).thenReturn(null);
 
-        testObj.perform(voidRequestMock);
+        assertThatThrownBy(() -> testObj.perform(voidRequestMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void perform_WhenTotalAmountNull_ShouldThrowException() {
         when(voidRequestMock.getTotalAmount()).thenReturn(null);
 
-        testObj.perform(voidRequestMock);
+        assertThatThrownBy(() -> testObj.perform(voidRequestMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void perform_WhenMerchantTransactionCodeNull_ShouldThrowException() {
         when(voidRequestMock.getMerchantTransactionCode()).thenReturn(null);
 
-        testObj.perform(voidRequestMock);
+        assertThatThrownBy(() -> testObj.perform(voidRequestMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = CheckoutComPaymentIntegrationException.class)
+    @Test
     public void perform_WhenExecutionExceptionWithError500_ShouldThrowPaymentIntegrationException() throws ExecutionException, InterruptedException {
-        final ApiResponseInfo apiResponseInfo = new ApiResponseInfo();
-        apiResponseInfo.setHttpStatusCode(503);
+        when(checkoutComPaymentIntegrationServiceMock.voidPayment(voidRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(503, Map.of(), Map.of())));
 
-        when(checkoutComPaymentIntegrationServiceMock.voidPayment(voidRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(apiResponseInfo)));
-
-        testObj.perform(voidRequestMock);
+        assertThatThrownBy(() -> testObj.perform(voidRequestMock)).isInstanceOf(CheckoutComPaymentIntegrationException.class);
     }
 
     @Test
     public void perform_WhenExecutionExceptionWithNonError500_ShouldReturnInvalidRequestErrorVoidResult() throws ExecutionException, InterruptedException {
-        final ApiResponseInfo apiResponseInfo = new ApiResponseInfo();
-        apiResponseInfo.setHttpStatusCode(404);
 
-        when(checkoutComPaymentIntegrationServiceMock.voidPayment(voidRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(apiResponseInfo)));
+        when(checkoutComPaymentIntegrationServiceMock.voidPayment(voidRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(404, Map.of(), Map.of())));
 
         final VoidResult result = testObj.perform(voidRequestMock);
 

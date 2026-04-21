@@ -10,7 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Optional;
 
 import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParameterNotNull;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.join;
 
 /**
  * Populates the AddressData from the GooglePayPaymentContact

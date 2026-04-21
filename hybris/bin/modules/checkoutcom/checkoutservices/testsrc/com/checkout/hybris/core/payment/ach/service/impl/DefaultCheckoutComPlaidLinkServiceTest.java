@@ -28,10 +28,11 @@ public class DefaultCheckoutComPlaidLinkServiceTest {
 	private static final String CLIENT_ID = "client-id";
 	private static final String SECRET = "secret";
 	private static final String CLIENT_NAME = "client-name";
-	public static final String ENG_ISOCODE = "eng";
+	private static final String ENG_ISOCODE = "eng";
 	private static final String PUBLIC_TOKEN = "public-token";
 	private static final String ACCESS_TOKEN = "access-token";
 	private static final String ACCOUNT_ID = "account-id";
+
 	@Spy
 	@InjectMocks
 	private DefaultCheckoutComPlaidLinkService testObj;
@@ -78,8 +79,7 @@ public class DefaultCheckoutComPlaidLinkServiceTest {
 		assertThat(result.getProducts()).containsExactlyInAnyOrder(Products.AUTH);
 		assertThat(Objects.requireNonNull(
 								  Objects.requireNonNull(Objects.requireNonNull(result.getAccountFilters()).getDepository()))
-						  .getAccountSubtypes()).containsExactlyInAnyOrder(
-				AccountSubtype.SAVINGS, AccountSubtype.CHECKING);
+			.getAccountSubtypes()).containsExactlyInAnyOrder(DepositoryAccountSubtype.SAVINGS, DepositoryAccountSubtype.CHECKING);
 		assertThat(result.getCountryCodes()).containsExactlyInAnyOrder(CountryCode.US);
 		assertThat(result.getLanguage()).isEqualTo(ENG_ISOCODE);
 	}

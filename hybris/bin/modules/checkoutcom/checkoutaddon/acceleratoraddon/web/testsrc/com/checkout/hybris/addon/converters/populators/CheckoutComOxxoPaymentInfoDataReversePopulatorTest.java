@@ -1,31 +1,30 @@
 package com.checkout.hybris.addon.converters.populators;
 
 
-import com.checkout.hybris.addon.forms.PaymentDataForm;
-import com.checkout.hybris.facades.beans.OxxoPaymentInfoData;
-import de.hybris.bootstrap.annotations.UnitTest;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.MockitoJUnitRunner;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+
+import com.checkout.hybris.addon.forms.PaymentDataForm;
+import com.checkout.hybris.facades.beans.OxxoPaymentInfoData;
+import de.hybris.bootstrap.annotations.UnitTest;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
 public class CheckoutComOxxoPaymentInfoDataReversePopulatorTest {
 
     private static final String DOCUMENT_VALUE = "asafasfasfafasf";
     private static final String DOCUMENT = "document";
 
     @InjectMocks
-    private CheckoutComOxxoPaymentInfoDataReversePopulator testObj;
+    private CheckoutComOxxoPaymentInfoDataReversePopulator testObj = new CheckoutComOxxoPaymentInfoDataReversePopulator();
 
-    private OxxoPaymentInfoData target = new OxxoPaymentInfoData();
-    private PaymentDataForm source = new PaymentDataForm();
-    private Map<String, Object> formAttributes = new HashMap<>();
+    private final OxxoPaymentInfoData target = new OxxoPaymentInfoData();
+    private final PaymentDataForm source = new PaymentDataForm();
+    private final Map<String, Object> formAttributes = new HashMap<>();
 
     @Test
     public void populate_ShouldPopulateDocument() {
@@ -34,16 +33,20 @@ public class CheckoutComOxxoPaymentInfoDataReversePopulatorTest {
 
         testObj.populate(source, target);
 
-        Assert.assertEquals(DOCUMENT_VALUE, target.getDocument());
+        assertEquals(DOCUMENT_VALUE, target.getDocument());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_ShouldThrowException_WhenSourceIsNull() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("PaymentDataForm cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_ShouldThrowException_WhenTargetIsNull() {
-        testObj.populate(source, null);
+        assertThatThrownBy(() -> testObj.populate(source, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("OxxoPaymentInfoData cannot be null.");
     }
 }

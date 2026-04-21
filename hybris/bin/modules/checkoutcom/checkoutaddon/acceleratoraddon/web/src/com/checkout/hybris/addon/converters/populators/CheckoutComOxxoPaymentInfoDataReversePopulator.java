@@ -1,13 +1,13 @@
 package com.checkout.hybris.addon.converters.populators;
 
+import java.util.Map;
+
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.facades.beans.OxxoPaymentInfoData;
 import de.hybris.platform.converters.Populator;
 import de.hybris.platform.servicelayer.dto.converter.ConversionException;
 import org.springframework.util.Assert;
-
-import java.util.Map;
 
 /**
  * Populates the required attributes of the {@link OxxoPaymentInfoData}

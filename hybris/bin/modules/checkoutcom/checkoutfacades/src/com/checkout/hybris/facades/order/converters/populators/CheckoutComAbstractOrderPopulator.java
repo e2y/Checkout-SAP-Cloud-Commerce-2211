@@ -82,7 +82,7 @@ public class CheckoutComAbstractOrderPopulator implements Populator<AbstractOrde
      * @param checkoutComPaymentType payment type
      */
     protected void setPaymentTypeAndQrCodeOnOrderData(final AbstractOrderData target, final PaymentInfoModel paymentInfo, final CheckoutComPaymentType checkoutComPaymentType) {
-        target.setPaymentType(checkoutComPaymentType.name());
+        target.setCheckoutPaymentType(checkoutComPaymentType.name());
         if (paymentInfo instanceof CheckoutComBenefitPayPaymentInfoModel checkoutComBenefitPayPaymentInfo) {
             target.setQrCodeData(checkoutComBenefitPayPaymentInfo.getQrCode());
         }

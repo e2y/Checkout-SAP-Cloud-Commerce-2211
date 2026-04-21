@@ -49,7 +49,7 @@ public class CheckoutComKlarnaSessionRequestDtoPopulator implements Populator<Ca
 
         target.setPaymentType(REGULAR);
 
-        currencyCode.ifPresent(currency -> target.setAmount(checkoutComCurrencyService.convertAmountIntoPennies(currency, source.getTotalPrice())));
+        currencyCode.ifPresent(currency -> target.setAmount(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currency, source.getTotalPrice())));
         target.setProducts(checkoutComKlarnaProductsRequestDtoConverter.convert(source));
 
         populateKlarnaSession(source, target);

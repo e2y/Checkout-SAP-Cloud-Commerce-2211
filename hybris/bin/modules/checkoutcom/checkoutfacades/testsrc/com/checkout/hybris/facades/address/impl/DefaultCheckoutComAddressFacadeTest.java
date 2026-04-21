@@ -8,10 +8,12 @@ import de.hybris.platform.commercefacades.user.data.AddressData;
 import de.hybris.platform.commercefacades.user.data.CountryData;
 import de.hybris.platform.commercefacades.user.data.RegionData;
 import de.hybris.platform.commerceservices.delivery.DeliveryService;
+import de.hybris.platform.converters.Populator;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.order.CartService;
 import de.hybris.platform.servicelayer.dto.converter.Converter;
+import de.hybris.platform.servicelayer.model.ModelService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,7 +30,6 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultCheckoutComAddressFacadeTest {
 
-    private static final String ADDRESS_ID = "ADDRESS_ID";
     private static final String COUNTRY_CODE = "US";
     private static final String REGION_CODE = "Region";
 
@@ -45,6 +46,10 @@ public class DefaultCheckoutComAddressFacadeTest {
     private CheckoutComAddressService addressServiceMock;
     @Mock
     private CheckoutComCheckoutFlowFacade checkoutFlowFacadeMock;
+    @Mock
+    private Populator<AddressData, AddressModel> addressReversePopulatorMock;
+    @Mock
+    private ModelService modelServiceMock;
 
     @Mock
     private AddressModel addressModelMock;
@@ -63,10 +68,8 @@ public class DefaultCheckoutComAddressFacadeTest {
     public void setUp() {
         ReflectionTestUtils.setField(testObj, "addressConverter", addressConverterMock);
         when(addressConverterMock.convert(addressModelMock)).thenReturn(addressDataMock);
-        when(addressDataMock.getId()).thenReturn(ADDRESS_ID);
         when(cartServiceMock.hasSessionCart()).thenReturn(true);
         when(cartServiceMock.getSessionCart()).thenReturn(cartModelMock);
-        when(checkoutFlowFacadeMock.getDeliveryAddressModelForCode(ADDRESS_ID)).thenReturn(addressModelMock);
         when(cartModelMock.getPaymentAddress()).thenReturn(addressModelMock);
     }
 
@@ -108,26 +111,17 @@ public class DefaultCheckoutComAddressFacadeTest {
     }
 
     @Test
-    public void setCartBillingDetails_WhenNoAddressModel_ShouldDoNothing() {
-        when(addressDataMock.getId()).thenReturn(null);
-
-        testObj.setCartBillingDetails(addressDataMock);
-
-        verifyNoInteractions(addressServiceMock);
-    }
-
-    @Test
     public void setCartBillingDetails_WhenEverythingCorrect_ShouldWorkCorrectly() {
         testObj.setCartBillingDetails(addressDataMock);
 
-        verify(addressServiceMock).setCartPaymentAddress(cartModelMock, addressModelMock);
+        verify(addressServiceMock).setCartPaymentAddress(eq(cartModelMock), any(AddressModel.class));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void setCartBillingDetailsByAddressId_WhenNoCartFound_ShouldThrowException() {
         when(cartServiceMock.hasSessionCart()).thenReturn(false);
 
-        testObj.setCartBillingDetailsByAddressId(ADDRESS_ID);
+        testObj.setCartBillingDetailsByAddress(addressDataMock);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -136,17 +130,8 @@ public class DefaultCheckoutComAddressFacadeTest {
     }
 
     @Test
-    public void setCartBillingDetailsByAddressId_WhenNoAddressModel_ShouldDoNothing() {
-        when(checkoutFlowFacadeMock.getDeliveryAddressModelForCode(ADDRESS_ID)).thenReturn(null);
-
-        testObj.setCartBillingDetailsByAddressId(ADDRESS_ID);
-
-        verifyNoInteractions(addressServiceMock);
-    }
-
-    @Test
     public void setCartBillingDetailsByAddressId_WhenEverythingCorrect_ShouldWorkCorrectly() {
-        testObj.setCartBillingDetailsByAddressId(ADDRESS_ID);
+        testObj.setCartBillingDetailsByAddress(addressDataMock);
 
         verify(addressServiceMock).setCartPaymentAddress(cartModelMock, addressModelMock);
     }

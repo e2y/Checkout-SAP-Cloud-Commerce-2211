@@ -1,16 +1,17 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComGooglePayConfigurationModel;
 import com.checkout.hybris.core.model.CheckoutComGooglePayPaymentInfoModel;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.payments.ThreeDSRequest;
-import com.checkout.sdk.payments.TokenSource;
+import com.checkout.common.Currency;
+import com.checkout.payments.ThreeDSRequest;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestTokenSource;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
@@ -25,12 +26,9 @@ import static java.lang.String.format;
  */
 public class CheckoutComGooglePayPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
 
-    public CheckoutComGooglePayPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                      final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                      final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                      final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-            checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+
+    protected CheckoutComGooglePayPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
     }
 
     /**
@@ -45,8 +43,8 @@ public class CheckoutComGooglePayPaymentRequestStrategy extends CheckoutComAbstr
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
+                                                            final String currencyIsoCode, final Long amount) {
         final PaymentInfoModel paymentInfo = cart.getPaymentInfo();
         if (paymentInfo instanceof CheckoutComGooglePayPaymentInfoModel) {
             return createTokenSourcePaymentRequest((CheckoutComGooglePayPaymentInfoModel) paymentInfo, currencyIsoCode, amount, cart.getPaymentAddress());
@@ -64,19 +62,26 @@ public class CheckoutComGooglePayPaymentRequestStrategy extends CheckoutComAbstr
      * @param billingAddress  to set in the request
      * @return paymentRequest to send to Checkout.com
      */
-    protected PaymentRequest<RequestSource> createTokenSourcePaymentRequest(final CheckoutComGooglePayPaymentInfoModel paymentInfo,
+    protected PaymentRequest createTokenSourcePaymentRequest(final CheckoutComGooglePayPaymentInfoModel paymentInfo,
                                                                             final String currencyIsoCode,
                                                                             final Long amount,
                                                                             final AddressModel billingAddress) {
-        final PaymentRequest<RequestSource> paymentRequest = PaymentRequest.fromSource(new TokenSource(paymentInfo.getToken()), currencyIsoCode, amount);
-        ((TokenSource) paymentRequest.getSource()).setBillingAddress(billingAddress != null ? createAddress(billingAddress) : null);
-        return paymentRequest;
+        return PaymentRequest.builder()
+            .source(
+                RequestTokenSource.builder()
+                    .billingAddress(billingAddress != null ? createAddress(billingAddress) : null)
+                    .token(paymentInfo.getToken())
+                    .build()
+            )
+            .currency(Currency.valueOf(currencyIsoCode))
+            .amount(amount)
+            .build();
     }
 
     /**
      * GooglePay is like card payments. Capture or auto-capture depends on the merchant configuration
      *
-     * @return tru is we auto-capture, false otherwise
+     * @return true is we auto-capture, false otherwise
      */
     @Override
     protected Optional<Boolean> isCapture() {

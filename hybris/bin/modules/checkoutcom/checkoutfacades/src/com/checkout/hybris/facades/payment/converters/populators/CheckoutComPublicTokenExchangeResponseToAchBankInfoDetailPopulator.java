@@ -7,7 +7,6 @@ import com.plaid.client.model.*;
 import de.hybris.platform.converters.Populator;
 import de.hybris.platform.servicelayer.dto.converter.ConversionException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.security.InvalidParameterException;
@@ -54,7 +53,6 @@ public class CheckoutComPublicTokenExchangeResponseToAchBankInfoDetailPopulator 
         }
     }
 
-    @NotNull
     private void populateAchBankInfoDetailsData(final String accessToken,
                                                 final AuthGetResponse authGetResponse,
                                                 final String selectedBankId,

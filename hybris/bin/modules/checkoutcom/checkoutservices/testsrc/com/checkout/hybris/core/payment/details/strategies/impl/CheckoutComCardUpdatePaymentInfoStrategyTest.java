@@ -5,8 +5,8 @@ import com.checkout.hybris.core.payment.details.mappers.CheckoutComUpdatePayment
 import com.checkout.hybris.core.payment.details.strategies.CheckoutComUpdatePaymentInfoStrategy;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.GetPaymentResponse;
-import com.checkout.sdk.payments.ResponseSource;
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.payments.response.source.ResponseSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.order.CartService;

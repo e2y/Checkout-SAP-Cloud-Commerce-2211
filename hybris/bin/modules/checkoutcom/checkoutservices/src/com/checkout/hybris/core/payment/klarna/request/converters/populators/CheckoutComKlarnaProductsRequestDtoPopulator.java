@@ -55,10 +55,10 @@ public class CheckoutComKlarnaProductsRequestDtoPopulator implements Populator<C
 
                 productRequestDto.setName(product != null ? product.getName() : null);
                 productRequestDto.setQuantity(cartEntry.getQuantity());
-                productRequestDto.setTotalDiscountAmount(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, discountAmount));
-                productRequestDto.setTotalAmount(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, totalAmount));
-                productRequestDto.setTotalTaxAmount(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode,totalTaxAmount));
-                productRequestDto.setUnitPrice(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, cartEntry.getBasePrice()));
+                productRequestDto.setTotalDiscountAmount(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, discountAmount));
+                productRequestDto.setTotalAmount(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, totalAmount));
+                productRequestDto.setTotalTaxAmount(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode,totalTaxAmount));
+                productRequestDto.setUnitPrice(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, cartEntry.getBasePrice()));
                 productRequestDto.setReference(product != null ? product.getCode() : null);
 
                 target.add(productRequestDto);
@@ -91,13 +91,13 @@ public class CheckoutComKlarnaProductsRequestDtoPopulator implements Populator<C
 
             if (doesCartContainsTaxes(cart)) {
                 final double totalShippingTaxes = taxRate * cart.getDeliveryCost();
-                shippingLine.setTotalTaxAmount(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, totalShippingTaxes));
+                shippingLine.setTotalTaxAmount(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, totalShippingTaxes));
             } else {
                 shippingLine.setTotalTaxAmount(0L);
             }
-            final long totalAmount = checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, cart.getDeliveryCost());
+            final long totalAmount = checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, cart.getDeliveryCost());
             shippingLine.setTotalAmount(totalAmount);
-            shippingLine.setUnitPrice(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, cart.getDeliveryCost()));
+            shippingLine.setUnitPrice(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, cart.getDeliveryCost()));
             shippingLine.setTotalDiscountAmount(NumberUtils.LONG_ZERO);
             klarnaProductRequestDtos.add(shippingLine);
         }
@@ -120,13 +120,13 @@ public class CheckoutComKlarnaProductsRequestDtoPopulator implements Populator<C
 
             orderDiscount.setName("Order total discount");
             orderDiscount.setQuantity(NumberUtils.LONG_ONE);
-            final long totalDiscount = checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, cart.getTotalDiscounts()) * -1;
+            final long totalDiscount = checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, cart.getTotalDiscounts()) * -1;
             orderDiscount.setTotalAmount(totalDiscount);
             orderDiscount.setUnitPrice(totalDiscount);
 
             if (doesCartContainsTaxes(cart)) {
                 final double totalDiscountTaxes = taxRate * cart.getTotalDiscounts() * -1;
-                orderDiscount.setTotalTaxAmount(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, totalDiscountTaxes));
+                orderDiscount.setTotalTaxAmount(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, totalDiscountTaxes));
             } else {
                 orderDiscount.setTotalTaxAmount(0L);
             }
@@ -148,13 +148,13 @@ public class CheckoutComKlarnaProductsRequestDtoPopulator implements Populator<C
 
             paymentCost.setName("Order payment cost");
             paymentCost.setQuantity(NumberUtils.LONG_ONE);
-            final long orderPaymentCost = checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, cart.getPaymentCost());
+            final long orderPaymentCost = checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, cart.getPaymentCost());
             paymentCost.setTotalAmount(orderPaymentCost);
             paymentCost.setUnitPrice(orderPaymentCost);
 
             if (doesCartContainsTaxes(cart)) {
                 final double paymentCostTaxes = taxRate * cart.getPaymentCost();
-                paymentCost.setTotalTaxAmount(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, paymentCostTaxes));
+                paymentCost.setTotalTaxAmount(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, paymentCostTaxes));
             } else {
                 paymentCost.setTotalTaxAmount(0L);
             }

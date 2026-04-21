@@ -8,10 +8,11 @@ import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationSe
 import com.checkout.hybris.facades.beans.WalletPaymentAdditionalAuthInfo;
 import com.checkout.hybris.facades.beans.WalletPaymentInfoData;
 import com.checkout.hybris.facades.payment.token.request.converters.mappers.CheckoutComMappedPaymentTokenRequestConverter;
-import com.checkout.sdk.payments.GetPaymentResponse;
-import com.checkout.sdk.payments.ResponseSource;
-import com.checkout.sdk.tokens.TokenResponse;
-import com.checkout.sdk.tokens.WalletTokenRequest;
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.payments.response.source.ResponseSource;
+import com.checkout.tokens.TokenResponse;
+import com.checkout.tokens.TokenType;
+import com.checkout.tokens.WalletTokenRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.order.CartService;
@@ -96,10 +97,10 @@ public class DefaultCheckoutComPaymentFacadeTest {
         when(cartModelMock.getCheckoutComPaymentReference()).thenReturn(CART_REFERENCE);
         when(checkoutComPaymentIntegrationServiceMock.getPaymentDetails(CKO_SESSION_ID)).thenReturn(getPaymentResponse);
         when(getPaymentResponse.getReference()).thenReturn(CART_REFERENCE);
-        when(getPaymentResponse.isApproved()).thenReturn(true);
+        when(getPaymentResponse.getApproved()).thenReturn(true);
         when(checkoutComPaymentIntegrationServiceMock.generateWalletPaymentToken(walletTokenRequestMock)).thenReturn(tokenResponseMock);
         when(tokenResponseMock.getToken()).thenReturn(TOKEN_VALUE);
-        when(tokenResponseMock.getType()).thenReturn(APPLEPAY.name());
+        when(tokenResponseMock.getType()).thenReturn(TokenType.APPLEPAY);
         when(checkoutComMappedPaymentTokenRequestConverterMock.convertWalletTokenRequest(walletPaymentAdditionalAuthInfoMock, APPLEPAY)).thenReturn(walletTokenRequestMock);
     }
 
@@ -166,7 +167,7 @@ public class DefaultCheckoutComPaymentFacadeTest {
         assertTrue(result.isPresent());
         assertEquals(getPaymentResponse, result.get());
         assertEquals(CART_REFERENCE, result.get().getReference());
-        assertTrue(result.get().isApproved());
+        assertTrue(result.get().getApproved());
     }
 
     @Test

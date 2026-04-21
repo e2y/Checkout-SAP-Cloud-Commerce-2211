@@ -2,9 +2,9 @@ package com.checkout.hybris.test.inbound.events;
 
 import de.hybris.platform.core.model.ItemModel;
 import de.hybris.platform.cronjob.model.CronJobModel;
-import de.hybris.platform.odata2services.odata.persistence.hook.PrePersistHook;
+import de.hybris.platform.inboundservices.persistence.PersistenceContext;
+import de.hybris.platform.inboundservices.persistence.hook.PrePersistHook;
 import de.hybris.platform.servicelayer.cronjob.CronJobService;
-
 import java.util.Optional;
 
 public class CheckoutComCronJobPersistenceHook implements PrePersistHook {
@@ -15,7 +15,7 @@ public class CheckoutComCronJobPersistenceHook implements PrePersistHook {
     }
 
     @Override
-    public Optional<ItemModel> execute(final ItemModel item) {
+    public Optional<ItemModel> execute(final ItemModel item, final PersistenceContext context) {
         if (item instanceof CronJobModel) {
             final CronJobModel foundCronJob = cronJobService.getCronJob(((CronJobModel) item).getCode());
             cronJobService.performCronJob(foundCronJob);

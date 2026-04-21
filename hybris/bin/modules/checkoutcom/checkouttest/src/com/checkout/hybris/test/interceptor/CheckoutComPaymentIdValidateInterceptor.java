@@ -6,7 +6,6 @@ import de.hybris.platform.servicelayer.interceptor.InterceptorContext;
 import de.hybris.platform.servicelayer.interceptor.ValidateInterceptor;
 import de.hybris.platform.servicelayer.internal.dao.GenericDao;
 import de.hybris.platform.servicelayer.model.ModelService;
-
 import java.util.Map;
 
 /**
@@ -19,22 +18,20 @@ public class CheckoutComPaymentIdValidateInterceptor implements ValidateIntercep
     private final GenericDao<AbstractOrderModel> abstractOrderGenericDao;
 
     public CheckoutComPaymentIdValidateInterceptor(final ModelService modelService,
-                                                   final GenericDao<AbstractOrderModel> abstractOrderGenericDao) {
+          final GenericDao<AbstractOrderModel> checkoutTestAbstractOrderGenericDao) {
         this.modelService = modelService;
-        this.abstractOrderGenericDao = abstractOrderGenericDao;
+        this.abstractOrderGenericDao = checkoutTestAbstractOrderGenericDao;
     }
 
     @Override
     public void onValidate(final PaymentInfoModel paymentInfo, final InterceptorContext interceptorContext) {
         if (!interceptorContext.isNew(paymentInfo) && paymentInfo.getPaymentId() != null) {
-            final AbstractOrderModel order = abstractOrderGenericDao.find(Map.of(AbstractOrderModel.PAYMENTINFO, paymentInfo)).stream()
+            abstractOrderGenericDao.find(Map.of(AbstractOrderModel.PAYMENTINFO, paymentInfo)).stream()
                     .findFirst()
-                    .orElse(null);
-
-            if (order != null) {
-                order.setCheckoutPaymentId(paymentInfo.getPaymentId());
-                modelService.save(order);
-            }
+                  .ifPresent(order -> {
+                      order.setCheckoutPaymentId(paymentInfo.getPaymentId());
+                      modelService.save(order);
+                  });
         }
     }
 }

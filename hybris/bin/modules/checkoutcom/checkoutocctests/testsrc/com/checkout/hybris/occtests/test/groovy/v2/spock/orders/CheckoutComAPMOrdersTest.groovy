@@ -38,13 +38,13 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
         }
 
         where:
-        format | APM        | currency          | billingCountry | paymentInfoPostBody                      | billingAddressPostBody       | redirectKey
-        JSON   | P24        | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON  | 'checkoutocctests.checkout.p24.sandbox'
-        XML    | P24        | EUR_CURRENCY_CODE | 'Germany'      | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON  | 'checkoutocctests.checkout.p24.sandbox'
-        JSON   | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON      | 'checkoutocctests.checkout.ideal.sandbox'
-        XML    | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON      | 'checkoutocctests.checkout.ideal.sandbox '
-        JSON   | BANCONTACT | EUR_CURRENCY_CODE | 'Belgium'      | DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON | BELGIUM_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.bancontact.sandbox'
-        XML    | BANCONTACT | EUR_CURRENCY_CODE | 'Belgium'      | DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON | BELGIUM_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.bancontact.sandbox'
+        format | APM        | currency          | billingCountry | paymentInfoPostBody                      | billingAddressPostBody        | redirectKey
+        JSON   | P24        | EUR_CURRENCY_CODE | 'Poland'       | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON   | 'checkoutocctests.checkout.p24.sandbox'
+        XML    | P24        | EUR_CURRENCY_CODE | 'Poland'       | DEFAULT_CHECKOUT_P24_PAYMENT_JSON        | POLAND_BILLING_ADDRESS_JSON   | 'checkoutocctests.checkout.p24.sandbox'
+        JSON   | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.ideal.sandbox'
+        XML    | IDEAL      | EUR_CURRENCY_CODE | 'Netherlands'  | DEFAULT_CHECKOUT_IDEAL_PAYMENT_JSON      | NL_BILLING_ADDRESS_JSON       | 'checkoutocctests.checkout.ideal.sandbox '
+        JSON   | BANCONTACT | EUR_CURRENCY_CODE | 'Belgium'      | DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON | BELGIUM_BILLING_ADDRESS_JSON  | 'checkoutocctests.checkout.bancontact.sandbox'
+        XML    | BANCONTACT | EUR_CURRENCY_CODE | 'Belgium'      | DEFAULT_CHECKOUT_BANCONTACT_PAYMENT_JSON | BELGIUM_BILLING_ADDRESS_JSON  | 'checkoutocctests.checkout.bancontact.sandbox'
         JSON   | MULTIBANCO | EUR_CURRENCY_CODE | 'Portugal'     | DEFAULT_CHECKOUT_MULTIBANCO_PAYMENT_JSON | PORTUGAL_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.multibanco.sandbox'
         XML    | MULTIBANCO | EUR_CURRENCY_CODE | 'Portugal'     | DEFAULT_CHECKOUT_MULTIBANCO_PAYMENT_JSON | PORTUGAL_BILLING_ADDRESS_JSON | 'checkoutocctests.checkout.multibanco.sandbox'
     }
@@ -69,16 +69,13 @@ class CheckoutComAPMOrdersTest extends AbstractCheckoutComPaymentsTest {
             if (isNotEmpty(data) && isNotEmpty(data.errors)) println(data)
             status == SC_CREATED
             isNotEmpty(data.code)
-            data.paymentType == APM.name()
-            if (data.paymentType == BENEFITPAY.name()) {
-                isNotEmpty(data.qrCodeData)
-            }
+            data.checkoutComPaymentInfo.type == APM.name()
         }
 
         where:
         format | APM   | currency          | billingCountry | paymentInfoPostBody                 | billingAddressPostBody
-        JSON   | FAWRY | EGP_CURRENCY_CODE | 'Egypt'      | DEFAULT_CHECKOUT_FAWRY_PAYMENT_JSON | DEFAULT_BILLING_ADDRESS_JSON
-        XML    | FAWRY | EGP_CURRENCY_CODE | 'Egypt'      | DEFAULT_CHECKOUT_FAWRY_PAYMENT_JSON | DEFAULT_BILLING_ADDRESS_JSON
+        JSON   | FAWRY | EGP_CURRENCY_CODE | 'Egypt'        | DEFAULT_CHECKOUT_FAWRY_PAYMENT_JSON | DEFAULT_BILLING_ADDRESS_JSON
+        XML    | FAWRY | EGP_CURRENCY_CODE | 'Egypt'        | DEFAULT_CHECKOUT_FAWRY_PAYMENT_JSON | DEFAULT_BILLING_ADDRESS_JSON
     }
 
 }

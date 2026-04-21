@@ -1,11 +1,12 @@
 package com.checkout.hybris.core.payment.services.impl;
 
-import com.checkout.sdk.CheckoutApi;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.core.payment.services.CheckoutComApiService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInstrumentsService;
-import com.checkout.sdk.instruments.InstrumentsClient;
-import com.checkout.sdk.instruments.UpdateInstrumentRequest;
+import com.checkout.CheckoutApi;
+import com.checkout.instruments.InstrumentsClient;
+import com.checkout.instruments.update.UpdateInstrumentCardRequest;
+import com.checkout.instruments.update.UpdateInstrumentRequest;
 import de.hybris.platform.core.model.order.payment.CreditCardPaymentInfoModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,8 +20,7 @@ public class DefaultCheckoutComPaymentInstrumentService implements CheckoutComPa
 	private static final String INSTRUMENT_UPDATE_FAILED = "Instrument update failed";
 	private final CheckoutComApiService checkoutComApiService;
 
-
-	public DefaultCheckoutComPaymentInstrumentService(final CheckoutComApiService checkoutComApiService) {
+    public DefaultCheckoutComPaymentInstrumentService(final CheckoutComApiService checkoutComApiService) {
 		this.checkoutComApiService = checkoutComApiService;
 	}
 
@@ -28,18 +28,16 @@ public class DefaultCheckoutComPaymentInstrumentService implements CheckoutComPa
 	public void removeInstrumentByCreditCard(final CreditCardPaymentInfoModel creditCardPaymentInfoModel) {
 		try {
 			LOG.debug("Trying to remove credit card with code [{}]", creditCardPaymentInfoModel.getCode());
-			getInstrumentsClient().deleteInstrument(creditCardPaymentInfoModel.getSubscriptionId()).get();
+            getInstrumentsClient().delete(creditCardPaymentInfoModel.getSubscriptionId()).get();
 			LOG.debug("Removal successful for credit card with code [{}]", creditCardPaymentInfoModel.getCode());
 		}
 		catch (final InterruptedException e) {
-			LOG.error("Error while removing the instrument associated with credit card with code [{}]",
-					  creditCardPaymentInfoModel.getCode());
+            LOG.error("Error while removing the instrument associated with credit card with code [{}]", creditCardPaymentInfoModel.getCode());
 			Thread.currentThread().interrupt();
 			throw new CheckoutComPaymentIntegrationException(INSTRUMENT_REMOVAL_FAILED, e);
 		}
 		catch (final ExecutionException e) {
-			LOG.error("Error while removing the instrument associated with credit card with code [{}]",
-					  creditCardPaymentInfoModel.getCode());
+            LOG.error("Error while removing the instrument associated with credit card with code [{}]", creditCardPaymentInfoModel.getCode());
 			throw new CheckoutComPaymentIntegrationException(INSTRUMENT_REMOVAL_FAILED, e);
 		}
 	}
@@ -51,19 +49,17 @@ public class DefaultCheckoutComPaymentInstrumentService implements CheckoutComPa
 			final UpdateInstrumentRequest updateInstrumentRequest = createUpdateInstrumentRequest(
 					creditCardPaymentInfoModel.getCcOwner(), creditCardPaymentInfoModel.getValidToYear(),
 					creditCardPaymentInfoModel.getValidToMonth());
-			getInstrumentsClient().updateInstrument(creditCardPaymentInfoModel.getSubscriptionId(),
+            getInstrumentsClient().update(creditCardPaymentInfoModel.getSubscriptionId(),
 													updateInstrumentRequest).get();
 			LOG.debug("Update successful for credit card with code [{}]", creditCardPaymentInfoModel.getCode());
 		}
 		catch (final InterruptedException e) {
-			LOG.error("Error while updating the instrument associated with credit card with code [{}]",
-					  creditCardPaymentInfoModel.getCode());
+            LOG.error("Error while updating the instrument associated with credit card with code [{}]", creditCardPaymentInfoModel.getCode());
 			Thread.currentThread().interrupt();
 			throw new CheckoutComPaymentIntegrationException(INSTRUMENT_UPDATE_FAILED, e);
 		}
 		catch (final ExecutionException e) {
-			LOG.error("Error while updating the instrument associated with credit card with code [{}]",
-					  creditCardPaymentInfoModel.getCode());
+            LOG.error("Error while updating the instrument associated with credit card with code [{}]", creditCardPaymentInfoModel.getCode());
 			throw new CheckoutComPaymentIntegrationException(INSTRUMENT_UPDATE_FAILED, e);
 		}
 	}
@@ -71,17 +67,16 @@ public class DefaultCheckoutComPaymentInstrumentService implements CheckoutComPa
 	protected UpdateInstrumentRequest createUpdateInstrumentRequest(final String cardHolderName,
 																	final String validToYear,
 																	final String validToMonth) {
-		final UpdateInstrumentRequest updateInstrumentRequest = new UpdateInstrumentRequest();
-		updateInstrumentRequest.setName(cardHolderName);
-		updateInstrumentRequest.setExpiryYear(Integer.parseInt(validToYear));
-		updateInstrumentRequest.setExpiryMonth(Integer.parseInt(validToMonth));
-
-		return updateInstrumentRequest;
+        return UpdateInstrumentCardRequest.builder()
+            .name(cardHolderName)
+            .expiryYear(Integer.parseInt(validToYear))
+            .expiryMonth(Integer.parseInt(validToMonth))
+            .build();
 	}
 
 	protected InstrumentsClient getInstrumentsClient() {
 		final CheckoutApi checkoutApi = checkoutComApiService.createCheckoutApi();
-		
-		return checkoutApi.instrumentsClient();
+
+        return checkoutApi.instrumentsClient();
 	}
 }
