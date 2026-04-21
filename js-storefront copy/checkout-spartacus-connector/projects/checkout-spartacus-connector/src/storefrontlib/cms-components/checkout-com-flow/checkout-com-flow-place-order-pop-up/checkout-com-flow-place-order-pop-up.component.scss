@@ -1,0 +1,14 @@
+y-checkout-com-flow-place-order-pop-up {
+  .cx-modal-container {
+    overflow-y: hidden;
+  }
+
+  #flow-container {
+    max-height: 80dvh;
+    overflow: hidden auto;
+  }
+}
+
+body.popup-open {
+  overflow: hidden;
+}

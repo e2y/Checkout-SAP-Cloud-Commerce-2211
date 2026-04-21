@@ -27,6 +27,7 @@
         <value>ACH</value>
         <value>APPLEPAY</value>
         <value>GOOGLEPAY</value>
+        <value>PLAID</value>
     </enum>
 
     <enum class="com.checkout.hybris.core.google.payment.enums.TokenFormatType">

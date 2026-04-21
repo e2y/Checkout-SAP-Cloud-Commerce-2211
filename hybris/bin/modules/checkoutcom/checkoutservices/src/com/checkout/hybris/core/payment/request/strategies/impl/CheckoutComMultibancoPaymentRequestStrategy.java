@@ -1,14 +1,16 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.CountryCode;
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.address.services.CheckoutComAddressService;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.apm.RequestMultiBancoSource;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import org.apache.commons.lang.StringUtils;
@@ -20,21 +22,12 @@ import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParamete
 /**
  * specific {@link CheckoutComPaymentRequestStrategy} implementation for Multibanco apm payments
  */
-@SuppressWarnings("java:S107")
 public class CheckoutComMultibancoPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
-
-    protected static final String PAYMENT_COUNTRY_KEY = "payment_country";
-    protected static final String ACCOUNT_HOLDER_KEY = "account_holder_name";
 
     protected final CheckoutComAddressService addressService;
 
-    public CheckoutComMultibancoPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                       final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                       final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                       final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper,
-                                                       final CheckoutComAddressService addressService) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-            checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+    protected CheckoutComMultibancoPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService, final CheckoutComAddressService addressService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
         this.addressService = addressService;
     }
 
@@ -50,11 +43,8 @@ public class CheckoutComMultibancoPaymentRequestStrategy extends CheckoutComAbst
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
-        final PaymentRequest<RequestSource> paymentRequest = super.getRequestSourcePaymentRequest(cart, currencyIsoCode, amount);
-        final AlternativePaymentSource source = (AlternativePaymentSource) paymentRequest.getSource();
-
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
+                                                            final String currencyIsoCode, final Long amount) {
         final AddressModel billingAddress = cart.getPaymentInfo().getBillingAddress();
 
         validateParameterNotNull(billingAddress, "Billing address model cannot be null");
@@ -63,9 +53,15 @@ public class CheckoutComMultibancoPaymentRequestStrategy extends CheckoutComAbst
         final String countryIsoCode = billingAddress.getCountry().getIsocode();
         checkArgument(StringUtils.isNotEmpty(countryIsoCode), "Billing address country code cannot be null");
 
-        source.put(PAYMENT_COUNTRY_KEY, countryIsoCode);
-        source.put(ACCOUNT_HOLDER_KEY, addressService.getCustomerFullNameFromAddress(billingAddress));
-        return paymentRequest;
+        return PaymentRequest.builder()
+            .source(
+                RequestMultiBancoSource.builder()
+                    .paymentCountry(CountryCode.valueOf(countryIsoCode))
+                    .accountHolderName(addressService.getCustomerFullNameFromAddress(billingAddress))
+                    .build()
+            )
+            .amount(amount)
+            .currency(Currency.valueOf(currencyIsoCode))
+            .build();
     }
-
 }

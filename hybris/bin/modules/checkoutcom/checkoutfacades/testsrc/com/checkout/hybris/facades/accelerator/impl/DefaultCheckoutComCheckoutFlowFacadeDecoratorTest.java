@@ -12,9 +12,11 @@ import com.checkout.hybris.core.payment.services.CheckoutComPaymentService;
 import com.checkout.hybris.facades.beans.AuthorizeResponseData;
 import com.checkout.hybris.facades.beans.CheckoutComPaymentInfoData;
 import com.checkout.hybris.facades.constants.CheckoutFacadesConstants;
-import com.checkout.sdk.payments.*;
+import com.checkout.payments.PaymentStatus;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.response.PaymentResponse;
+import com.checkout.payments.response.source.ResponseSource;
 import de.hybris.bootstrap.annotations.UnitTest;
-import de.hybris.platform.acceleratorfacades.flow.CheckoutFlowFacade;
 import de.hybris.platform.commercefacades.order.CartFacade;
 import de.hybris.platform.commercefacades.order.data.CCPaymentInfoData;
 import de.hybris.platform.commercefacades.order.data.CartData;
@@ -22,25 +24,25 @@ import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.order.CartService;
 import de.hybris.platform.servicelayer.dto.converter.Converter;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
 
     private static final String PAYMENT_ID = "paymentId";
     private static final String APPROVED_RESPONSE_CODE = "10000";
-    private static final String DECLINED_RESPONSE_CODE = "20005";
     private static final String CART_CODE = "cart-code";
     private static final String APM_TYPE_VALUE = "APM";
 
@@ -48,8 +50,6 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
     @InjectMocks
     private DefaultCheckoutComCheckoutFlowFacadeDecorator testObj;
 
-    @Mock
-    private CheckoutFlowFacade checkoutFlowFacadeMock;
     @Mock
     private CartData cartDataMock;
     @Mock
@@ -77,46 +77,42 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
     @Mock
     private CheckoutComAPMPaymentInfoModel checkoutComAPMPaymentInfoMock;
     @Mock
-    private PaymentRequest<RequestSource> requestMock;
+    private PaymentRequest requestMock;
     @Mock
     private PaymentResponse paymentResponseMock;
     @Mock
-    private PaymentProcessed paymentMock;
-    @Mock
     private CheckoutComPaymentInfoService paymentInfoServiceMock;
-    @Mock
-    private PaymentPending paymentPendingResponseMock;
-    @Mock
-    private ResponseSource paymentSourceMock;
     @Mock
     private CheckoutComPaymentService paymentServiceMock;
     @Mock
     private AuthorizeResponse authorizeResponseMock;
     @Mock
     private AuthorizeResponseData authorizeResponseDataMock;
+    @Mock
+    private ResponseSource responseSourceMock;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         setUpPaymentInfo();
         setUpPaymentResponse();
         setUpTestObj();
 
-        when(cartServiceMock.getSessionCart()).thenReturn(cartModelMock);
-        when(cartServiceMock.hasSessionCart()).thenReturn(true);
-        when(cartModelMock.getPaymentInfo()).thenReturn(checkoutComCreditCardPaymentInfoMock);
-        when(cartModelMock.getCode()).thenReturn(CART_CODE);
+        lenient().when(cartServiceMock.getSessionCart()).thenReturn(cartModelMock);
+        lenient().when(cartServiceMock.hasSessionCart()).thenReturn(true);
+        lenient().when(cartModelMock.getPaymentInfo()).thenReturn(checkoutComCreditCardPaymentInfoMock);
+        lenient().when(cartModelMock.getCode()).thenReturn(CART_CODE);
 
-        when(paymentServiceMock.handlePendingPaymentResponse(paymentPendingResponseMock, checkoutComAPMPaymentInfoMock)).thenReturn(authorizeResponseMock);
+        lenient().when(paymentServiceMock.handlePendingPaymentResponse(paymentResponseMock, checkoutComAPMPaymentInfoMock)).thenReturn(authorizeResponseMock);
         ReflectionTestUtils.setField(testObj, "authorizeResponseConverter", authorizeResponseConverterMock);
-        when(authorizeResponseConverterMock.convert(authorizeResponseMock)).thenReturn(authorizeResponseDataMock);
-        when(paymentInfoServiceMock.isValidPaymentInfo(cartModelMock)).thenReturn(true);
+        lenient().when(authorizeResponseConverterMock.convert(authorizeResponseMock)).thenReturn(authorizeResponseDataMock);
+        lenient().when(paymentInfoServiceMock.isValidPaymentInfo(cartModelMock)).thenReturn(true);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void authorizePayment_WhenCartIsNull_ShouldThrowException() {
         when(testObj.hasCheckoutCart()).thenReturn(false);
 
-        testObj.authorizePayment();
+        assertThatThrownBy(() -> testObj.authorizePayment()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -139,7 +135,7 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
 
     @Test
     public void authorizePayment_WhenPaymentResponseIsNull_ShouldReturnFalse() {
-        when(paymentResponseMock.getPayment()).thenReturn(null);
+        when(checkoutComPaymentIntegrationServiceMock.authorizePayment(requestMock)).thenReturn(null);
 
         final AuthorizeResponseData result = testObj.authorizePayment();
 
@@ -148,7 +144,8 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
 
     @Test
     public void authorizePayment_WhenPaymentNotApproved_ShouldSavePaymentID_andReturnFalse() {
-        when(paymentMock.isApproved()).thenReturn(false);
+        when(paymentResponseMock.isApproved()).thenReturn(false);
+        when(paymentResponseMock.getStatus()).thenReturn(PaymentStatus.DECLINED);
 
         final AuthorizeResponseData result = testObj.authorizePayment();
 
@@ -158,7 +155,10 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
 
     @Test
     public void authorizePayment_WhenPaymentResponseCodeIsNotApproved_ShouldReturnFalse() {
-        when(paymentMock.getResponseCode()).thenReturn(DECLINED_RESPONSE_CODE);
+        when(paymentResponseMock.isApproved()).thenReturn(false);
+        when(authorizeResponseConverterMock.convert(authorizeResponseMock)).thenReturn(authorizeResponseDataMock);
+        when(authorizeResponseDataMock.getIsSuccess()).thenReturn(false);
+        when(paymentServiceMock.handlePendingPaymentResponse(paymentResponseMock, checkoutComCreditCardPaymentInfoMock)).thenReturn(authorizeResponseMock);
 
         final AuthorizeResponseData result = testObj.authorizePayment();
 
@@ -181,16 +181,15 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
         assertTrue(result.getIsSuccess());
         assertFalse(result.getIsRedirect());
         assertTrue(result.getIsDataRequired());
-        verify(paymentInfoServiceMock).addSubscriptionIdToUserPayment(checkoutComCreditCardPaymentInfoMock, paymentSourceMock);
+        verify(paymentInfoServiceMock).addSubscriptionIdToUserPayment(checkoutComCreditCardPaymentInfoMock, responseSourceMock);
         verify(paymentInfoServiceMock).addPaymentId(PAYMENT_ID, checkoutComCreditCardPaymentInfoMock);
     }
 
     @Test
-    public void authorizePayment_WhenPaymentResponsePending_ShouldReturnTheCorrectAuthorizeResponseData() {
+    public void authorizePayment_WhenPaymentResponseStatusIsPENDING_ShouldReturnTheCorrectAuthorizeResponseData() {
         when(cartModelMock.getPaymentInfo()).thenReturn(checkoutComAPMPaymentInfoMock);
-        when(paymentResponseMock.isPending()).thenReturn(true);
-        when(paymentResponseMock.getPending()).thenReturn(paymentPendingResponseMock);
-        when(paymentResponseMock.getPayment()).thenReturn(null);
+        when(paymentResponseMock.getStatus()).thenReturn(PaymentStatus.PENDING);
+        when(paymentResponseMock.isApproved()).thenReturn(false);
 
         final AuthorizeResponseData result = testObj.authorizePayment();
 
@@ -232,11 +231,11 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
         verifyNoInteractions(addressServiceMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void setPaymentInfoBillingAddressOnSessionCart_WhenPaymentInfoNull_ShouldThrowException() {
         when(cartModelMock.getPaymentInfo()).thenReturn(null);
 
-        testObj.setPaymentInfoBillingAddressOnSessionCart();
+        assertThatThrownBy(() -> testObj.setPaymentInfoBillingAddressOnSessionCart()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -318,11 +317,11 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
         assertEquals(APM_TYPE_VALUE, result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void getCurrentPaymentMethodType_WhenCartIsNull_ShouldThrowException() {
         doReturn(null).when(testObj).getCheckoutCart();
 
-        testObj.getCurrentPaymentMethodType();
+        assertThatThrownBy(() -> testObj.getCurrentPaymentMethodType()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -335,27 +334,26 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecoratorTest {
     }
 
     private void setUpTestObj() {
-        doReturn(cartDataMock).when(testObj).getCheckoutCart();
-        doReturn(true).when(testObj).hasCheckoutCart();
-        doReturn(true).when(testObj).callSuperCheckIfCurrentUserIsTheCartUser();
-        doReturn(null).when(testObj).callSuperExpressCheckoutResult();
+        lenient().doReturn(cartDataMock).when(testObj).getCheckoutCart();
+        lenient().doReturn(true).when(testObj).hasCheckoutCart();
+        lenient().doReturn(true).when(testObj).callSuperCheckIfCurrentUserIsTheCartUser();
+        lenient().doReturn(null).when(testObj).callSuperExpressCheckoutResult();
 
         testObj.setCartFacade(cartFacadeMock);
         testObj.setCartService(cartServiceMock);
     }
 
     private void setUpPaymentInfo() {
-        when(checkoutComCreditCardPaymentInfoMock.getBillingAddress()).thenReturn(addressModelMock);
-        when(checkoutComRequestFactoryMock.createPaymentRequest(cartModelMock)).thenReturn(requestMock);
-        when(checkoutComPaymentIntegrationServiceMock.authorizePayment(requestMock)).thenReturn(paymentResponseMock);
+        lenient().when(checkoutComCreditCardPaymentInfoMock.getBillingAddress()).thenReturn(addressModelMock);
+        lenient().when(checkoutComRequestFactoryMock.createPaymentRequest(cartModelMock)).thenReturn(requestMock);
+        lenient().when(checkoutComPaymentIntegrationServiceMock.authorizePayment(requestMock)).thenReturn(paymentResponseMock);
     }
 
     private void setUpPaymentResponse() {
-        when(paymentResponseMock.getPayment()).thenReturn(paymentMock);
-        when(paymentResponseMock.getPending()).thenReturn(paymentPendingResponseMock);
-        when(paymentMock.getId()).thenReturn(PAYMENT_ID);
-        when(paymentMock.getSource()).thenReturn(paymentSourceMock);
-        when(paymentMock.isApproved()).thenReturn(true);
-        when(paymentMock.getResponseCode()).thenReturn(APPROVED_RESPONSE_CODE);
+        lenient().when(paymentResponseMock.getStatus()).thenReturn(PaymentStatus.PENDING);
+        lenient().when(paymentResponseMock.getId()).thenReturn(PAYMENT_ID);
+        lenient().when(paymentResponseMock.getSource()).thenReturn(responseSourceMock);
+        lenient().when(paymentResponseMock.isApproved()).thenReturn(true);
+        lenient().when(paymentResponseMock.getResponseCode()).thenReturn(APPROVED_RESPONSE_CODE);
     }
 }

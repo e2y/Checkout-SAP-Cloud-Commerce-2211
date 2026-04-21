@@ -62,7 +62,7 @@ public class CheckoutComPaymentEventReversePopulator implements Populator<Checko
 
             if (StringUtils.isNotBlank(data.getCurrency()) && data.getAmount() != null) {
                 target.setCurrency(commonI18NService.getCurrency(data.getCurrency()));
-                target.setAmount(checkoutComCurrencyService.convertAmountFromPennies(data.getCurrency(), data.getAmount().longValue()));
+                target.setAmount(checkoutComCurrencyService.addDecimalsToAmountForGivenCurrency(data.getCurrency(), data.getAmount().longValue()));
             }
         }
     }

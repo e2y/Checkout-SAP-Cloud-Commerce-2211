@@ -10,7 +10,7 @@ import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
 import com.checkout.hybris.facades.beans.*;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import com.checkout.hybris.facades.payment.converters.CheckoutComApmMappedPaymentInfoReverseConverter;
-import com.checkout.sdk.payments.GetPaymentResponse;
+import com.checkout.payments.response.GetPaymentResponse;
 import de.hybris.platform.commercefacades.order.data.CCPaymentInfoData;
 import de.hybris.platform.commercefacades.order.data.CartData;
 import de.hybris.platform.core.model.order.CartModel;
@@ -70,8 +70,7 @@ public class DefaultCheckoutComPaymentInfoFacade implements CheckoutComPaymentIn
             } else if (paymentInfoData instanceof AchPaymentInfoData) {
                 paymentInfoModel = checkoutComAchPaymentInfoReverseConverter.convert((AchPaymentInfoData) paymentInfoData);
                 paymentInfoService.createPaymentInfo(paymentInfoModel, sessionCart);
-            } else if (paymentInfoData instanceof APMPaymentInfoData) {
-                final APMPaymentInfoData apmPaymentInfoData = (APMPaymentInfoData) paymentInfoData;
+            } else if (paymentInfoData instanceof APMPaymentInfoData apmPaymentInfoData) {
                 final CheckoutComPaymentType paymentType = checkoutComPaymentTypeResolver.resolvePaymentMethod(apmPaymentInfoData.getType());
                 paymentInfoModel = checkoutComApmMappedPaymentInfoReverseConverter.convertAPMPaymentInfoData(apmPaymentInfoData, paymentType);
                 paymentInfoService.createPaymentInfo(paymentInfoModel, sessionCart);
@@ -96,8 +95,7 @@ public class DefaultCheckoutComPaymentInfoFacade implements CheckoutComPaymentIn
                 idealPaymentInfoData.setType(IDEAL.name());
                 return idealPaymentInfoData;
             case ACH:
-                final AchPaymentInfoData achPaymentInfoData = new AchPaymentInfoData();
-                return achPaymentInfoData;
+                return new AchPaymentInfoData();
             case SEPA:
                 final SepaPaymentInfoData sepaPaymentInfoData = new SepaPaymentInfoData();
                 sepaPaymentInfoData.setType(SEPA.name());

@@ -24,6 +24,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
@@ -108,12 +109,14 @@ public class CheckoutComVoidOrderActionTest {
         assertEquals(NOK, result);
     }
 
-    @Test(expected = RetryLaterException.class)
+    @Test
     public void execute_WhenVoidThrowsPaymentIntegrationException_ShouldThrowRetryLaterException() {
         when(orderModelMock.getPaymentTransactions()).thenReturn(singletonList(paymentTransactionMock));
         when(paymentServiceMock.cancel(authTransactionEntryModelMock)).thenThrow(new CheckoutComPaymentIntegrationException("error"));
 
-        testObj.execute(checkoutComVoidProcessModelMock);
+        assertThatThrownBy(() -> testObj.execute(checkoutComVoidProcessModelMock))
+                .isInstanceOf(RetryLaterException.class)
+                .hasMessage("Payment Gateway exception during void.");
     }
 
     @Test

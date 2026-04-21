@@ -1,7 +1,9 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
 import com.checkout.hybris.core.apm.services.CheckoutComAPMConfigurationService;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComAPMConfigurationModel;
 import com.checkout.hybris.core.model.CheckoutComFawryConfigurationModel;
 import com.checkout.hybris.core.model.CheckoutComFawryPaymentInfoModel;
@@ -9,15 +11,12 @@ import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.apm.RequestFawrySource;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.CustomerModel;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.FAWRY;
@@ -29,25 +28,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @SuppressWarnings("java:S107")
 public class CheckoutComFawryPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
 
-    protected static final String MOBILE_NUMBER_KEY = "customer_mobile";
-    protected static final String CUSTOMER_EMAIL_KEY = "customer_email";
-    protected static final String PRODUCTS_PRODUCT_ID_KEY = "product_id";
-    protected static final String PRODUCTS_QUANTITY_KEY = "quantity";
-    protected static final String PRODUCTS_PRICE_KEY = "price";
-    protected static final String DESCRIPTION_KEY = "description";
-    protected static final String PRODUCTS_KEY = "products";
-
     protected final CheckoutComAPMConfigurationService checkoutComAPMConfigurationService;
 
-    public CheckoutComFawryPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                  final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                  final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                  final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper,
-                                                  final CheckoutComAPMConfigurationService checkoutComAPMConfigurationService) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-              checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+    protected CheckoutComFawryPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService, final CheckoutComAPMConfigurationService checkoutComAPMConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
         this.checkoutComAPMConfigurationService = checkoutComAPMConfigurationService;
     }
+
 
     /**
      * {@inheritDoc}
@@ -61,23 +48,19 @@ public class CheckoutComFawryPaymentRequestStrategy extends CheckoutComAbstractA
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
-        final PaymentRequest<RequestSource> paymentRequest = super.getRequestSourcePaymentRequest(cart, currencyIsoCode, amount);
-        final AlternativePaymentSource source = (AlternativePaymentSource) paymentRequest.getSource();
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
+                                                            final String currencyIsoCode, final Long amount) {
         final CustomerModel customer = (CustomerModel) cart.getUser();
+        RequestFawrySource requestFawrySource = new RequestFawrySource();
+        requestFawrySource.setCustomerEmail(customer.getContactEmail());
+        requestFawrySource.setCustomerMobile(((CheckoutComFawryPaymentInfoModel) cart.getPaymentInfo()).getMobileNumber());
+        requestFawrySource.setDescription(checkoutPaymentRequestServicesWrapper.cmsSiteService.getCurrentSite().getName());
+        requestFawrySource.setProducts(populateProductsField(amount));
 
-        source.put(MOBILE_NUMBER_KEY, ((CheckoutComFawryPaymentInfoModel) cart.getPaymentInfo()).getMobileNumber());
-        source.put(CUSTOMER_EMAIL_KEY, customer.getContactEmail());
-        source.put(DESCRIPTION_KEY, checkoutPaymentRequestServicesWrapper.cmsSiteService.getCurrentSite().getName());
-        source.put(PRODUCTS_KEY, populateProductsField(amount));
-
-        return paymentRequest;
+        return PaymentRequest.builder().source(requestFawrySource).currency(Currency.valueOf(currencyIsoCode)).amount(amount).build();
     }
 
-    protected List<Map<String, Object>> populateProductsField(final Long amount) {
-        final Map<String, Object> products = new HashMap<>();
-
+    protected List<RequestFawrySource.Product> populateProductsField(final Long amount) {
         final Optional<CheckoutComAPMConfigurationModel> optionalFawryConfiguration =
                 checkoutComAPMConfigurationService.getApmConfigurationByCode(
                         FAWRY.name());
@@ -85,11 +68,14 @@ public class CheckoutComFawryPaymentRequestStrategy extends CheckoutComAbstractA
 
         final CheckoutComFawryConfigurationModel fawryConfiguration =
                 (CheckoutComFawryConfigurationModel) optionalFawryConfiguration.get();
-        products.put(PRODUCTS_PRODUCT_ID_KEY, fawryConfiguration.getProductId());
-        products.put(DESCRIPTION_KEY, fawryConfiguration.getProductDescription());
-        products.put(PRODUCTS_QUANTITY_KEY, 1);
-        products.put(PRODUCTS_PRICE_KEY, amount);
 
-        return List.of(products);
+        final RequestFawrySource.Product product = RequestFawrySource.Product.builder()
+                .id(fawryConfiguration.getProductId())
+                .description(fawryConfiguration.getProductDescription())
+                .quantity(1L)
+                .price(amount)
+                .build();
+
+        return List.of(product);
     }
 }

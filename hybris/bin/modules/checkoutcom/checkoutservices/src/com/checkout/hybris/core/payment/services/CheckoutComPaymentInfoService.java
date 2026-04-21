@@ -2,7 +2,7 @@ package com.checkout.hybris.core.payment.services;
 
 import com.checkout.hybris.core.model.CheckoutComBenefitPayPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
-import com.checkout.sdk.payments.ResponseSource;
+import com.checkout.payments.response.source.ResponseSource;
 import de.hybris.platform.core.model.order.AbstractOrderModel;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;

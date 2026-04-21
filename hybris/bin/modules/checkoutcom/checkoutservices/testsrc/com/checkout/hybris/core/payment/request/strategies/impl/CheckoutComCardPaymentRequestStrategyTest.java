@@ -1,20 +1,24 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
-import com.checkout.sdk.common.Address;
+import com.checkout.common.Address;
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
-import com.checkout.sdk.payments.*;
+import com.checkout.payments.ThreeDSRequest;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestIdSource;
+import com.checkout.payments.request.source.RequestTokenSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
@@ -23,11 +27,13 @@ import static com.checkout.hybris.core.enums.PaymentActionType.AUTHORIZE;
 import static com.checkout.hybris.core.enums.PaymentActionType.AUTHORIZE_AND_CAPTURE;
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.CARD;
 import static java.util.Collections.emptyMap;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CheckoutComCardPaymentRequestStrategyTest {
 
     private static final String SUBSCRIPTION_ID = "subscriptionId";
@@ -43,7 +49,7 @@ public class CheckoutComCardPaymentRequestStrategyTest {
     @Mock
     private CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationServiceMock;
     @Mock
-    private PaymentRequest<RequestSource> paymentRequestMock;
+    private PaymentRequest paymentRequestMock;
     @Mock
     private CartModel cartMock;
     @Mock
@@ -55,47 +61,49 @@ public class CheckoutComCardPaymentRequestStrategyTest {
     @Mock
     private AddressModel addressModelMock;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ReflectionTestUtils.setField(testObj, "checkoutPaymentRequestServicesWrapper", checkoutPaymentRequestServicesWrapperMock);
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "checkoutComMerchantConfigurationService", checkoutComMerchantConfigurationServiceMock);
-        when(checkoutComMerchantConfigurationServiceMock.getPaymentAction()).thenReturn(AUTHORIZE_AND_CAPTURE);
-        when(checkoutComMerchantConfigurationServiceMock.isThreeDSEnabled()).thenReturn(true);
-        when(checkoutComMerchantConfigurationServiceMock.isAttemptNoThreeDSecure()).thenReturn(true);
-        when(cartMock.getPaymentInfo()).thenReturn(checkoutComPaymentInfoMock);
-        when(cartMock.getPaymentAddress()).thenReturn(addressModelMock);
-        when(checkoutComPaymentInfoMock.isSaved()).thenReturn(true);
-        when(checkoutComPaymentInfoMock.getSubscriptionId()).thenReturn(SUBSCRIPTION_ID);
-        when(checkoutComPaymentInfoMock.getCardToken()).thenReturn(CARD_TOKEN);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void getRequestSourcePaymentRequest_WhenPaymentInfoIsNotCheckoutComCreditCard_ShouldThrowException() {
         when(cartMock.getPaymentInfo()).thenReturn(paymentInfoMock);
 
-        testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(String.format("Strategy called with unsupported paymentInfo type : [%s] while trying to authorize cart: [%s]", paymentInfoMock.getClass(), cartMock.getCode()));
     }
 
     @Test
     public void getRequestSourcePaymentRequest_WhenCardSavedAndSubscriptionIdPopulated_ShouldCreateIdSourcePaymentRequest() {
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+        when(cartMock.getPaymentInfo()).thenReturn(checkoutComPaymentInfoMock);
+        when(checkoutComPaymentInfoMock.isSaved()).thenReturn(true);
+        when(checkoutComPaymentInfoMock.getSubscriptionId()).thenReturn(SUBSCRIPTION_ID);
 
-        assertEquals(SUBSCRIPTION_ID, ((IdSource) result.getSource()).getId());
-        assertEquals(CURRENCY_ISO_CODE, result.getCurrency());
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+
+        assertEquals(SUBSCRIPTION_ID, ((RequestIdSource) result.getSource()).getId());
+        assertEquals(Currency.valueOf(CURRENCY_ISO_CODE), result.getCurrency());
         assertEquals(CHECKOUT_COM_TOTAL_PRICE, result.getAmount());
     }
 
     @Test
     public void getRequestSourcePaymentRequest_WhenNoSavedCard_ShouldCreateTokenSourcePaymentRequest() {
+        when(cartMock.getPaymentInfo()).thenReturn(checkoutComPaymentInfoMock);
+        when(cartMock.getPaymentAddress()).thenReturn(addressModelMock);
+        when(checkoutComPaymentInfoMock.getCardToken()).thenReturn(CARD_TOKEN);
+
         when(checkoutComPaymentInfoMock.isSaved()).thenReturn(false);
         doReturn(addressMock).when(testObj).createAddress(addressModelMock);
 
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
 
-        assertEquals(CARD_TOKEN, ((TokenSource) result.getSource()).getToken());
-        assertEquals(CURRENCY_ISO_CODE, result.getCurrency());
+        assertEquals(CARD_TOKEN, ((RequestTokenSource) result.getSource()).getToken());
+        assertEquals(Currency.valueOf(CURRENCY_ISO_CODE), result.getCurrency());
         assertEquals(CHECKOUT_COM_TOTAL_PRICE, result.getAmount());
-        assertEquals(addressMock, ((TokenSource) result.getSource()).getBillingAddress());
+        assertEquals(addressMock, ((RequestTokenSource) result.getSource()).getBillingAddress());
     }
 
     @Test
@@ -110,22 +118,27 @@ public class CheckoutComCardPaymentRequestStrategyTest {
 
     @Test
     public void isCapture_WhenAuthAndCapture_ShouldReturnTrue() {
-        assertTrue(testObj.isCapture().get());
+        when(checkoutComMerchantConfigurationServiceMock.getPaymentAction()).thenReturn(AUTHORIZE_AND_CAPTURE);
+
+        assertThat(testObj.isCapture()).contains(true);
     }
 
     @Test
     public void isCapture_WhenNotAuthAndCapture_ShouldReturnFalse() {
         when(checkoutComMerchantConfigurationServiceMock.getPaymentAction()).thenReturn(AUTHORIZE);
 
-        assertFalse(testObj.isCapture().get());
+        assertThat(testObj.isCapture()).contains(false);
     }
 
     @Test
     public void createThreeDSRequest_WhenStandard_ShouldCreateThreeDSFromConfiguration() {
+        when(checkoutComMerchantConfigurationServiceMock.isThreeDSEnabled()).thenReturn(true);
+        when(checkoutComMerchantConfigurationServiceMock.isAttemptNoThreeDSecure()).thenReturn(true);
+
         final Optional<ThreeDSRequest> result = testObj.createThreeDSRequest();
 
-        assertTrue(result.isPresent());
-        assertTrue(result.get().isEnabled());
+        assertThat(result.isPresent()).isTrue();
+        assertTrue(result.get().getEnabled());
         assertTrue(result.get().getAttemptN3D());
     }
 

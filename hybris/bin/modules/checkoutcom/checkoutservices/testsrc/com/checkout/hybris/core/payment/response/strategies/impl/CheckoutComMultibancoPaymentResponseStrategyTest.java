@@ -1,10 +1,10 @@
 package com.checkout.hybris.core.payment.response.strategies.impl;
 
-import com.checkout.sdk.common.Link;
+import com.checkout.common.Link;
 import com.checkout.hybris.core.authorisation.AuthorizeResponse;
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.PaymentPending;
+import com.checkout.payments.response.PaymentResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import org.junit.Before;
@@ -32,7 +32,7 @@ public class CheckoutComMultibancoPaymentResponseStrategyTest {
     private CheckoutComMultibancoPaymentResponseStrategy testObj;
 
     @Mock
-    private PaymentPending pendingResponseMock;
+    private PaymentResponse paymentResponseMock;
     @Mock
     private Link linkMock;
     @Mock
@@ -45,9 +45,9 @@ public class CheckoutComMultibancoPaymentResponseStrategyTest {
     @Before
     public void setUp() {
         when(apmPaymentInfoMock.getUserDataRequired()).thenReturn(false);
-        when(pendingResponseMock.getLinks()).thenReturn(Map.of(MULTIBANCO_REDIRECT_LINK_KEY, linkMock));
+        when(paymentResponseMock.getLinks()).thenReturn(Map.of(MULTIBANCO_REDIRECT_LINK_KEY, linkMock));
         when(linkMock.getHref()).thenReturn(REDIRECT_LINK);
-        when(pendingResponseMock.getId()).thenReturn(PAYMENT_ID);
+        when(paymentResponseMock.getId()).thenReturn(PAYMENT_ID);
         doNothing().when(paymentInfoServiceMock).addPaymentId(PAYMENT_ID, apmPaymentInfoMock);
     }
 
@@ -58,7 +58,7 @@ public class CheckoutComMultibancoPaymentResponseStrategyTest {
 
     @Test
     public void getRedirectUrl_WhenMultibanco_ShouldReturnAuthorizeResponseCorrectlyPopulated() {
-        final AuthorizeResponse result = testObj.handlePendingPaymentResponse(pendingResponseMock, apmPaymentInfoMock);
+        final AuthorizeResponse result = testObj.handlePendingPaymentResponse(paymentResponseMock, apmPaymentInfoMock);
 
         verify(paymentInfoServiceMock).addPaymentId(PAYMENT_ID, apmPaymentInfoMock);
         assertFalse(result.getIsDataRequired());
@@ -74,11 +74,11 @@ public class CheckoutComMultibancoPaymentResponseStrategyTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void getRedirectUrl_WhenPaymentInfoNotSupported_ShouldThrowException() {
-        testObj.handlePendingPaymentResponse(pendingResponseMock, paymentInfoMock);
+        testObj.handlePendingPaymentResponse(paymentResponseMock, paymentInfoMock);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void getRedirectUrl_WhenPaymentInfoIsNull_ShouldThrowException() {
-        testObj.handlePendingPaymentResponse(pendingResponseMock, null);
+        testObj.handlePendingPaymentResponse(paymentResponseMock, null);
     }
 }

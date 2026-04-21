@@ -34,54 +34,54 @@ public class DefaultCheckoutComCurrencyServiceTest {
     private CommonI18NService commonI18NServiceMock;
 
     @Test(expected = IllegalArgumentException.class)
-    public void convertAmountIntoPennies_WhenCurrencyIsNull_ShouldThrowException() {
-        testObj.convertAmountIntoPennies(null, GBP_AMOUNT);
+    public void removeDecimalsFromCurrencyAmount_WhenCurrencyIsNull_ShouldThrowException() {
+        testObj.removeDecimalsFromCurrencyAmount(null, GBP_AMOUNT);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void convertAmountIntoPennies_WhenAmountIsNull_ShouldThrowException() {
-        testObj.convertAmountIntoPennies(GBP, null);
+    public void removeDecimalsFromCurrencyAmountIntoPennies_WhenAmountIsNull_ShouldThrowException() {
+        testObj.removeDecimalsFromCurrencyAmount(GBP, null);
     }
 
     @Test
-    public void convertAmountIntoPennies_ShouldConvertTheValueProperly_WhenCurrencyHasTwoDecimals() {
+    public void convertAmountIntoPennies_ShouldRemoveDecimalsFromCurrencyTheValueProperly_WhenCurrencyHasTwoDecimals() {
         when(commonI18NServiceMock.convertAndRoundCurrency(1, Math.pow(10, 2), 0, GBP_AMOUNT)).thenReturn(12323d);
 
-        final Long amount = testObj.convertAmountIntoPennies(GBP, GBP_AMOUNT);
+        final Long amount = testObj.removeDecimalsFromCurrencyAmount(GBP, GBP_AMOUNT);
 
         assertThat(amount).isEqualTo(CHECKOUTCOM_AMOUNT);
     }
 
     @Test
-    public void convertAmountIntoPennies_ShouldConvertTheValueProperly_WhenCurrencyHas3Decimals() {
+    public void convertAmountIntoPennies_ShouldRemoveDecimalsFromCurrencyTheValueProperly_WhenCurrencyHas3Decimals() {
         when(commonI18NServiceMock.convertAndRoundCurrency(1, Math.pow(10, 3), 0, BHD_AMOUNT)).thenReturn(12323d);
 
-        final Long amount = testObj.convertAmountIntoPennies(BHD, BHD_AMOUNT);
+        final Long amount = testObj.removeDecimalsFromCurrencyAmount(BHD, BHD_AMOUNT);
 
         assertThat(amount).isEqualTo(CHECKOUTCOM_AMOUNT);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void convertAmountFromPennies_WhenTheCurrencyCodeNull_ShouldThrowException() {
-        testObj.convertAmountFromPennies(null, CHECKOUTCOM_AMOUNT);
+    public void addDecimalsToAmountForGivenCurrency_WhenTheCurrencyCodeNull_ShouldThrowException() {
+        testObj.addDecimalsToAmountForGivenCurrency(null, CHECKOUTCOM_AMOUNT);
     }
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void convertAmountFromPennies_WhenTheAmountNull_ShouldThrowException() {
-        testObj.convertAmountFromPennies(GBP, null);
+    public void addDecimalsToAmountFromPennies_WhenTheAmountNull_ShouldThrowException() {
+        testObj.addDecimalsToAmountForGivenCurrency(GBP, null);
     }
 
     @Test
-    public void convertAmountFromPennies_WhenThePaymentResponseValud_ShouldConvertTheValueProperly() {
-        final BigDecimal result = testObj.convertAmountFromPennies(GBP, CHECKOUTCOM_AMOUNT);
+    public void convertAmountFromPennies_WhenThePaymentResponseValud_ShouldAddDecimalsToTheValueProperly() {
+        final BigDecimal result = testObj.addDecimalsToAmountForGivenCurrency(GBP, CHECKOUTCOM_AMOUNT);
 
         assertEquals(result, BigDecimal.valueOf(GBP_AMOUNT));
     }
 
     @Test
-    public void convertAmountFromPennies_WhenThePaymentResponseValueAndCurrancyHasThreeDecimals_ShouldConvertTheValueProperly() {
-        final BigDecimal result = testObj.convertAmountFromPennies(BHD, CHECKOUTCOM_AMOUNT);
+    public void convertAmountFromPennies_WhenThePaymentResponseValueAndCurrancyHasThreeDecimals_ShouldAddDecimalsToTheValueProperly() {
+        final BigDecimal result = testObj.addDecimalsToAmountForGivenCurrency(BHD, CHECKOUTCOM_AMOUNT);
 
         assertEquals(result, BigDecimal.valueOf(BHD_AMOUNT));
     }

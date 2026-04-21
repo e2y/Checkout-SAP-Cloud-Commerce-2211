@@ -1,12 +1,17 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.*;
+import com.checkout.common.Currency;
+import com.checkout.payments.ThreeDSRequest;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestIdSource;
+import com.checkout.payments.request.source.RequestTokenSource;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
@@ -22,12 +27,8 @@ import static java.lang.String.format;
  */
 public class CheckoutComCardPaymentRequestStrategy extends CheckoutComAbstractPaymentRequestStrategy implements CheckoutComPaymentRequestStrategy {
 
-    public CheckoutComCardPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                 final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                 final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                 final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-            checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+    protected CheckoutComCardPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
     }
 
     /**
@@ -51,8 +52,8 @@ public class CheckoutComCardPaymentRequestStrategy extends CheckoutComAbstractPa
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
+                                                            final String currencyIsoCode, final Long amount) {
         final PaymentInfoModel paymentInfo = cart.getPaymentInfo();
         if (paymentInfo instanceof CheckoutComCreditCardPaymentInfoModel checkoutComCreditCardPaymentInfo) {
 
@@ -62,7 +63,7 @@ public class CheckoutComCardPaymentRequestStrategy extends CheckoutComAbstractPa
                 return createTokenSourcePaymentRequest(checkoutComCreditCardPaymentInfo, currencyIsoCode, amount, cart.getPaymentAddress());
             }
         } else {
-            throw new IllegalArgumentException(format("Strategy called with unsupported paymentInfo type : [%s] while trying to authorize cart: [%s]", paymentInfo.getClass().toString(), cart.getCode()));
+            throw new IllegalArgumentException(format("Strategy called with unsupported paymentInfo type : [%s] while trying to authorize cart: [%s]", paymentInfo.getClass(), cart.getCode()));
         }
     }
 
@@ -74,8 +75,15 @@ public class CheckoutComCardPaymentRequestStrategy extends CheckoutComAbstractPa
      * @param amount          amount
      * @return paymentRequest to send to Checkout.com
      */
-    protected PaymentRequest<RequestSource> createIdSourcePaymentRequest(final CheckoutComCreditCardPaymentInfoModel paymentInfo, final String currencyIsoCode, final Long amount) {
-        return PaymentRequest.fromSource(new IdSource(paymentInfo.getSubscriptionId()), currencyIsoCode, amount);
+    protected PaymentRequest createIdSourcePaymentRequest(final CheckoutComCreditCardPaymentInfoModel paymentInfo, final String currencyIsoCode, final Long amount) {
+        final RequestIdSource requestIdSource = RequestIdSource.builder()
+            .id(paymentInfo.getSubscriptionId())
+            .build();
+        return PaymentRequest.builder()
+            .source(requestIdSource)
+            .currency(Currency.valueOf(currencyIsoCode))
+            .amount(amount)
+            .build();
     }
 
     /**
@@ -87,10 +95,15 @@ public class CheckoutComCardPaymentRequestStrategy extends CheckoutComAbstractPa
      * @param billingAddress  to set in the request
      * @return paymentRequest to send to Checkout.com
      */
-    protected PaymentRequest<RequestSource> createTokenSourcePaymentRequest(final CheckoutComCreditCardPaymentInfoModel paymentInfo, final String currencyIsoCode, final Long amount, final AddressModel billingAddress) {
-        final PaymentRequest<RequestSource> paymentRequest = PaymentRequest.fromSource(new TokenSource(paymentInfo.getCardToken()), currencyIsoCode, amount);
-        ((TokenSource) paymentRequest.getSource()).setBillingAddress(billingAddress != null ? createAddress(billingAddress) : null);
-        return paymentRequest;
+    protected PaymentRequest createTokenSourcePaymentRequest(final CheckoutComCreditCardPaymentInfoModel paymentInfo, final String currencyIsoCode, final Long amount, final AddressModel billingAddress) {
+        final RequestTokenSource requestTokenSource = RequestTokenSource.builder()
+            .billingAddress(billingAddress != null ? createAddress(billingAddress) : null)
+            .token(paymentInfo.getCardToken()).build();
+        return PaymentRequest.builder()
+            .source(requestTokenSource)
+            .currency(Currency.valueOf(currencyIsoCode))
+            .amount(amount)
+            .build();
     }
 
     /**
@@ -100,11 +113,10 @@ public class CheckoutComCardPaymentRequestStrategy extends CheckoutComAbstractPa
      */
     @Override
     protected Optional<ThreeDSRequest> createThreeDSRequest() {
-        final ThreeDSRequest threeDSRequest = new ThreeDSRequest();
-        threeDSRequest.setEnabled(checkoutPaymentRequestServicesWrapper
-            .checkoutComMerchantConfigurationService.isThreeDSEnabled());
-        threeDSRequest.setAttemptN3D(checkoutPaymentRequestServicesWrapper
-            .checkoutComMerchantConfigurationService.isAttemptNoThreeDSecure());
-        return Optional.of(threeDSRequest);
+        return Optional.of(ThreeDSRequest.builder()
+            .enabled(checkoutPaymentRequestServicesWrapper.checkoutComMerchantConfigurationService.isThreeDSEnabled())
+            .attemptN3D(checkoutPaymentRequestServicesWrapper.checkoutComMerchantConfigurationService.isAttemptNoThreeDSecure())
+            .build()
+        );
     }
 }

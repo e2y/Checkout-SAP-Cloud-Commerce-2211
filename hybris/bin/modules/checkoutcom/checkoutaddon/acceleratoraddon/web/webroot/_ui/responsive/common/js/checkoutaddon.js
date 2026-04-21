@@ -11,7 +11,7 @@ ACC.checkoutCom = {
     "showACHCompanyField",
     "showACHTerms",
     "showSepaMandate",
-  "replaceTooltip"
+    "replaceTooltip"
     ],
 
   spinner: null,

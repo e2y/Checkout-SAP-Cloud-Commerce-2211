@@ -61,7 +61,7 @@ class CheckoutComCCOrdersTest extends AbstractCheckoutComPaymentsTest {
             if (isNotEmpty(data) && isNotEmpty(data.errors)) println(data)
             status == SC_CREATED
             isNotEmpty(data.code)
-            data.paymentType == "CARD"
+            data.paymentType.code == "CARD"
         }
 
         where:

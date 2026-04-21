@@ -7,12 +7,12 @@ import de.hybris.platform.commerceservices.request.mapping.annotation.RequestMap
 import de.hybris.platform.commercewebservicescommons.dto.order.PaymentDetailsWsDTO;
 import de.hybris.platform.commercewebservicescommons.errors.exceptions.RequestParameterException;
 import de.hybris.platform.core.PK;
+import de.hybris.platform.util.Sanitizer;
 import de.hybris.platform.webservicescommons.cache.CacheControl;
 import de.hybris.platform.webservicescommons.cache.CacheControlDirective;
 import de.hybris.platform.webservicescommons.errors.exceptions.WebserviceValidationException;
 import de.hybris.platform.webservicescommons.mapping.DataMapper;
 import de.hybris.platform.webservicescommons.swagger.ApiBaseSiteIdAndUserIdParam;
-import de.hybris.platform.webservicescommons.util.YSanitizer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -117,7 +117,7 @@ public class CheckoutComPaymentDetailsController {
     }
 
     protected String sanitize(final String input) {
-        return YSanitizer.sanitize(input);
+        return Sanitizer.sanitize(input);
     }
 
     protected Validator getPaymentDetailsDTOValidator() {

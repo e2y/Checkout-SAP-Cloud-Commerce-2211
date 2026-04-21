@@ -30,4 +30,7 @@
         <property name="extensionName" value="checkoutsampledataaddon"/>
     </bean>
 
+    <alias name="checkoutSampleDataImportService" alias="addonSampleDataImportService" />
+    <bean id="checkoutSampleDataImportService" class="com.checkout.hybris.sampledataaddon.CheckoutSampleDataImportService" parent="defaultAddonSampleDataImportService"/>
+
 </beans>

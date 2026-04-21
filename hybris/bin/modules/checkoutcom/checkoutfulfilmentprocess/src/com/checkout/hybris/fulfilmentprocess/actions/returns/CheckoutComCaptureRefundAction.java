@@ -18,6 +18,7 @@ import de.hybris.platform.returns.model.RefundEntryModel;
 import de.hybris.platform.returns.model.ReturnEntryModel;
 import de.hybris.platform.returns.model.ReturnProcessModel;
 import de.hybris.platform.returns.model.ReturnRequestModel;
+import de.hybris.platform.site.BaseSiteService;
 import de.hybris.platform.task.RetryLaterException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -53,11 +54,13 @@ public class CheckoutComCaptureRefundAction extends AbstractAction<ReturnProcess
 
     protected final CheckoutComPaymentService paymentService;
     protected final CheckoutComPaymentTransactionService checkoutComPaymentTransactionService;
+    protected final BaseSiteService baseSiteService;
 
     public CheckoutComCaptureRefundAction(final CheckoutComPaymentService paymentService,
-                                          final CheckoutComPaymentTransactionService checkoutComPaymentTransactionService) {
+                                          final CheckoutComPaymentTransactionService checkoutComPaymentTransactionService, final BaseSiteService baseSiteService) {
         this.paymentService = paymentService;
         this.checkoutComPaymentTransactionService = checkoutComPaymentTransactionService;
+        this.baseSiteService = baseSiteService;
     }
 
     /**
@@ -77,6 +80,7 @@ public class CheckoutComCaptureRefundAction extends AbstractAction<ReturnProcess
 
         final ReturnRequestModel returnRequest = process.getReturnRequest();
         final OrderModel order = returnRequest.getOrder();
+        baseSiteService.setCurrentBaseSite(order.getSite(),false);
         final List<PaymentTransactionModel> paymentTransactions = order.getPaymentTransactions();
 
         if (paymentTransactions.isEmpty()) {

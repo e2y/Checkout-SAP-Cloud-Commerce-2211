@@ -5,12 +5,15 @@ import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
 import com.checkout.hybris.facades.address.CheckoutComAddressFacade;
 import de.hybris.platform.commercefacades.i18n.I18NFacade;
 import de.hybris.platform.commercefacades.user.data.AddressData;
+import de.hybris.platform.converters.Populator;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.order.CartService;
 import de.hybris.platform.servicelayer.dto.converter.Converter;
+import de.hybris.platform.servicelayer.model.ModelService;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParameterNotNull;
@@ -24,20 +27,26 @@ public class DefaultCheckoutComAddressFacade implements CheckoutComAddressFacade
 
     protected final CheckoutComAddressService addressService;
     protected final Converter<AddressModel, AddressData> addressConverter;
+    protected final Populator<AddressData, AddressModel> addressReversePopulator;
     protected final CartService cartService;
     protected final CheckoutComCheckoutFlowFacade checkoutFlowFacade;
-    private final I18NFacade i18NFacade;
+    protected final I18NFacade i18NFacade;
+    protected final ModelService modelService;
 
     public DefaultCheckoutComAddressFacade(final CheckoutComAddressService addressService,
                                            final Converter<AddressModel, AddressData> addressConverter,
+                                           final Populator<AddressData, AddressModel> addressReversePopulator,
                                            final CartService cartService,
                                            final CheckoutComCheckoutFlowFacade checkoutFlowFacade,
-                                           final I18NFacade i18NFacade) {
+                                           final I18NFacade i18NFacade,
+                                           final ModelService modelService) {
         this.addressService = addressService;
         this.addressConverter = addressConverter;
+        this.addressReversePopulator = addressReversePopulator;
         this.cartService = cartService;
         this.checkoutFlowFacade = checkoutFlowFacade;
         this.i18NFacade = i18NFacade;
+        this.modelService = modelService;
     }
 
     /**
@@ -64,21 +73,56 @@ public class DefaultCheckoutComAddressFacade implements CheckoutComAddressFacade
     @Override
     public void setCartBillingDetails(final AddressData addressData) {
         validateParameterNotNull(addressData, "Delivery Address cannot be null");
-        setCartBillingDetailsByAddressId(addressData.getId());
+        setCartBillingDetailsByAddress(addressData);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setCartBillingDetailsByAddressId(final String addressId) {
+    public void setCartBillingDetailsByAddress(final AddressData addressData) {
         if (cartService.hasSessionCart()) {
             final CartModel sessionCart = cartService.getSessionCart();
 
-            final AddressModel addressModel = checkoutFlowFacade.getDeliveryAddressModelForCode(addressId);
-            if (addressModel != null) {
-                addressService.setCartPaymentAddress(sessionCart, addressModel);
+            AddressModel billingAddress = sessionCart.getPaymentAddress();
+            if (Objects.isNull(billingAddress)) {
+                billingAddress = modelService.create(AddressModel.class);
+                billingAddress.setOwner(sessionCart);
             }
+            addressReversePopulator.populate(addressData, billingAddress);
+            billingAddress.setShippingAddress(Boolean.FALSE);
+            billingAddress.setBillingAddress(Boolean.TRUE);
+            billingAddress.setVisibleInAddressBook(Boolean.FALSE);
+
+            modelService.save(billingAddress);
+            addressService.setCartPaymentAddress(sessionCart, billingAddress);
+
+        } else {
+            throw new IllegalArgumentException(CART_MODEL_NULL);
+        }
+    }
+
+    @Override
+    public void setCartBillingDetailsByAddressId(final String addressId) {
+        if (cartService.hasSessionCart()) {
+            final CartModel sessionCart = cartService.getSessionCart();
+            AddressModel addressModel = checkoutFlowFacade.getDeliveryAddressModelForCode(addressId);
+            if (Objects.isNull(addressModel)) {
+                return;
+            }
+            AddressModel billingAddress = sessionCart.getPaymentAddress();
+            if (Objects.isNull(billingAddress)) {
+                billingAddress = modelService.create(AddressModel.class);
+                billingAddress.setOwner(sessionCart);
+            }
+            final AddressData addressData = addressConverter.convert(addressModel);
+            addressData.setId(null);
+            addressReversePopulator.populate(addressData, billingAddress);
+            billingAddress.setShippingAddress(Boolean.FALSE);
+            billingAddress.setBillingAddress(Boolean.TRUE);
+            billingAddress.setVisibleInAddressBook(Boolean.FALSE);
+            modelService.save(billingAddress);
+            addressService.setCartPaymentAddress(sessionCart, billingAddress);
         } else {
             throw new IllegalArgumentException(CART_MODEL_NULL);
         }
@@ -99,11 +143,11 @@ public class DefaultCheckoutComAddressFacade implements CheckoutComAddressFacade
      * {@inheritDoc}
      */
     @Override
-    public void setAddressDataRegion(final String region,final String countryCode, final AddressData addressData) {
+    public void setAddressDataRegion(final String region, final String countryCode, final AddressData addressData) {
         Optional.ofNullable(region).filter(StringUtils::isNotBlank)
                 .map(String::toUpperCase)
                 .filter(administrativeAreaUpperCased -> StringUtils.isNotBlank(countryCode))
-                .map(administrativeAreaUpperCased -> i18NFacade.getRegion(countryCode.toUpperCase(),administrativeAreaUpperCased))
+                .map(administrativeAreaUpperCased -> i18NFacade.getRegion(countryCode.toUpperCase(), administrativeAreaUpperCased))
                 .ifPresent(addressData::setRegion);
     }
 

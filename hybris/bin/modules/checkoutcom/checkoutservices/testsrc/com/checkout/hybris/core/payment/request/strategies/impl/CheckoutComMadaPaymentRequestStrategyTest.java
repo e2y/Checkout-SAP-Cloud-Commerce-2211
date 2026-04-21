@@ -1,8 +1,8 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.payments.ThreeDSRequest;
+
+import com.checkout.payments.ThreeDSRequest;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.cms2.model.site.CMSSiteModel;
 import de.hybris.platform.cms2.servicelayer.services.CMSSiteService;
@@ -40,7 +40,7 @@ public class CheckoutComMadaPaymentRequestStrategyTest {
     @Mock
     private CMSSiteModel currentSiteMock;
     @Mock
-    private PaymentRequest<RequestSource> paymentRequestMock;
+    private PaymentRequest paymentRequestMock;
     @Captor
     private ArgumentCaptor<Map<String, Object>> metadataMapCapture;
 
@@ -73,7 +73,7 @@ public class CheckoutComMadaPaymentRequestStrategyTest {
         final Optional<ThreeDSRequest> result = testObj.createThreeDSRequest();
 
         assertTrue(result.isPresent());
-        assertTrue(result.get().isEnabled());
+        assertTrue(result.get().getEnabled());
     }
 
     @Test

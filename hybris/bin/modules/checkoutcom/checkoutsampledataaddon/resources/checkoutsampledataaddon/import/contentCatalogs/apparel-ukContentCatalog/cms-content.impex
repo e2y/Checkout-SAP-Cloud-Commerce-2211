@@ -29,7 +29,7 @@ INSERT_UPDATE Media; code[unique = true]; $media                            ; mi
 INSERT_UPDATE CheckoutComCardComponent; uid[unique = true]; $contentCV[unique = true]; name   ; $picture[lang = $lang]
                                       ; cardComponent     ;                          ; "Card" ; card-icon
 
-INSERT_UPDATE CheckoutComAPMComponent; uid[unique = true]  ; $contentCV[unique = true]; name          ; apmConfiguration(code); $picture[lang = $lang]; visible[default = true];
+INSERT_UPDATE CheckoutComAPMComponent; uid[unique = true]  ; $contentCV[unique = true]; name          ; apmConfiguration(code); $picture[lang = $lang]; visible[default = true]
                                      ; payPalComponent     ;                          ; "PayPal"      ; PAYPAL                ; paypal-icon           ;
                                      ; poliComponent       ;                          ; "POLi"        ; POLI                  ; poli-icon             ;
                                      ; idealComponent      ;                          ; "iDeal"       ; IDEAL                 ; ideal-icon            ;
@@ -44,7 +44,7 @@ INSERT_UPDATE CheckoutComAPMComponent; uid[unique = true]  ; $contentCV[unique =
                                      ; multibancoComponent ;                          ; "Multibanco"  ; MULTIBANCO            ; multibanco-icon       ;
                                      ; sepaComponent       ;                          ; "Sepa"        ; SEPA                  ; sepa-icon             ;
                                      ; p24Component        ;                          ; "Przelewy24"  ; P24                   ; p24-icon              ;
-                                     ; oxxoComponent       ;                          ; "Oxxo"        ; OXXO                  ; oxxo-icon             ;
+                                     ; oxxoComponent       ;                          ; "Oxxo"        ; OXXO                  ; oxxo-icon             ; false
                                      ; achComponent        ;                          ; "Ach"         ; ACH                   ; ach-icon              ;
 
 INSERT_UPDATE CheckoutComGooglePayComponent; uid[unique = true] ; $contentCV[unique = true]; name         ; $picture[lang = $lang]

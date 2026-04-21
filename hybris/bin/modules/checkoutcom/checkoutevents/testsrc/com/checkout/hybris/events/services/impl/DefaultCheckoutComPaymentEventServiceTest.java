@@ -1,5 +1,19 @@
 package com.checkout.hybris.events.services.impl;
 
+import java.util.Set;
+
+import static com.checkout.hybris.events.enums.CheckoutComPaymentEventType.PAYMENT_APPROVED;
+import static com.checkout.hybris.events.enums.CheckoutComPaymentEventType.PAYMENT_REFUNDED;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.core.model.CheckoutComMerchantConfigurationModel;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
 import com.checkout.hybris.events.beans.CheckoutComPaymentEventDataObject;
@@ -17,18 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static com.checkout.hybris.events.enums.CheckoutComPaymentEventType.PAYMENT_APPROVED;
-import static com.checkout.hybris.events.enums.CheckoutComPaymentEventType.PAYMENT_REFUNDED;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
-
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultCheckoutComPaymentEventServiceTest {
@@ -36,7 +38,7 @@ public class DefaultCheckoutComPaymentEventServiceTest {
     private static final String SITE_ID = "electronics";
     private static final String PAYMENT_ID = "pay_6qugd47beltevjzfi37ngm2apy";
 
-    private static final HashSet<CheckoutComPaymentEventType> EVENT_TYPES = new HashSet<>(asList(PAYMENT_APPROVED, PAYMENT_REFUNDED));
+    private static final Set<CheckoutComPaymentEventType> EVENT_TYPES = Set.of(PAYMENT_APPROVED, PAYMENT_REFUNDED);
 
     @InjectMocks
     private DefaultCheckoutComPaymentEventService testObj;
@@ -61,9 +63,11 @@ public class DefaultCheckoutComPaymentEventServiceTest {
         when(merchantConfigMock.getCheckoutComPaymentEventTypes()).thenReturn(EVENT_TYPES);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void getAllowedPaymentEventTypesForMerchant_WhenSiteIdNull_ShouldThrowException() {
-        testObj.getAllowedPaymentEventTypesForMerchant(null);
+        assertThatThrownBy(() -> testObj.getAllowedPaymentEventTypesForMerchant(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Site id is null in the event body.");
     }
 
     @Test
@@ -86,19 +90,18 @@ public class DefaultCheckoutComPaymentEventServiceTest {
         assertTrue(result.contains(PAYMENT_APPROVED));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void getSiteIdForTheEvent_WhenBodyNull_ShouldReturnFalse() {
-        testObj.getSiteIdForTheEvent(null);
+        assertThatThrownBy(() -> testObj.getSiteIdForTheEvent(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Event body cannot be null.");
     }
 
-    @Test(expected = NullPointerException.class)
-    public void getSiteIdForTheEvent_WhenBodyEmpty_ShouldThrowException() {
-        testObj.getSiteIdForTheEvent(checkoutComPaymentEventObjectStub);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void getSiteIdForTheEvent_WhenDataBodyEmpty_ShouldThrowException() {
-        testObj.getSiteIdForTheEvent(null);
+    @Test
+    public void getSiteIdForTheEvent_WhenDataBodyNull_ShouldThrowException() {
+        assertThatThrownBy(() -> testObj.getSiteIdForTheEvent(checkoutComPaymentEventObjectStub))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Data object of the event body cannot be null.");
     }
 
     @Test
@@ -127,5 +130,4 @@ public class DefaultCheckoutComPaymentEventServiceTest {
         assertEquals(SITE_ID, result);
         verify(paymentInfoServiceMock, never()).getSiteIdFromPaymentId(anyString());
     }
-
 }

@@ -1,5 +1,14 @@
 package com.checkout.hybris.facades.order.converters.populators;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComAchPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComBenefitPayPaymentInfoModel;
@@ -19,11 +28,12 @@ import de.hybris.platform.store.BaseStoreModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InOrder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -58,8 +68,6 @@ public class CheckoutComAbstractOrderPopulatorTest {
     @Mock
     private CheckoutComCreditCardPaymentInfoModel ccPaymentInfoMock;
     @Mock
-    private CheckoutComPaymentInfoData checkoutComPaymentInfoDataMock;
-    @Mock
     private CheckoutComBenefitPayPaymentInfoModel checkoutComApmPaymentInfoMock;
     @Mock
     private AddressModel addressMock;
@@ -77,14 +85,18 @@ public class CheckoutComAbstractOrderPopulatorTest {
         when(sourceMock.getUser()).thenReturn(customerMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WithNullSource_ShouldThrowException() {
-        testObj.populate(null, targetMock);
+        assertThatThrownBy(() -> testObj.populate(null, targetMock))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Parameter source cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WithNullTarget_ShouldThrowException() {
-        testObj.populate(sourceMock, null);
+        assertThatThrownBy(() -> testObj.populate(sourceMock, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Parameter target cannot be null.");
     }
 
     @Test
@@ -108,7 +120,7 @@ public class CheckoutComAbstractOrderPopulatorTest {
 
         testObj.populate(sourceMock, targetMock);
 
-        verify(targetMock).setPaymentType(CheckoutComPaymentType.CARD.name());
+        verify(targetMock).setCheckoutPaymentType(CheckoutComPaymentType.CARD.name());
         verifyNoInteractions(checkoutComApmPaymentInfoPopulatorMapperMock);
         verifyNoInteractions(checkoutComPaymentInfoPopulatorMock);
         verifyNoInteractions(modelServiceMock);
@@ -160,7 +172,7 @@ public class CheckoutComAbstractOrderPopulatorTest {
         testObj.populate(sourceMock, targetMock);
 
         verifyNoInteractions(modelServiceMock);
-        verify(targetMock).setPaymentType(CheckoutComPaymentType.BENEFITPAY.name());
+        verify(targetMock).setCheckoutPaymentType(CheckoutComPaymentType.BENEFITPAY.name());
         verify(targetMock).setQrCodeData(QR_CODE_DATA);
     }
 }

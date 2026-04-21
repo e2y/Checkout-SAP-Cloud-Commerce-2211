@@ -1,28 +1,30 @@
 package com.checkout.hybris.addon.converters.populators;
 
+import java.util.Map;
+
+import static com.checkout.hybris.addon.converters.populators.CheckoutComFawryPaymentInfoDataReversePopulator.MOBILE_NUMBER_KEY;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.facades.beans.FawryPaymentInfoData;
-import com.google.common.collect.ImmutableMap;
 import de.hybris.bootstrap.annotations.UnitTest;
 import org.junit.Test;
-
-import static com.checkout.hybris.addon.converters.populators.CheckoutComFawryPaymentInfoDataReversePopulator.MOBILE_NUMBER_KEY;
-import static org.junit.Assert.assertEquals;
 
 @UnitTest
 public class CheckoutComFawryPaymentInfoDataReversePopulatorTest {
 
     private static final String MOBILE_NUMBER_VALUE = "12345678912";
 
-    private CheckoutComFawryPaymentInfoDataReversePopulator testObj = new CheckoutComFawryPaymentInfoDataReversePopulator();
+    private final CheckoutComFawryPaymentInfoDataReversePopulator testObj = new CheckoutComFawryPaymentInfoDataReversePopulator();
 
-    private PaymentDataForm source = new PaymentDataForm();
-    private FawryPaymentInfoData target = new FawryPaymentInfoData();
+    private final PaymentDataForm source = new PaymentDataForm();
+    private final FawryPaymentInfoData target = new FawryPaymentInfoData();
 
     @Test
     public void populate_ShouldPopulateTargetCorrectly() {
-        source.setFormAttributes(ImmutableMap.of(MOBILE_NUMBER_KEY, MOBILE_NUMBER_VALUE));
+        source.setFormAttributes(Map.of(MOBILE_NUMBER_KEY, MOBILE_NUMBER_VALUE));
 
         testObj.populate(source, target);
 
@@ -30,14 +32,18 @@ public class CheckoutComFawryPaymentInfoDataReversePopulatorTest {
         assertEquals(MOBILE_NUMBER_VALUE, target.getMobileNumber());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenSourceNull_ShouldThrowException() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("PaymentDataForm cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenTargetNull_ShouldThrowException() {
-        testObj.populate(source, null);
+        assertThatThrownBy(() -> testObj.populate(source, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("FawryPaymentInfoData cannot be null.");
     }
 
 }

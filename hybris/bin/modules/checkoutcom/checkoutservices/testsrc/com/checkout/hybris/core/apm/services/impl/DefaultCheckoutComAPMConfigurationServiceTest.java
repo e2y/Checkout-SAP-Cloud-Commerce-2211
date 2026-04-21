@@ -26,17 +26,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.*;
 
+import static com.checkout.common.Currency.EUR;
+import static com.checkout.common.Currency.GBP;
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.FAWRY;
-import static com.checkout.sdk.common.Currency.EUR;
-import static com.checkout.sdk.common.Currency.GBP;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Locale.FRANCE;
 import static java.util.Locale.UK;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -90,41 +90,41 @@ public class DefaultCheckoutComAPMConfigurationServiceTest {
                 checkoutComApmConfigurationDaoMock, globalAPMConfigurationDaoMock, checkoutComMerchantConfigurationServiceMock,
                 checkoutComAPMConfigurationSettingsMock));
 
-        when(restrictedCountryMock.getIsocode()).thenReturn(FRANCE.getCountry());
-        when(restrictedCurrencyMock.getIsocode()).thenReturn(EUR);
-        when(apmConfiguration1Mock.getRestrictedCountries()).thenReturn(Set.of(restrictedCountryMock));
-        when(apmConfiguration1Mock.getRestrictedCurrencies()).thenReturn(Set.of(restrictedCurrencyMock));
-        when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(Boolean.TRUE);
-        when(checkoutComAPMConfigurationSettingsMock.get(APM_CODE)).thenReturn(apmConfigurationSettingsMock);
+        lenient().when(restrictedCountryMock.getIsocode()).thenReturn(FRANCE.getCountry());
+        lenient().when(restrictedCurrencyMock.getIsocode()).thenReturn(EUR.name());
+        lenient().when(apmConfiguration1Mock.getRestrictedCountries()).thenReturn(Set.of(restrictedCountryMock));
+        lenient().when(apmConfiguration1Mock.getRestrictedCurrencies()).thenReturn(Set.of(restrictedCurrencyMock));
+        lenient().when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(Boolean.TRUE);
+        lenient().when(checkoutComAPMConfigurationSettingsMock.get(APM_CODE)).thenReturn(apmConfigurationSettingsMock);
 
-        when(cartServiceMock.getSessionCart()).thenReturn(cartMock);
-        when(cartServiceMock.getSessionCart()).thenReturn(cartMock);
-        when(cartMock.getCurrency().getIsocode()).thenReturn(CART_CURRENCY);
-        when(cartMock.getPaymentAddress()).thenReturn(paymentAddressMock);
-        when(cartMock.getDeliveryAddress()).thenReturn(shippingAddressMock);
-        when(paymentAddressMock.getCountry().getIsocode()).thenReturn(BILLING_ADDRESS_COUNTRY_CODE);
-        when(shippingAddressMock.getCountry().getIsocode()).thenReturn(BILLING_ADDRESS_COUNTRY_CODE);
-        when(checkoutComApmComponentDaoMock.find()).thenReturn(List.of(component1Mock, component2Mock));
-        when(component1Mock.getApmConfiguration()).thenReturn(apmConfiguration1Mock);
-        when(component2Mock.getApmConfiguration()).thenReturn(apmConfiguration2Mock);
-        when(component1Mock.getVisible()).thenReturn(Boolean.TRUE);
-        when(component2Mock.getVisible()).thenReturn(Boolean.TRUE);
-        when(globalAPMConfigurationDaoMock.find()).thenReturn(List.of(checkoutComGlobalAPMConfigurationMock));
+        lenient().when(cartServiceMock.getSessionCart()).thenReturn(cartMock);
+        lenient().when(cartServiceMock.getSessionCart()).thenReturn(cartMock);
+        lenient().when(cartMock.getCurrency().getIsocode()).thenReturn(CART_CURRENCY);
+        lenient().when(cartMock.getPaymentAddress()).thenReturn(paymentAddressMock);
+        lenient().when(cartMock.getDeliveryAddress()).thenReturn(shippingAddressMock);
+        lenient().when(paymentAddressMock.getCountry().getIsocode()).thenReturn(BILLING_ADDRESS_COUNTRY_CODE);
+        lenient().when(shippingAddressMock.getCountry().getIsocode()).thenReturn(BILLING_ADDRESS_COUNTRY_CODE);
+        lenient().when(checkoutComApmComponentDaoMock.find()).thenReturn(List.of(component1Mock, component2Mock));
+        lenient().when(component1Mock.getApmConfiguration()).thenReturn(apmConfiguration1Mock);
+        lenient().when(component2Mock.getApmConfiguration()).thenReturn(apmConfiguration2Mock);
+        lenient().when(component1Mock.getVisible()).thenReturn(Boolean.TRUE);
+        lenient().when(component2Mock.getVisible()).thenReturn(Boolean.TRUE);
+        lenient().when(globalAPMConfigurationDaoMock.find()).thenReturn(List.of(checkoutComGlobalAPMConfigurationMock));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isApmAvailable_WhenCountryCodeIsEmpty_ShouldThrowException() {
-        testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), "");
+        assertThatThrownBy(() -> testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), "")).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isApmAvailable_WhenCurrencyCodeIsEmpty_ShouldThrowException() {
-        testObj.isApmAvailable(apmConfiguration1Mock, "", GBP);
+        assertThatThrownBy(() -> testObj.isApmAvailable(apmConfiguration1Mock, "", GBP.name())).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void isApmAvailable_WhenApmConfigurationIsNull_ShouldReturnTrue() {
-        final boolean result = testObj.isApmAvailable(null, UK.getCountry(), GBP);
+        final boolean result = testObj.isApmAvailable(null, UK.getCountry(), GBP.name());
 
         assertTrue(result);
     }
@@ -133,7 +133,7 @@ public class DefaultCheckoutComAPMConfigurationServiceTest {
     public void isApmAvailable_WhenSiteConfigurationIsEnabledForNAS_andAPMIsNot_ShouldReturnFalse() {
         when(checkoutComGlobalAPMConfigurationMock.getNasAPMs()).thenReturn(List.of());
 
-        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), GBP);
+        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), GBP.name());
 
         assertFalse(result);
     }
@@ -144,21 +144,21 @@ public class DefaultCheckoutComAPMConfigurationServiceTest {
         when(apmConfiguration1Mock.getRestrictedCurrencies()).thenReturn(emptySet());
         when(checkoutComGlobalAPMConfigurationMock.getNasAPMs()).thenReturn(List.of(apmConfiguration1Mock));
 
-        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), GBP);
+        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), GBP.name());
 
         assertTrue(result);
     }
 
     @Test
     public void isApmAvailable_WhenApmRestrictedForDifferentCountry_ShouldReturnFalse() {
-        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), EUR);
+        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), EUR.name());
 
         assertFalse(result);
     }
 
     @Test
     public void isApmAvailable_WhenApmRestrictedForDifferentCurrency_ShouldReturnFalse() {
-        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), GBP);
+        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, UK.getCountry(), GBP.name());
 
         assertFalse(result);
     }
@@ -167,7 +167,7 @@ public class DefaultCheckoutComAPMConfigurationServiceTest {
     public void isApmAvailable_WhenApmRestrictedForDifferentCountryAndCurrency_ShouldReturnTrue() {
         when(checkoutComGlobalAPMConfigurationMock.getNasAPMs()).thenReturn(List.of(apmConfiguration1Mock));
 
-        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, FRANCE.getCountry(), EUR);
+        final boolean result = testObj.isApmAvailable(apmConfiguration1Mock, FRANCE.getCountry(), EUR.name());
 
         assertTrue(result);
     }
@@ -191,56 +191,53 @@ public class DefaultCheckoutComAPMConfigurationServiceTest {
         assertFalse(result.isPresent());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void getApmConfigurationByCode_WhenConfigurationCodeIsNull_ShouldThrowException() {
-        testObj.getApmConfigurationByCode(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void isApmRedirect_WhenApmCodeEmpty_ShouldThrowException() {
-        testObj.isApmRedirect("");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void isApmRedirect_WhenApmCodeMissing_ShouldThrowException() {
-        when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(false);
-
-        testObj.isApmRedirect(APM_CODE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void isApmRedirect_WhenApmCodeNotConfigured_ShouldThrowException() {
-        when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(true);
-        when(checkoutComAPMConfigurationSettingsMock.get(APM_CODE)).thenReturn(null);
-
-        testObj.isApmRedirect(APM_CODE);
+        assertThatThrownBy(() -> testObj.getApmConfigurationByCode(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void isApmRedirect_WhenApmCodetConfigured_ShouldReturnConfigurationValue() {
+    public void isApmRedirect_WhenApmCodeEmpty_ShouldThrowException() {
+        assertThatThrownBy(() -> testObj.isApmRedirect("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void isApmRedirect_WhenApmCodeMissing_ShouldThrowException() {
+        when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(false);
+        assertThatThrownBy(() -> testObj.isApmRedirect(APM_CODE)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void isApmRedirect_WhenApmCodeNotConfigured_ShouldThrowException() {
+        when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(true);
+        when(checkoutComAPMConfigurationSettingsMock.get(APM_CODE)).thenReturn(null);
+        assertThatThrownBy(() -> testObj.isApmRedirect(APM_CODE)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void isApmRedirect_WhenApmCodeConfigured_ShouldReturnConfigurationValue() {
         when(apmConfigurationSettingsMock.getIsApmRedirect()).thenReturn(Boolean.TRUE);
 
         assertTrue(testObj.isApmRedirect(APM_CODE));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isApmUserDataRequired_WhenApmCodeEmpty_ShouldThrowException() {
-        testObj.isApmUserDataRequired("");
+        assertThatThrownBy(() -> testObj.isApmUserDataRequired("")).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isApmUserDataRequired_WhenApmCodeMissing_ShouldThrowException() {
         when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(false);
 
-        testObj.isApmUserDataRequired(APM_CODE);
+        assertThatThrownBy(() -> testObj.isApmUserDataRequired(APM_CODE)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isApmUserDataRequired_WhenApmCodeNotConfigured_ShouldThrowException() {
         when(checkoutComAPMConfigurationSettingsMock.containsKey(APM_CODE)).thenReturn(true);
         when(checkoutComAPMConfigurationSettingsMock.get(APM_CODE)).thenReturn(null);
-
-        testObj.isApmUserDataRequired(APM_CODE);
+        assertThatThrownBy(() -> testObj.isApmUserDataRequired(APM_CODE)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

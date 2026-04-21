@@ -4,8 +4,8 @@ import com.checkout.hybris.core.model.CheckoutComIdealPaymentInfoModel;
 import com.checkout.hybris.core.payment.details.mappers.CheckoutComUpdatePaymentInfoStrategyMapper;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.AlternativePaymentSourceResponse;
-import com.checkout.sdk.payments.GetPaymentResponse;
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.payments.response.source.AlternativePaymentSourceResponse;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.order.CartService;
 import de.hybris.platform.servicelayer.model.ModelService;
@@ -17,7 +17,7 @@ import javax.annotation.PostConstruct;
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.IDEAL;
 
 /**
- * Strategy to processes the checkout.com payment response for Card payment
+ * Strategy to process the checkout.com payment response for Card payment
  */
 public class CheckoutComIdealUpdatePaymentInfoStrategy extends CheckoutComAbstractUpdatePaymentInfoStrategy {
 

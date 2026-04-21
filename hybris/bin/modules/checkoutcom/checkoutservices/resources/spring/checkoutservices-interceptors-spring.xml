@@ -12,6 +12,11 @@
         <constructor-arg ref="checkoutComPaymentReferenceGenerationStrategy"/>
     </bean>
 
+    <alias name="defaultCheckoutComAddressInterceptor"
+           alias="checkoutComAddressInterceptor"/>
+    <bean id="defaultCheckoutComAddressInterceptor"
+          class="com.checkout.hybris.core.address.interceptors.CheckoutComAddressInterceptor"/>
+
     <alias name="defaultCheckoutComPaymentReferenceValidateInterceptor"
            alias="checkoutComPaymentReferenceValidateInterceptor"/>
     <bean id="defaultCheckoutComPaymentReferenceValidateInterceptor"
@@ -27,6 +32,12 @@
           class="de.hybris.platform.servicelayer.interceptor.impl.InterceptorMapping">
         <property name="interceptor" ref="checkoutComPaymentReferenceValidateInterceptor"/>
         <property name="typeCode" value="Cart"/>
+    </bean>
+
+    <bean id="checkoutComAddressValidateInterceptorMapping"
+          class="de.hybris.platform.servicelayer.interceptor.impl.InterceptorMapping">
+        <property name="interceptor" ref="checkoutComAddressInterceptor"/>
+        <property name="typeCode" value="Address"/>
     </bean>
 
 </beans>

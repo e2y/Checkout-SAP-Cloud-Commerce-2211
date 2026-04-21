@@ -3,6 +3,7 @@ package com.checkout.hybris.facades.cart.validators.impl;
 import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import de.hybris.platform.commercefacades.order.data.CartData;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
@@ -17,7 +18,7 @@ public class CheckoutComCheckoutExpressPlaceOrderCartValidator extends CheckoutC
     }
 
     @Override
-    public void validate(final Object target, final Errors errors) {
+    public void validate(final @NotNull Object target, final @NotNull Errors errors) {
         final CartData cartData = (CartData) target;
 
         validateDeliveryInfoInvalid(errors);

@@ -2,7 +2,10 @@ package com.checkout.hybris.core.address.services;
 
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.user.AddressModel;
+import de.hybris.platform.core.model.user.CustomerModel;
 import de.hybris.platform.servicelayer.user.AddressService;
+
+import java.util.List;
 
 /**
  * Checkout.com AddressService to handle operations on Addresses

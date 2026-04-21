@@ -122,6 +122,7 @@
                         <editorArea:attribute qualifier="privateSharedKey"/>
                         <editorArea:attribute qualifier="nasPublicKey"/>
                         <editorArea:attribute qualifier="nasSecretKey"/>
+                        <editorArea:attribute qualifier="channelProcessingId"/>
                         <editorArea:attribute qualifier="nasSignatureKey"/>
                         <editorArea:attribute qualifier="nasAuthorisationHeaderKey"/>
                         <editorArea:attribute qualifier="useNasAuthorisationKeyOnNotifications"/>
@@ -348,6 +349,10 @@
                     <editorArea:section name="sec.configuration.checkoutcom.payment.section">
                         <editorArea:attribute qualifier="checkoutComSuccessRedirectUrl" readonly="true"/>
                         <editorArea:attribute qualifier="checkoutComFailureRedirectUrl" readonly="true"/>
+                    </editorArea:section>
+                    <editorArea:section name="sec.configuration.checkoutcom.payment.flow.section">
+                        <editorArea:attribute qualifier="flow"/>
+                        <editorArea:attribute qualifier="flowUIConfiguration"/>
                     </editorArea:section>
                 </editorArea:tab>
             </editorArea:editorArea>

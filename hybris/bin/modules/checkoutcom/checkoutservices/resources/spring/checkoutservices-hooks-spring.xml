@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <alias name="defaultCheckoutComAdditionalTaxesCalculationMethodHook" alias="checkoutComAdditionalTaxesCalculationMethodHook"/>
+    <bean id="defaultCheckoutComAdditionalTaxesCalculationMethodHook"
+          class="com.checkout.hybris.core.order.hooks.DefaultCheckoutComAdditionalTaxesCalculationMethodHook">
+        <constructor-arg name="modelService" ref="modelService"/>
+    </bean>
+
+    <bean id="defaultCheckoutComAdditionalTaxesCalculationMethodHookMergeDirective" depends-on="commerceCartCalculationMethodHooks" parent="listMergeDirective">
+        <property name="add" ref="checkoutComAdditionalTaxesCalculationMethodHook"/>
+    </bean>
+</beans>

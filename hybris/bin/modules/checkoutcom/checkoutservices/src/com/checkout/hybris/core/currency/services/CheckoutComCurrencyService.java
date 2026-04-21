@@ -15,7 +15,7 @@ public interface CheckoutComCurrencyService {
      * @param amount          the value amount
      * @return the amount in pennies
      */
-    Long convertAmountIntoPennies(String currencyIsoCode, Double amount);
+    Long removeDecimalsFromCurrencyAmount(String currencyIsoCode, Double amount);
 
     /**
      * Converts an amount in BigDecimal value taking into account the currency
@@ -24,5 +24,5 @@ public interface CheckoutComCurrencyService {
      * @param amountInPennies the amount in pennies
      * @return the amount from pennies
      */
-    BigDecimal convertAmountFromPennies(String currencyIsoCode, Long amountInPennies);
+    BigDecimal addDecimalsToAmountForGivenCurrency(String currencyIsoCode, Long amountInPennies);
 }

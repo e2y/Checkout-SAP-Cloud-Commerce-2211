@@ -1,10 +1,26 @@
 package com.checkout.hybris.occ.controllers;
 
+import static com.checkout.hybris.facades.enums.WalletPaymentType.APPLEPAY;
+import static de.hybris.platform.webservicescommons.mapping.FieldSetLevelHelper.DEFAULT_LEVEL;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.checkout.dto.order.ApplePayValidateMerchantRequestWsDTO;
 import com.checkout.dto.order.PlaceWalletOrderWsDTO;
 import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
 import com.checkout.hybris.facades.address.CheckoutComWalletAddressFacade;
-import com.checkout.hybris.facades.beans.*;
+import com.checkout.hybris.facades.beans.ApplePayAdditionalAuthInfo;
+import com.checkout.hybris.facades.beans.ApplePayAuthorisationRequest;
+import com.checkout.hybris.facades.beans.ApplePayPaymentContact;
+import com.checkout.hybris.facades.beans.ApplePayShippingContactUpdate;
+import com.checkout.hybris.facades.beans.ApplePayShippingMethod;
+import com.checkout.hybris.facades.beans.ApplePayValidateMerchantRequestData;
+import com.checkout.hybris.facades.beans.PlaceWalletOrderDataResponse;
 import com.checkout.hybris.facades.customer.CheckoutComCustomerFacade;
 import com.checkout.hybris.facades.payment.wallet.CheckoutComApplePayFacade;
 import com.checkout.hybris.facades.payment.wallet.CheckoutComWalletOrderFacade;
@@ -26,10 +42,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.validation.Validator;
-
-import static com.checkout.hybris.facades.enums.WalletPaymentType.APPLEPAY;
-import static de.hybris.platform.webservicescommons.mapping.FieldSetLevelHelper.DEFAULT_LEVEL;
-import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -81,7 +93,7 @@ public class CheckoutComApplePayOrderControllerTest {
     @Mock
     private ApplePayShippingMethod applePayShippingMethodMock;
 
-    private ApplePayValidateMerchantRequestWsDTO validateMerchantRequestWsDTOStub = new ApplePayValidateMerchantRequestWsDTO();
+    private ApplePayValidateMerchantRequestWsDTO validateMerchantRequestWsDTOStub;
 
     @Before
     public void setUp() {
@@ -96,6 +108,7 @@ public class CheckoutComApplePayOrderControllerTest {
         when(checkoutFacadeMock.hasCheckoutCart()).thenReturn(Boolean.TRUE);
         when(cartFacadeMock.getSessionCart()).thenReturn(cartDataMock);
         doNothing().when(checkoutComPlaceOrderCartValidatorMock).validate(eq(cartDataMock), any());
+        validateMerchantRequestWsDTOStub = new ApplePayValidateMerchantRequestWsDTO();
     }
 
     @Test
@@ -112,11 +125,13 @@ public class CheckoutComApplePayOrderControllerTest {
         inOrder.verify(dataMapperMock).map(placeWalletOrderDataResponseMock, PlaceWalletOrderWsDTO.class, DEFAULT_LEVEL);
     }
 
-    @Test(expected = NoCheckoutCartException.class)
-    public void placeOrder_WhenNoCheckoutCart_ShouldThrowException() throws NoCheckoutCartException {
+    @Test
+    public void placeOrder_WhenNoCheckoutCart_ShouldThrowException() {
         when(checkoutFacadeMock.hasCheckoutCart()).thenReturn(Boolean.FALSE);
 
-        testObj.placeOrder(authorisationRequestMock, DEFAULT_LEVEL);
+        assertThatThrownBy(() -> testObj.placeOrder(authorisationRequestMock, DEFAULT_LEVEL))
+                .isInstanceOf(NoCheckoutCartException.class)
+                .hasMessage("Cannot place order. There was no checkout cart created yet!");
     }
 
     @Test

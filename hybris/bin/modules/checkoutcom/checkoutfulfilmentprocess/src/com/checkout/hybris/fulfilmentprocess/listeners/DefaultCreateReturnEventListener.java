@@ -38,9 +38,9 @@ public class DefaultCreateReturnEventListener extends AbstractSiteEventListener<
     protected static final Logger LOG = LogManager.getLogger(DefaultCreateReturnEventListener.class);
     protected static final String SEPARATOR = "-";
 
-    private BusinessProcessService businessProcessService;
-    private BaseStoreService baseStoreService;
-    private ModelService modelService;
+    private final BusinessProcessService businessProcessService;
+    private final BaseStoreService baseStoreService;
+    private final ModelService modelService;
     private Set<SiteChannel> supportedSiteChannels;
 
     public DefaultCreateReturnEventListener(final BusinessProcessService businessProcessService,

@@ -1,6 +1,6 @@
 package com.checkout.hybris.core.address.strategies.impl;
 
-import com.checkout.sdk.common.Phone;
+import com.checkout.common.Phone;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.user.AddressModel;
 import org.junit.Test;
@@ -123,6 +123,23 @@ public class DefaultCheckoutComPhoneNumberStrategyTest {
         assertEquals(VALID_COUNTRY_CODE_MAX_LONG_EXPECTED, result.get().getCountryCode());
 
         result = testObj.getPhone(COUNTRY_CODE_MIN_LONG_VALID, VALID_PHONE_NUMBER_MAX_LONG);
+
+        assertTrue(result.isPresent());
+        assertEquals(VALID_PHONE_MAX_LONG_EXPECTED, result.get().getNumber());
+        assertEquals(VALID_COUNTRY_CODE_MIN_LONG_EXPECTED, result.get().getCountryCode());
+    }
+
+    @Test
+    public void createPhone_WhenEverythingIsCorrectlyFilled_ShouldReturnThePhoneFullyPopulated() {
+        when(addressModelMock.getPhone1()).thenReturn(VALID_PHONE_NUMBER_MAX_LONG);
+
+        Optional<Phone> result = testObj.createPhone(COUNTRY_CODE_MAX_LONG_VALID, addressModelMock);
+
+        assertTrue(result.isPresent());
+        assertEquals(VALID_PHONE_MAX_LONG_EXPECTED, result.get().getNumber());
+        assertEquals(VALID_COUNTRY_CODE_MAX_LONG_EXPECTED, result.get().getCountryCode());
+
+        result = testObj.createPhone(COUNTRY_CODE_MIN_LONG_VALID, addressModelMock);
 
         assertTrue(result.isPresent());
         assertEquals(VALID_PHONE_MAX_LONG_EXPECTED, result.get().getNumber());

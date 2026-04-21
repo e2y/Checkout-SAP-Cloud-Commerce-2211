@@ -6,7 +6,7 @@ import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.response.mappers.CheckoutComPaymentResponseStrategyMapper;
 import com.checkout.hybris.core.payment.response.strategies.CheckoutComPaymentResponseStrategy;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.PaymentPending;
+import com.checkout.payments.response.PaymentResponse;
 import com.google.common.base.Preconditions;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 
@@ -34,7 +34,7 @@ public class CheckoutComSepaPaymentResponseStrategy extends CheckoutComAbstractP
      * {@inheritDoc}
      */
     @Override
-    public AuthorizeResponse handlePendingPaymentResponse(final PaymentPending paymentPendingResponse, final PaymentInfoModel paymentInfo) {
+    public AuthorizeResponse handlePendingPaymentResponse(final PaymentResponse paymentPendingResponse, final PaymentInfoModel paymentInfo) {
         validateParameterNotNull(paymentPendingResponse, "Payment pending response cannot be null");
         Preconditions.checkArgument(paymentInfo instanceof CheckoutComSepaPaymentInfoModel, "Payment info null or not valid for Sepa.");
 

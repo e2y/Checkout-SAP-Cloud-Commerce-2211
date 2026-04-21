@@ -34,7 +34,7 @@ public class DefaultCheckoutComKlarnaDiscountAmountStrategy implements CheckoutC
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(productLines), "List of KlarnaProductRequestDto cannot be empty.");
         final String currencyCode = cart.getCurrency() != null ? cart.getCurrency().getIsocode() : null;
 
-        final AtomicLong totalDiscounts = new AtomicLong(checkoutComCurrencyService.convertAmountIntoPennies(currencyCode, cart.getTotalDiscounts()));
+        final AtomicLong totalDiscounts = new AtomicLong(checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyCode, cart.getTotalDiscounts()));
 
         if (NumberUtils.LONG_ZERO.equals(totalDiscounts.get())) {
             return;

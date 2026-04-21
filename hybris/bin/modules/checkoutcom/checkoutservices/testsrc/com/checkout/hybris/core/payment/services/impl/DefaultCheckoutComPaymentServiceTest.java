@@ -11,7 +11,7 @@ import com.checkout.hybris.core.payment.response.strategies.impl.CheckoutComMult
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentReturnedService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentTransactionService;
 import com.checkout.hybris.events.model.CheckoutComPaymentEventModel;
-import com.checkout.sdk.payments.PaymentPending;
+import com.checkout.payments.response.PaymentResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.enums.OrderStatus;
 import de.hybris.platform.core.model.c2l.CurrencyModel;
@@ -21,11 +21,12 @@ import de.hybris.platform.payment.enums.PaymentTransactionType;
 import de.hybris.platform.payment.model.PaymentTransactionEntryModel;
 import de.hybris.platform.payment.model.PaymentTransactionModel;
 import de.hybris.platform.servicelayer.model.ModelService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
@@ -40,14 +41,15 @@ import static de.hybris.platform.payment.enums.PaymentTransactionType.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DefaultCheckoutComPaymentServiceTest {
 
     private static final String SITE_ID = "siteId";
@@ -77,7 +79,7 @@ public class DefaultCheckoutComPaymentServiceTest {
     @Mock
     private CurrencyModel currencyModelMock;
     @Mock
-    private PaymentPending paymentPendingMock;
+    private PaymentResponse paymentResponseMock;
     @Mock
     private AuthorizeResponse authorizeResponseMock;
     @Mock
@@ -96,17 +98,17 @@ public class DefaultCheckoutComPaymentServiceTest {
             acceptedAuthorizationPaymentTransactionEntryMock, reviewAuthorizationPaymentTransactionEntryMock,
             refundPaymentTransactionEntry1Mock, cancelPaymentTransactionEntryMock;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         setUpTestObjMocks();
         setUpPaymentEvent();
         setUpPaymentTransactionsAndTransactionEntries();
 
-        when(orderMock.getCurrency()).thenReturn(currencyModelMock);
-        when(orderMock.getPaymentInfo()).thenReturn(cardPaymentInfoMock);
-        when(orderMock.getPaymentTransactions()).thenReturn(singletonList(paymentTransactionMock));
-        when(paymentTransactionMock.getOrder()).thenReturn(orderMock);
-        when(orderMock.getSite().getUid()).thenReturn(SITE_ID);
+        lenient().when(orderMock.getCurrency()).thenReturn(currencyModelMock);
+        lenient().when(orderMock.getPaymentInfo()).thenReturn(cardPaymentInfoMock);
+        lenient().when(orderMock.getPaymentTransactions()).thenReturn(singletonList(paymentTransactionMock));
+        lenient().when(paymentTransactionMock.getOrder()).thenReturn(orderMock);
+        lenient().when(orderMock.getSite().getUid()).thenReturn(SITE_ID);
     }
 
     @Test
@@ -296,9 +298,9 @@ public class DefaultCheckoutComPaymentServiceTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void captureExists_WhenTransactionIsNull_ShouldThrowException() {
-        testObj.captureExists(null);
+        assertThatThrownBy(() -> testObj.captureExists(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -322,9 +324,9 @@ public class DefaultCheckoutComPaymentServiceTest {
         assertTrue(testObj.captureExists(orderMock));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isCapturePending_WhenOrderIsNull_ShouldThrowException() {
-        testObj.isCapturePending(null);
+        assertThatThrownBy(() -> testObj.isCapturePending(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -348,9 +350,9 @@ public class DefaultCheckoutComPaymentServiceTest {
         assertFalse(testObj.isCapturePending(orderMock));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isVoidPresent_WhenNullOrder_ShouldThrowException() {
-        testObj.isVoidPresent(null);
+        assertThatThrownBy(() -> testObj.isVoidPresent(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -382,9 +384,9 @@ public class DefaultCheckoutComPaymentServiceTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isVoidPending_WhenNullOrder_ShouldThrowException() {
-        testObj.isVoidPending(null);
+        assertThatThrownBy(() -> testObj.isVoidPending(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -463,73 +465,73 @@ public class DefaultCheckoutComPaymentServiceTest {
         final Optional<PaymentTransactionEntryModel> result = testObj.findPendingTransactionEntry(PAYMENT_ID, paymentTransactionMock, CAPTURE);
 
         assertTrue(result.isPresent());
-        assertSame(capturePaymentTransactionEntryMock, result.get());
+        Assertions.assertSame(capturePaymentTransactionEntryMock, result.get());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void acceptPayment_WhenNullEvent_ShouldThrowException() {
-        testObj.acceptPayment(null, paymentTransactionMock, AUTHORIZATION);
+        assertThatThrownBy(() -> testObj.acceptPayment(null, paymentTransactionMock, AUTHORIZATION)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void acceptPayment_WhenNullTransaction_ShouldThrowException() {
-        testObj.acceptPayment(paymentEventMock, null, AUTHORIZATION);
+        assertThatThrownBy(() -> testObj.acceptPayment(paymentEventMock, null, AUTHORIZATION)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void acceptPayment_WhenNullTransactionType_ShouldThrowException() {
-        testObj.acceptPayment(paymentEventMock, paymentTransactionMock, null);
+        assertThatThrownBy(() -> testObj.acceptPayment(paymentEventMock, paymentTransactionMock, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rejectPayment_WhenNullPaymentEvent_ShouldThrowException() {
-        testObj.rejectPayment(null, paymentTransactionMock, AUTHORIZATION);
+        assertThatThrownBy(() -> testObj.rejectPayment(null, paymentTransactionMock, AUTHORIZATION)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rejectPayment_WhenNullPaymentTransaction_ShouldThrowException() {
-        testObj.rejectPayment(paymentEventMock, null, AUTHORIZATION);
+        assertThatThrownBy(() -> testObj.rejectPayment(paymentEventMock, null, AUTHORIZATION)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rejectPayment_WhenNullTransactionType_ShouldThrowException() {
-        testObj.rejectPayment(paymentEventMock, paymentTransactionMock, null);
+        assertThatThrownBy(() -> testObj.rejectPayment(paymentEventMock, paymentTransactionMock, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void returnPayment_WhenNullEvent_ShouldThrowException() {
-        testObj.returnPayment(null, paymentTransactionMock, RETURN);
+        assertThatThrownBy(() -> testObj.returnPayment(null, paymentTransactionMock, RETURN)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void returnPayment_WhenNullTransaction_ShouldThrowException() {
-        testObj.returnPayment(paymentEventMock, null, RETURN);
+        assertThatThrownBy(() -> testObj.returnPayment(paymentEventMock, null, RETURN)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void returnPayment_WhenNullTransactionType_ShouldThrowException() {
-        testObj.returnPayment(paymentEventMock, paymentTransactionMock, null);
+        assertThatThrownBy(() -> testObj.returnPayment(paymentEventMock, paymentTransactionMock, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void handlePendingPaymentResponse_WhenMultibancoPaymentMethod_ShouldUseMultibancoStrategyAndReturnAuthoriseResponse() {
         when(checkoutComPaymentTypeResolverMock.resolvePaymentType(apmPaymentInfoMock)).thenReturn(MULTIBANCO);
         when(checkoutComPaymentResponseStrategyMapperMock.findStrategy(MULTIBANCO)).thenReturn(checkoutComMultibancoPaymentResponseStrategyMock);
-        when(checkoutComMultibancoPaymentResponseStrategyMock.handlePendingPaymentResponse(paymentPendingMock, apmPaymentInfoMock)).thenReturn(authorizeResponseMock);
+        when(checkoutComMultibancoPaymentResponseStrategyMock.handlePendingPaymentResponse(paymentResponseMock, apmPaymentInfoMock)).thenReturn(authorizeResponseMock);
 
-        final AuthorizeResponse result = testObj.handlePendingPaymentResponse(paymentPendingMock, apmPaymentInfoMock);
+        final AuthorizeResponse result = testObj.handlePendingPaymentResponse(paymentResponseMock, apmPaymentInfoMock);
 
         assertEquals(authorizeResponseMock, result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void handlePendingPaymentResponse_WhenPaymentResponseIsNull_ShouldThrowException() {
-        testObj.handlePendingPaymentResponse(null, apmPaymentInfoMock);
+        assertThatThrownBy(() -> testObj.handlePendingPaymentResponse(null, apmPaymentInfoMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void handlePendingPaymentResponse_WhenPaymentInfoIsNull_ShouldThrowException() {
-        testObj.handlePendingPaymentResponse(paymentPendingMock, null);
+        assertThatThrownBy(() -> testObj.handlePendingPaymentResponse(paymentResponseMock, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -553,16 +555,15 @@ public class DefaultCheckoutComPaymentServiceTest {
         assertFalse(testObj.isDeferred(orderMock));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isDeferred_WhenPaymentInfoIsNull_ShouldThrowException() {
         when(orderMock.getPaymentInfo()).thenReturn(null);
-
-        assertFalse(testObj.isDeferred(orderMock));
+        assertThatThrownBy(() -> testObj.isDeferred(orderMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isDeferred_WhenOrderIsNull_ShouldThrowException() {
-        testObj.isDeferred(null);
+        assertThatThrownBy(() -> testObj.isDeferred(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -653,19 +654,19 @@ public class DefaultCheckoutComPaymentServiceTest {
     }
 
     private void setUpPaymentEvent() {
-        when(paymentEventMock.getEventType()).thenReturn(PAYMENT_APPROVED.toString());
+        lenient().when(paymentEventMock.getEventType()).thenReturn(PAYMENT_APPROVED.toString());
     }
 
     private void setUpPaymentTransactionsAndTransactionEntries() {
-        when(capturePaymentTransactionEntryMock.getType()).thenReturn(CAPTURE);
-        when(capturePendingPaymentTransactionEntryMock.getType()).thenReturn(CAPTURE);
-        when(rejectedAuthorizationPaymentTransactionEntryMock.getType()).thenReturn(AUTHORIZATION);
-        when(rejectedAuthorizationPaymentTransactionEntryMock.getTransactionStatus()).thenReturn(TransactionStatus.REJECTED.toString());
-        when(acceptedAuthorizationPaymentTransactionEntryMock.getType()).thenReturn(AUTHORIZATION);
-        when(acceptedAuthorizationPaymentTransactionEntryMock.getTransactionStatus()).thenReturn(TransactionStatus.ACCEPTED.toString());
-        when(reviewAuthorizationPaymentTransactionEntryMock.getType()).thenReturn(AUTHORIZATION);
-        when(reviewAuthorizationPaymentTransactionEntryMock.getTransactionStatus()).thenReturn(TransactionStatus.REVIEW.toString());
-        when(cancelPaymentTransactionEntryMock.getType()).thenReturn(CANCEL);
-        when(checkoutComPaymentTransactionServiceMock.getPaymentTransaction(orderMock)).thenReturn(paymentTransactionMock);
+        lenient().when(capturePaymentTransactionEntryMock.getType()).thenReturn(CAPTURE);
+        lenient().when(capturePendingPaymentTransactionEntryMock.getType()).thenReturn(CAPTURE);
+        lenient().when(rejectedAuthorizationPaymentTransactionEntryMock.getType()).thenReturn(AUTHORIZATION);
+        lenient().when(rejectedAuthorizationPaymentTransactionEntryMock.getTransactionStatus()).thenReturn(TransactionStatus.REJECTED.toString());
+        lenient().when(acceptedAuthorizationPaymentTransactionEntryMock.getType()).thenReturn(AUTHORIZATION);
+        lenient().when(acceptedAuthorizationPaymentTransactionEntryMock.getTransactionStatus()).thenReturn(TransactionStatus.ACCEPTED.toString());
+        lenient().when(reviewAuthorizationPaymentTransactionEntryMock.getType()).thenReturn(AUTHORIZATION);
+        lenient().when(reviewAuthorizationPaymentTransactionEntryMock.getTransactionStatus()).thenReturn(TransactionStatus.REVIEW.toString());
+        lenient().when(cancelPaymentTransactionEntryMock.getType()).thenReturn(CANCEL);
+        lenient().when(checkoutComPaymentTransactionServiceMock.getPaymentTransaction(orderMock)).thenReturn(paymentTransactionMock);
     }
 }

@@ -54,9 +54,9 @@
             <map>
                 <entry key="BASIC" value="code,guid"/>
                 <entry key="DEFAULT"
-                       value="checkoutComPaymentInfo(DEFAULT),paymentType,qrCodeData,unconsignedEntries(DEFAULT),status,created,deliveryStatusDisplay,statusDisplay,consignments(DEFAULT),guestCustomer,deliveryStatus,store,appliedOrderPromotions(DEFAULT),pickupItemsQuantity,net,calculated,appliedVouchers(DEFAULT),productDiscounts(DEFAULT),totalDiscounts(DEFAULT),subTotal(DEFAULT),orderDiscounts(DEFAULT),entries(DEFAULT),appliedProductPromotions(DEFAULT),totalPrice(DEFAULT),site,deliveryMode(DEFAULT),code,deliveryOrderGroups(DEFAULT),guid,paymentInfo(DEFAULT),pickupOrderGroups(DEFAULT),totalItems,totalPriceWithTax(DEFAULT),deliveryItemsQuantity,totalTax(DEFAULT),user(DEFAULT),deliveryAddress(DEFAULT),deliveryCost(DEFAULT),cancellable,returnable"/>
+                       value="checkoutComPaymentInfo(DEFAULT),checkoutPaymentType,qrCodeData,unconsignedEntries(DEFAULT),status,created,deliveryStatusDisplay,statusDisplay,consignments(DEFAULT),guestCustomer,deliveryStatus,store,appliedOrderPromotions(DEFAULT),pickupItemsQuantity,net,calculated,appliedVouchers(DEFAULT),productDiscounts(DEFAULT),totalDiscounts(DEFAULT),subTotal(DEFAULT),orderDiscounts(DEFAULT),entries(DEFAULT),appliedProductPromotions(DEFAULT),totalPrice(DEFAULT),site,deliveryMode(DEFAULT),code,deliveryOrderGroups(DEFAULT),guid,paymentInfo(DEFAULT),pickupOrderGroups(DEFAULT),totalItems,totalPriceWithTax(DEFAULT),deliveryItemsQuantity,totalTax(DEFAULT),user(DEFAULT),deliveryAddress(DEFAULT),deliveryCost(DEFAULT),cancellable,returnable"/>
                 <entry key="FULL"
-                       value="checkoutComPaymentInfo(FULL),paymentType,qrCodeData,unconsignedEntries(FULL),status,created,deliveryStatusDisplay,statusDisplay,consignments(FULL),guestCustomer,deliveryStatus,store,appliedOrderPromotions(FULL),pickupItemsQuantity,net,calculated,appliedVouchers(FULL),productDiscounts(FULL),totalDiscounts(FULL),subTotal(FULL),orderDiscounts(FULL),entries(FULL),appliedProductPromotions(FULL),totalPrice(FULL),site,deliveryMode(FULL),code,deliveryOrderGroups(FULL),guid,paymentInfo(FULL),pickupOrderGroups(FULL),totalItems,totalPriceWithTax(FULL),deliveryItemsQuantity,totalTax(FULL),user(FULL),deliveryAddress(FULL),deliveryCost(FULL),cancellable,returnable"/>
+                       value="checkoutComPaymentInfo(FULL),checkoutPaymentType,qrCodeData,unconsignedEntries(FULL),status,created,deliveryStatusDisplay,statusDisplay,consignments(FULL),guestCustomer,deliveryStatus,store,appliedOrderPromotions(FULL),pickupItemsQuantity,net,calculated,appliedVouchers(FULL),productDiscounts(FULL),totalDiscounts(FULL),subTotal(FULL),orderDiscounts(FULL),entries(FULL),appliedProductPromotions(FULL),totalPrice(FULL),site,deliveryMode(FULL),code,deliveryOrderGroups(FULL),guid,paymentInfo(FULL),pickupOrderGroups(FULL),totalItems,totalPriceWithTax(FULL),deliveryItemsQuantity,totalTax(FULL),user(FULL),deliveryAddress(FULL),deliveryCost(FULL),cancellable,returnable"/>
             </map>
         </property>
     </bean>
@@ -66,8 +66,8 @@
                   value="de.hybris.platform.commercefacades.user.data.AddressData"/>
         <property name="levelMapping">
             <map>
-                <entry key="BASIC" value="firstName,lastName,titleCode,phone,line1,line2,town,postalCode,country(isocode),region(isocode),defaultAddress"/>
-                <entry key="DEFAULT" value="firstName,lastName,titleCode,phone,line1,line2,town,postalCode,country(isocode),region(isocode),defaultAddress,email"/>
+                <entry key="BASIC" value="id,firstName,lastName,titleCode,phone,line1,line2,town,postalCode,country(isocode),region(isocode),defaultAddress"/>
+                <entry key="DEFAULT" value="id,firstName,lastName,titleCode,phone,line1,line2,town,postalCode,country(isocode),region(isocode),defaultAddress,email"/>
                 <entry key="FULL" value="DEFAULT"/>
             </map>
         </property>
@@ -80,7 +80,7 @@
             <map>
                 <entry key="BASIC" value="id,firstName,lastName,titleCode,phone,line1,line2,town,postalCode,country(isocode),region(isocode),defaultAddress,email"/>
                 <entry key="DEFAULT" value="BASIC"/>
-                <entry key="FULL" value="DEFAULT"/>
+                <entry key="FULL" value="DEFAULT,country(isocode,name),region(isocode,name),formattedAddress"/>
             </map>
         </property>
     </bean>

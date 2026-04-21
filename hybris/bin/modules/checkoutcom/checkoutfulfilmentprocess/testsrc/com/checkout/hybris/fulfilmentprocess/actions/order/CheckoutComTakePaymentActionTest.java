@@ -1,5 +1,16 @@
 package com.checkout.hybris.fulfilmentprocess.actions.order;
 
+import java.util.Set;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
@@ -22,14 +33,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.Set;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -164,11 +167,13 @@ public class CheckoutComTakePaymentActionTest {
         verify(orderMock).setStatus(OrderStatus.PAYMENT_NOT_CAPTURED);
     }
 
-    @Test(expected = RetryLaterException.class)
-    public void execute_WhenCaptureThrowsPaymentIntegrationExeption_ShouldThrowRetryLaterException() {
+    @Test
+    public void execute_WhenCaptureThrowsPaymentIntegrationException_ShouldThrowRetryLaterException() {
         when(paymentServiceMock.capture(paymentTransactionMock)).thenThrow(new CheckoutComPaymentIntegrationException("error"));
 
-        testObj.execute(orderProcessMock);
+        assertThatThrownBy(() -> testObj.execute(orderProcessMock))
+                .isInstanceOf(RetryLaterException.class)
+                .hasMessage("Payment Gateway exception during capture.");
     }
 
     @Test

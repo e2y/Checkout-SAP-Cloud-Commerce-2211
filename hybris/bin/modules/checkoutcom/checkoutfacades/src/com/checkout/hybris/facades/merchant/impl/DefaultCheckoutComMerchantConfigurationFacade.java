@@ -38,6 +38,13 @@ public class DefaultCheckoutComMerchantConfigurationFacade implements CheckoutCo
     /**
      * {@inheritDoc}
      */
+    public String getCheckoutComMerchantEnvironment() {
+        return checkoutComMerchantConfigurationService.getEnvironment().getCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Optional<ApplePaySettingsData> getApplePaySettings() {
         final CheckoutComApplePayConfigurationModel applePayConfiguration = checkoutComMerchantConfigurationService.getApplePayConfiguration();

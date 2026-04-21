@@ -56,7 +56,7 @@
     <bean class="de.hybris.platform.commercewebservicescommons.dto.order.OrderWsDTO">
         <property name="redirectUrl" type="java.lang.String"/>
         <property name="qrCodeData" type="java.lang.String"/>
-        <property name="paymentType" type="java.lang.String"/>
+        <property name="checkoutPaymentType" type="java.lang.String"/>
         <property name="checkoutComPaymentInfo" type="com.checkout.dto.order.CheckoutComPaymentDetailsWsDTO"/>
     </bean>
 
@@ -163,5 +163,9 @@
         <property name="transfer_status" type="java.lang.String"/>
         <property name="institution"
                   type="com.checkout.dto.plaidlink.PlaidLinkMetadataResponseInstitutionDTO"/>
+    </bean>
+
+    <bean class="com.checkout.dto.flow.configuration.FlowEnabledDataResponseDTO">
+        <property name="enabled" type="boolean"/>
     </bean>
 </beans>

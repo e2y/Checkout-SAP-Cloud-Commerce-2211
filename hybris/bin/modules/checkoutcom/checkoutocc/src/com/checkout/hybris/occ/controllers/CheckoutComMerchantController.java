@@ -1,6 +1,8 @@
 package com.checkout.hybris.occ.controllers;
 
 import com.checkout.hybris.facades.merchant.CheckoutComMerchantConfigurationFacade;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.hybris.platform.webservicescommons.cache.CacheControl;
 import de.hybris.platform.webservicescommons.cache.CacheControlDirective;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
@@ -28,11 +33,14 @@ public class CheckoutComMerchantController {
 
     @Secured({"ROLE_CUSTOMERGROUP", "ROLE_GUEST", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_TRUSTED_CLIENT", "ROLE_CLIENT"})
     @GetMapping(produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> getMerchantKey() {
+    public ResponseEntity<String> getMerchantKey() throws JsonProcessingException {
 
-        final String publicKey = checkoutComMerchantConfigurationFacade.getCheckoutComMerchantPublicKey();
-        return StringUtils.isBlank(publicKey) ? ResponseEntity.status(INTERNAL_SERVER_ERROR).body("Merchant key is empty or null")
-                : ResponseEntity.ok().body(publicKey);
+        final Map<String, String> map = new HashMap<>();
+        map.put("publicKey", checkoutComMerchantConfigurationFacade.getCheckoutComMerchantPublicKey());
+        map.put("environment", checkoutComMerchantConfigurationFacade.getCheckoutComMerchantEnvironment());
+        ObjectMapper objectMapper = new ObjectMapper();
+        final String response = objectMapper.writeValueAsString(map);
+        return ResponseEntity.ok().body(response);
     }
 
     @Secured({"ROLE_CUSTOMERGROUP", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_GUEST", "ROLE_TRUSTED_CLIENT", "ROLE_CLIENT"})

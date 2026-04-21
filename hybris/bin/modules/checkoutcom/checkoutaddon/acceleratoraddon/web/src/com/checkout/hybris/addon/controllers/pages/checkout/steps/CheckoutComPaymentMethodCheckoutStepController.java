@@ -4,6 +4,8 @@ import com.checkout.hybris.addon.converters.CheckoutComMappedPaymentDataFormReve
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.resolvers.CheckoutComPaymentTypeResolver;
+import com.checkout.hybris.facades.flow.CheckoutComFlowConfigurationFacade;
+import com.checkout.hybris.facades.flow.CheckoutComFlowPaymentSessionFacade;
 import com.checkout.hybris.facades.merchant.CheckoutComMerchantConfigurationFacade;
 import com.checkout.hybris.facades.payment.attributes.mapper.CheckoutComPaymentAttributesStrategyMapper;
 import de.hybris.platform.acceleratorstorefrontcommons.annotations.PreValidateCheckoutStep;
@@ -23,7 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.Resource;
 
-import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.PAYMENT_METHOD_MODEL_ATTRIBUTE_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.*;
 
 /**
  * Web controller to handle a Payment checkout step
@@ -50,6 +52,10 @@ public class CheckoutComPaymentMethodCheckoutStepController extends CheckoutComA
     protected CheckoutComMappedPaymentDataFormReverseConverter checkoutComMappedPaymentDataFormReverseConverter;
     @Resource
     protected CheckoutComPaymentAttributesStrategyMapper checkoutComPaymentAttributesStrategyMapper;
+    @Resource
+    protected CheckoutComFlowConfigurationFacade checkoutComFlowConfigurationFacade;
+    @Resource
+    protected CheckoutComFlowPaymentSessionFacade checkoutComFlowPaymentSessionFacade;
 
     /**
      * Returns the Checkout.com payment details form
@@ -114,6 +120,12 @@ public class CheckoutComPaymentMethodCheckoutStepController extends CheckoutComA
         model.addAttribute(PUBLIC_KEY, checkoutComMerchantConfigurationFacade.getCheckoutComMerchantPublicKey());
         final String currentPaymentMethodType = checkoutFlowFacade.getCurrentPaymentMethodType();
         model.addAttribute(PAYMENT_METHOD_MODEL_ATTRIBUTE_KEY, currentPaymentMethodType);
+        boolean flowEnabled = checkoutComFlowConfigurationFacade.isFlowEnabled();
+        model.addAttribute(FLOW_ENABLED_MODEL_ATTRIBUTE_KEY, flowEnabled);
+        if (flowEnabled) {
+            model.addAttribute(FLOW_UI_CONFIGURATION_MODEL_ATTRIBUTE_KEY, checkoutComFlowConfigurationFacade.getCheckoutComFlowUIConfigurationData());
+            model.addAttribute(FLOW_PAYMENT_SESSION_ATTRIBUTE_KEY, checkoutComFlowPaymentSessionFacade.createPaymentSession());
+        }
 
         final CheckoutComPaymentType checkoutComPaymentType = checkoutComPaymentTypeResolver.resolvePaymentMethod(currentPaymentMethodType);
         checkoutComPaymentAttributesStrategyMapper.findStrategy(checkoutComPaymentType)

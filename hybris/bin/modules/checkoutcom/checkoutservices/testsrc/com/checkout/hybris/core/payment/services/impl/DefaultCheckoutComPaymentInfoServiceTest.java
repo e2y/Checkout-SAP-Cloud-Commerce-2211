@@ -6,7 +6,7 @@ import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurati
 import com.checkout.hybris.core.model.*;
 import com.checkout.hybris.core.order.daos.CheckoutComOrderDao;
 import com.checkout.hybris.core.payment.daos.CheckoutComPaymentInfoDao;
-import com.checkout.sdk.payments.CardSourceResponse;
+import com.checkout.payments.response.source.CardResponseSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commerceservices.service.data.CommerceCheckoutParameter;
 import de.hybris.platform.core.model.order.AbstractOrderModel;
@@ -16,22 +16,23 @@ import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.core.model.user.CustomerModel;
 import de.hybris.platform.servicelayer.model.ModelService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DefaultCheckoutComPaymentInfoServiceTest {
 
     private static final String SITE_ID = "electronics";
@@ -40,10 +41,10 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
     private static final String PAYMENT_1_CODE = "payment1Code";
     private static final String PAYMENT_2_CODE = "payment2Code";
     private static final String SUBSCRIPTION_ID = "subscriptionID";
-    public static final String RESPONSE = "response";
-    public static final String REQUEST = "request";
-    public static final String PAYMENT_REFERENCE = "paymentReference";
-    public static final String PAYLOAD = "payload";
+    private static final String RESPONSE = "response";
+    private static final String REQUEST = "request";
+    private static final String PAYMENT_REFERENCE = "paymentReference";
+    private static final String PAYLOAD = "payload";
 
     @Spy
     @InjectMocks
@@ -81,46 +82,44 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
     @Mock
     private PayloadModel payloadModelMock;
     @Mock
-    private CardSourceResponse sourceMock;
+    private CardResponseSource requestCardSourceMock;
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private OrderModel orderMock;
     @Mock
     private CheckoutComFawryPaymentInfoModel fawryPaymentInfoMock;
 
-
-
-    @Before
+    @BeforeEach
     public void setUp() {
-        when(cartModelMock.getUser()).thenReturn(userMock);
-        when(cartModelMock.getCode()).thenReturn(CART_CODE);
-        when(cartModelMock.getPaymentInfo()).thenReturn(paymentInfoModelMock);
-        doReturn(modelServiceMock).when(testObj).callSuperModelService();
-        when(paymentInfoModelMock.getItemtype()).thenReturn(PaymentInfoModel._TYPECODE);
-        when(cartModelMock.getPaymentAddress()).thenReturn(paymentAddressMock);
-        when(orderMock.getPaymentInfo()).thenReturn(cardPaymentInfoMock);
-        when(cardPaymentInfoMock.getCode()).thenReturn(PAYMENT_1_CODE);
-        when(cardPaymentInfoMock.getUser()).thenReturn(userMock);
-        when(cartModelMock.getPaymentInfo()).thenReturn(cardPaymentInfoMock);
-        when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
-        when(sourceMock.getId()).thenReturn(SUBSCRIPTION_ID);
-        when(cartModelMock.getUser()).thenReturn(userMock);
-        when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
-        when(userPaymentInfo1Mock.getCode()).thenReturn(PAYMENT_1_CODE);
-        when(userPaymentInfo2Mock.getCode()).thenReturn(PAYMENT_2_CODE);
-        when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_1_CODE)).thenReturn(List.of(paymentInfoModelMock, cardPaymentInfoMock));
-        when(paymentInfoModelMock.getOwner()).thenReturn(orderMock);
-        when(cardPaymentInfoMock.getOwner()).thenReturn(userMock);
-        when(orderMock.getSite().getUid()).thenReturn(SITE_ID);
+        lenient().when(cartModelMock.getUser()).thenReturn(userMock);
+        lenient().when(cartModelMock.getCode()).thenReturn(CART_CODE);
+        lenient().when(cartModelMock.getPaymentInfo()).thenReturn(paymentInfoModelMock);
+        lenient().doReturn(modelServiceMock).when(testObj).callSuperModelService();
+        lenient().when(paymentInfoModelMock.getItemtype()).thenReturn(PaymentInfoModel._TYPECODE);
+        lenient().when(cartModelMock.getPaymentAddress()).thenReturn(paymentAddressMock);
+        lenient().when(orderMock.getPaymentInfo()).thenReturn(cardPaymentInfoMock);
+        lenient().when(cardPaymentInfoMock.getCode()).thenReturn(PAYMENT_1_CODE);
+        lenient().when(cardPaymentInfoMock.getUser()).thenReturn(userMock);
+        lenient().when(cartModelMock.getPaymentInfo()).thenReturn(cardPaymentInfoMock);
+        lenient().when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
+        lenient().when(requestCardSourceMock.getId()).thenReturn(SUBSCRIPTION_ID);
+        lenient().when(cartModelMock.getUser()).thenReturn(userMock);
+        lenient().when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo1Mock, userPaymentInfo2Mock));
+        lenient().when(userPaymentInfo1Mock.getCode()).thenReturn(PAYMENT_1_CODE);
+        lenient().when(userPaymentInfo2Mock.getCode()).thenReturn(PAYMENT_2_CODE);
+        lenient().when(checkoutComPaymentInfoDaoMock.findPaymentInfosByPaymentId(PAYMENT_1_CODE)).thenReturn(List.of(paymentInfoModelMock, cardPaymentInfoMock));
+        lenient().when(paymentInfoModelMock.getOwner()).thenReturn(orderMock);
+        lenient().when(cardPaymentInfoMock.getOwner()).thenReturn(userMock);
+        lenient().when(orderMock.getSite().getUid()).thenReturn(SITE_ID);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void createPaymentInfo_WhenNullCart_ShouldThrowException() {
-        testObj.createPaymentInfo(checkoutComCreditCardPaymentInfoModelMock, null);
+        assertThatThrownBy(() -> testObj.createPaymentInfo(checkoutComCreditCardPaymentInfoModelMock, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void createPaymentInfo_WhenNullPaymentInfo_ShouldThrowException() {
-        testObj.createPaymentInfo(null, cartModelMock);
+        assertThatThrownBy(() -> testObj.createPaymentInfo(null, cartModelMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -175,21 +174,20 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         inOrder.verify(modelServiceMock).save(cartModelMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void createPaymentInfo_ForGenericPaymentInfo_ShouldThrowException() {
-        testObj.createPaymentInfo(paymentInfoModelMock, cartModelMock);
+        assertThatThrownBy(() -> testObj.createPaymentInfo(paymentInfoModelMock, cartModelMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void removePaymentInfo_WhenNullCart_ShouldThrowException() {
-        testObj.removePaymentInfo(null);
+        assertThatThrownBy(() -> testObj.removePaymentInfo(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void removePaymentInfo_WhenNullPaymentInfo_ShouldThrowException() {
         when(cartModelMock.getPaymentInfo()).thenReturn(null);
-
-        testObj.removePaymentInfo(cartModelMock);
+        assertThatThrownBy(() -> testObj.removePaymentInfo(cartModelMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -200,23 +198,15 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         verify(modelServiceMock).save(cartModelMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void removePaymentInfo_WhenPaymentInfoIsNotPresent_ShouldThrowException() {
-        when(cartModelMock.getPaymentInfo()).thenReturn(null);
-
-        testObj.removePaymentInfo(cartModelMock);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void cloneAndSetBillingAddressFromCart_WhenCartIsNull_ShouldThrowException() {
-        testObj.cloneAndSetBillingAddressFromCart(null, paymentInfoModelMock);
+        assertThatThrownBy(() -> testObj.cloneAndSetBillingAddressFromCart(null, paymentInfoModelMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void cloneAndSetBillingAddressFromCart_WhenPaymentAddressNull_ShouldThrowException() {
         when(cartModelMock.getPaymentAddress()).thenReturn(null);
-
-        testObj.cloneAndSetBillingAddressFromCart(cartModelMock, paymentInfoModelMock);
+        assertThatThrownBy(() -> testObj.cloneAndSetBillingAddressFromCart(cartModelMock, paymentInfoModelMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -225,22 +215,22 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
 
         final AddressModel result = testObj.cloneAndSetBillingAddressFromCart(cartModelMock, paymentInfoModelMock);
 
-        assertTrue(result.getBillingAddress());
-        assertFalse(result.getShippingAddress());
-        assertEquals(paymentInfoModelMock, result.getOwner());
+        Assertions.assertTrue(result.getBillingAddress());
+        Assertions.assertFalse(result.getShippingAddress());
+        Assertions.assertEquals(paymentInfoModelMock, result.getOwner());
         verify(paymentInfoModelMock).setBillingAddress(result);
     }
 
     @Test
     public void isValidCreditCardPaymentInfo_WhenCartPaymentIsInvalid_ShouldReturnFalse() {
-        assertFalse(testObj.isValidCreditCardPaymentInfo(cartModelMock));
+        Assertions.assertFalse(testObj.isValidCreditCardPaymentInfo(cartModelMock));
     }
 
     @Test
     public void isValidCreditCardPaymentInfo_WhenCardTokenIsNull_ShouldReturnFalse() {
         when(cartModelMock.getPaymentInfo()).thenReturn(checkoutComCreditCardPaymentInfoModelMock);
 
-        assertFalse(testObj.isValidCreditCardPaymentInfo(cartModelMock));
+        Assertions.assertFalse(testObj.isValidCreditCardPaymentInfo(cartModelMock));
     }
 
     @Test
@@ -248,19 +238,19 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         when(cartModelMock.getPaymentInfo()).thenReturn(checkoutComCreditCardPaymentInfoModelMock);
         when(checkoutComCreditCardPaymentInfoModelMock.getCardToken()).thenReturn("someToken");
 
-        assertTrue(testObj.isValidCreditCardPaymentInfo(cartModelMock));
+        Assertions.assertTrue(testObj.isValidCreditCardPaymentInfo(cartModelMock));
     }
 
     @Test
     public void isValidRedirectApmPaymentInfo_WhenApmIsInvalid_ShouldReturnFalse() {
-        assertFalse(testObj.isValidRedirectApmPaymentInfo(cartModelMock));
+        Assertions.assertFalse(testObj.isValidRedirectApmPaymentInfo(cartModelMock));
     }
 
     @Test
     public void isValidRedirectApmPaymentInfo_WhenApmTypeIsNull_ShouldReturnFalse() {
         when(cartModelMock.getPaymentInfo()).thenReturn(redirectApmPaymentInfoMock);
 
-        assertFalse(testObj.isValidRedirectApmPaymentInfo(cartModelMock));
+        Assertions.assertFalse(testObj.isValidRedirectApmPaymentInfo(cartModelMock));
     }
 
     @Test
@@ -268,24 +258,23 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         when(cartModelMock.getPaymentInfo()).thenReturn(redirectApmPaymentInfoMock);
         when(redirectApmPaymentInfoMock.getType()).thenReturn("APM");
 
-        assertTrue(testObj.isValidRedirectApmPaymentInfo(cartModelMock));
+        Assertions.assertTrue(testObj.isValidRedirectApmPaymentInfo(cartModelMock));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isUserDataRequiredApmPaymentMethod_WhenCartIsNull_ShouldThrowException() {
-        testObj.isUserDataRequiredApmPaymentMethod(null);
+        assertThatThrownBy(() -> testObj.isUserDataRequiredApmPaymentMethod(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void isUserDataRequiredApmPaymentMethod_WhenCartDoesNotHavePaymentInfo_ShouldThrowException() {
         when(cartModelMock.getPaymentInfo()).thenReturn(null);
-
-        testObj.isUserDataRequiredApmPaymentMethod(cartModelMock);
+        assertThatThrownBy(() -> testObj.isUserDataRequiredApmPaymentMethod(cartModelMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void isUserDataRequiredApmPaymentMethod_WhenCartHasNotApmPaymentInfo_ShouldReturnFalse() {
-        assertFalse(testObj.isUserDataRequiredApmPaymentMethod(cartModelMock));
+        Assertions.assertFalse(testObj.isUserDataRequiredApmPaymentMethod(cartModelMock));
     }
 
     @Test
@@ -294,7 +283,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         when(cartModelMock.getPaymentInfo()).thenReturn(redirectApmPaymentInfoMock);
         when(redirectApmPaymentInfoMock.getUserDataRequired()).thenReturn(true);
 
-        assertTrue(testObj.isUserDataRequiredApmPaymentMethod(cartModelMock));
+        Assertions.assertTrue(testObj.isUserDataRequiredApmPaymentMethod(cartModelMock));
     }
 
     @Test
@@ -303,14 +292,14 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         when(cartModelMock.getPaymentInfo()).thenReturn(redirectApmPaymentInfoMock);
         when(redirectApmPaymentInfoMock.getUserDataRequired()).thenReturn(false);
 
-        assertFalse(testObj.isUserDataRequiredApmPaymentMethod(cartModelMock));
+        Assertions.assertFalse(testObj.isUserDataRequiredApmPaymentMethod(cartModelMock));
     }
 
     @Test
     public void isValidPaymentInfo_WhenPaymentInfoIsValid_ShouldReturnTrue() {
         doReturn(true).when(testObj).isValidCreditCardPaymentInfo(cartModelMock);
 
-        assertTrue(testObj.isValidPaymentInfo(cartModelMock));
+        Assertions.assertTrue(testObj.isValidPaymentInfo(cartModelMock));
     }
 
     @Test
@@ -318,17 +307,18 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         doReturn(false).when(testObj).isValidCreditCardPaymentInfo(cartModelMock);
         doReturn(false).when(testObj).isValidRedirectApmPaymentInfo(cartModelMock);
 
-        assertFalse(testObj.isValidPaymentInfo(cartModelMock));
+        Assertions.assertFalse(testObj.isValidPaymentInfo(cartModelMock));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addQRCodeDataToBenefitPaymentInfo_WhenPaymentInfoIsNull_ShouldThrowException() {
-        testObj.addQRCodeDataToBenefitPaymentInfo(null, QR_CODE_DATA_VALUE);
+        assertThatThrownBy(() -> testObj.addQRCodeDataToBenefitPaymentInfo(null, QR_CODE_DATA_VALUE)).isInstanceOf(IllegalArgumentException.class);
+
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addQRCodeDataToBenefitPaymentInfo_WhenUserDataIsBlank_ShouldThrowException() {
-        testObj.addQRCodeDataToBenefitPaymentInfo(benefitPayPaymentInfoMock, "    ");
+        assertThatThrownBy(() -> testObj.addQRCodeDataToBenefitPaymentInfo(benefitPayPaymentInfoMock, "    ")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -339,16 +329,16 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         verify(modelServiceMock).save(benefitPayPaymentInfoMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addSubscriptionToUserPayment_WhenPaymentInfoIsNull_ShouldThrowException() {
-        testObj.addSubscriptionIdToUserPayment(null, sourceMock);
+        assertThatThrownBy(() -> testObj.addSubscriptionIdToUserPayment(null, requestCardSourceMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void addSubscriptionToUserPayment_WhenMarkedToSaveCard_ShouldSetSubscription() {
         when(cardPaymentInfoMock.getMarkToSave()).thenReturn(true);
 
-        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
+        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, requestCardSourceMock);
 
         final InOrder inOrder = inOrder(userPaymentInfo1Mock, modelServiceMock);
         inOrder.verify(userPaymentInfo1Mock).setSaved(true);
@@ -361,7 +351,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         when(cardPaymentInfoMock.getMarkToSave()).thenReturn(true);
         when(userMock.getPaymentInfos()).thenReturn(List.of(userPaymentInfo2Mock));
 
-        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
+        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, requestCardSourceMock);
 
         verifyNoInteractions(modelServiceMock);
     }
@@ -370,7 +360,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
     public void addSubscriptionToUserPayment_WhenNotMarkedToSaveCard_ShouldNotSetSubscription() {
         when(cardPaymentInfoMock.getMarkToSave()).thenReturn(false);
 
-        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
+        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, requestCardSourceMock);
 
         verifyNoInteractions(modelServiceMock);
     }
@@ -379,7 +369,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
     public void addSubscriptionToUserPayment_WhenNotCardSource_ShouldNotSetSubscription() {
         when(cardPaymentInfoMock.getMarkToSave()).thenReturn(false);
 
-        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
+        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, requestCardSourceMock);
 
         verifyNoInteractions(modelServiceMock);
     }
@@ -388,7 +378,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
     public void addSubscriptionToUserPayment_WhenSourceIdNull_ShouldNotSetSubscription() {
         when(cardPaymentInfoMock.getMarkToSave()).thenReturn(false);
 
-        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, sourceMock);
+        testObj.addSubscriptionIdToUserPayment(cardPaymentInfoMock, requestCardSourceMock);
 
         verifyNoInteractions(modelServiceMock);
     }
@@ -402,29 +392,29 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         inOrder.verify(modelServiceMock).save(cardPaymentInfoMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addPaymentId_WhenPaymentInfoIsNull_ShouldThrowException() {
-        testObj.addPaymentId(PAYMENT_1_CODE, null);
+        assertThatThrownBy(() -> testObj.addPaymentId(PAYMENT_1_CODE, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addPaymentId_WhenPaymentIdIsBlank_ShouldThrowException() {
-        testObj.addPaymentId("    ", paymentInfoModelMock);
+        assertThatThrownBy(() -> testObj.addPaymentId("    ", paymentInfoModelMock)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void createCommerceCheckoutParameter_WhenGivenInputsAreCorrect_ShouldCreateCorrectCommerceCheckoutParameter() {
         final CommerceCheckoutParameter result = testObj.createCommerceCheckoutParameter(cartModelMock);
 
-        assertEquals(cartModelMock, result.getCart());
-        assertTrue(result.isEnableHooks());
+        Assertions.assertEquals(cartModelMock, result.getCart());
+        Assertions.assertTrue(result.isEnableHooks());
     }
 
     @Test
     public void getSiteIdFromPaymentId_WhenPaymentIdExistsInAbstractOrder_ShouldReturnSiteId() {
         final String result = testObj.getSiteIdFromPaymentId(PAYMENT_1_CODE);
 
-        assertEquals(SITE_ID, result);
+        Assertions.assertEquals(SITE_ID, result);
     }
 
     @Test
@@ -433,15 +423,15 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
 
         final String result = testObj.getSiteIdFromPaymentId(PAYMENT_1_CODE);
 
-        assertTrue(isBlank(result));
+        Assertions.assertTrue(isBlank(result));
     }
 
     @Test
     public void findAbstractOrderByPaymentId_WhenPaymentIdExistsInAbstractOrder_ShouldReturnSiteId() {
         final List<AbstractOrderModel> result = testObj.findAbstractOrderByPaymentId(PAYMENT_1_CODE);
 
-        assertEquals(1, result.size());
-        assertEquals(orderMock, result.get(0));
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(orderMock, result.get(0));
     }
 
     @Test
@@ -450,7 +440,7 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
 
         final List<AbstractOrderModel> result = testObj.findAbstractOrderByPaymentId(PAYMENT_1_CODE);
 
-        assertTrue(result.isEmpty());
+        Assertions.assertTrue(result.isEmpty());
     }
 
     @Test
@@ -465,7 +455,6 @@ public class DefaultCheckoutComPaymentInfoServiceTest {
         when(orderMock.getRequestsPayload()).thenReturn(Collections.emptyList());
         when(orderMock.getResponsesPayload()).thenReturn(Collections.emptyList());
         doReturn(payloadModelMock).when(testObj).createPayloadModel(anyString());
-
 
         testObj.saveRequestAndResponseInOrder(orderMock, REQUEST, RESPONSE);
 

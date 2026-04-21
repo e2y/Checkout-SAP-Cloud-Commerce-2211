@@ -5,6 +5,7 @@ import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import de.hybris.platform.commercefacades.order.data.CartData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
@@ -25,12 +26,12 @@ public class CheckoutComPlaceOrderCartValidator implements Validator {
     }
 
     @Override
-    public boolean supports(final Class<?> clazz) {
+    public boolean supports(final @NotNull Class<?> clazz) {
         return CartData.class.equals(clazz);
     }
 
     @Override
-    public void validate(final Object target, final Errors errors) {
+    public void validate(final @NotNull Object target, final @NotNull Errors errors) {
         final CartData cartData = (CartData) target;
 
         validateDeliveryInfoInvalid(errors);

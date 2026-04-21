@@ -341,4 +341,13 @@
         <constructor-arg name="checkoutComPaymentInstrumentsService"
                          ref="checkoutComPaymentInstrumentService"/>
     </bean>
+
+    <alias name="defaultCheckoutComFlowPaymentSessionService"
+           alias="checkoutComFlowPaymentSessionService"/>
+    <bean id="defaultCheckoutComFlowPaymentSessionService"
+          class="com.checkout.hybris.core.flow.impl.DefaultCheckoutComFlowPaymentSessionService">
+        <constructor-arg name="cartService" ref="cartService"/>
+        <constructor-arg name="checkoutComApiService" ref="checkoutComApiService"/>
+        <constructor-arg name="paymentSessionRequestConverter" ref="checkoutComFlowCartPaymentSessionRequestConverter"/>
+    </bean>
 </beans>

@@ -1,15 +1,16 @@
 package com.checkout.hybris.core.payment.services.impl;
 
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
-import com.checkout.sdk.instruments.InstrumentsClient;
-import com.checkout.sdk.instruments.UpdateInstrumentRequest;
+import com.checkout.instruments.InstrumentsClient;
+import com.checkout.instruments.update.UpdateInstrumentCardRequest;
+import com.checkout.instruments.update.UpdateInstrumentRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.payment.CreditCardPaymentInfoModel;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DefaultCheckoutComPaymentInstrumentServiceTest {
 
 	private static final String SUBSCRIPTION_ID = "subscriptionId";
@@ -30,7 +31,8 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 	private static final String CC_OWNER = "Mike Hammer";
 	private static final String VALID_TO_YEAR = "20";
 	private static final String VALID_TO_MONTH = "12";
-	@Spy
+
+    @Spy
 	@InjectMocks
 	private DefaultCheckoutComPaymentInstrumentService testObj;
 
@@ -44,13 +46,15 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 
 	@Spy
 	private CompletableFuture<Object> updateInstrumentsCompletableFuture;
-	private final InterruptedException interruptedException = new InterruptedException();
+
+    private final InterruptedException interruptedException = new InterruptedException();
 	private final ExecutionException executionException = new ExecutionException(new RuntimeException());
-	@Captor
-	private ArgumentCaptor<UpdateInstrumentRequest> captureUpdateInstrumentRequest;
+
+    @Captor
+    private ArgumentCaptor<UpdateInstrumentCardRequest> captureUpdateInstrumentRequest;
 
 
-	@Before
+    @BeforeEach
 	public void setUp() {
 		doReturn(instrumentClientMock).when(testObj).getInstrumentsClient();
 
@@ -63,7 +67,7 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 
 		testObj.removeInstrumentByCreditCard(creditCardPaymentInfoModel);
 
-		verify(instrumentClientMock).deleteInstrument(SUBSCRIPTION_ID);
+        verify(instrumentClientMock).delete(SUBSCRIPTION_ID);
 	}
 
 	@Test
@@ -76,7 +80,7 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 				.hasCause(interruptedException)
 				.hasMessage(INSTRUMENT_REMOVAL_FAILED);
 
-		verify(instrumentClientMock).deleteInstrument(SUBSCRIPTION_ID);
+        verify(instrumentClientMock).delete(SUBSCRIPTION_ID);
 	}
 
 	@Test
@@ -89,7 +93,7 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 				.hasCause(executionException)
 				.hasMessage(INSTRUMENT_REMOVAL_FAILED);
 
-		verify(instrumentClientMock).deleteInstrument(SUBSCRIPTION_ID);
+        verify(instrumentClientMock).delete(SUBSCRIPTION_ID);
 	}
 
 
@@ -100,8 +104,8 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 
 		testObj.updateInstrumentByCreditCard(creditCardPaymentInfoModel);
 
-		verify(instrumentClientMock).updateInstrument(eq(SUBSCRIPTION_ID), captureUpdateInstrumentRequest.capture());
-		final UpdateInstrumentRequest capturedUpdateInstrumentRequest = captureUpdateInstrumentRequest.getValue();
+        verify(instrumentClientMock).update(eq(SUBSCRIPTION_ID), captureUpdateInstrumentRequest.capture());
+        final UpdateInstrumentCardRequest capturedUpdateInstrumentRequest = captureUpdateInstrumentRequest.getValue();
 
 		assertThat(capturedUpdateInstrumentRequest.getName()).isEqualTo(CC_OWNER);
 		assertThat(capturedUpdateInstrumentRequest.getExpiryMonth()).isEqualTo(Integer.valueOf(VALID_TO_MONTH));
@@ -118,8 +122,8 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 				.hasCause(interruptedException)
 				.hasMessage(INSTRUMENT_UPDATE_FAILED);
 
-		verify(instrumentClientMock).updateInstrument(eq(SUBSCRIPTION_ID), captureUpdateInstrumentRequest.capture());
-		final UpdateInstrumentRequest capturedUpdateInstrumentRequest = captureUpdateInstrumentRequest.getValue();
+        verify(instrumentClientMock).update(eq(SUBSCRIPTION_ID), captureUpdateInstrumentRequest.capture());
+        final UpdateInstrumentCardRequest capturedUpdateInstrumentRequest = captureUpdateInstrumentRequest.getValue();
 
 		assertThat(capturedUpdateInstrumentRequest.getName()).isEqualTo(CC_OWNER);
 		assertThat(capturedUpdateInstrumentRequest.getExpiryMonth()).isEqualTo(Integer.valueOf(VALID_TO_MONTH));
@@ -136,8 +140,8 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 				.hasCause(executionException)
 				.hasMessage(INSTRUMENT_UPDATE_FAILED);
 
-		verify(instrumentClientMock).updateInstrument(eq(SUBSCRIPTION_ID), captureUpdateInstrumentRequest.capture());
-		final UpdateInstrumentRequest capturedUpdateInstrumentRequest = captureUpdateInstrumentRequest.getValue();
+        verify(instrumentClientMock).update(eq(SUBSCRIPTION_ID), captureUpdateInstrumentRequest.capture());
+        final UpdateInstrumentCardRequest capturedUpdateInstrumentRequest = captureUpdateInstrumentRequest.getValue();
 
 		assertThat(capturedUpdateInstrumentRequest.getName()).isEqualTo(CC_OWNER);
 		assertThat(capturedUpdateInstrumentRequest.getExpiryMonth()).isEqualTo(Integer.valueOf(VALID_TO_MONTH));
@@ -155,14 +159,13 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 
 	private void ensureRemoveInstrumentsClientsDoesNothing() {
 		removeInstrumentsCompletableFuture = new CompletableFuture<>();
-		doReturn(removeInstrumentsCompletableFuture).when(instrumentClientMock).deleteInstrument(SUBSCRIPTION_ID);
+        doReturn(removeInstrumentsCompletableFuture).when(instrumentClientMock).delete(SUBSCRIPTION_ID);
 		ensureFutureCompletes(removeInstrumentsCompletableFuture);
 	}
 
 	private void ensureUpdateInstrumentsClientsDoesNothing() {
 		updateInstrumentsCompletableFuture = new CompletableFuture<>();
-		doReturn(updateInstrumentsCompletableFuture).when(instrumentClientMock).updateInstrument(eq(SUBSCRIPTION_ID),
-																								 any(UpdateInstrumentRequest.class));
+        doReturn(updateInstrumentsCompletableFuture).when(instrumentClientMock).update(eq(SUBSCRIPTION_ID), any(UpdateInstrumentRequest.class));
 		ensureFutureCompletes(updateInstrumentsCompletableFuture);
 	}
 
@@ -170,17 +173,15 @@ public class DefaultCheckoutComPaymentInstrumentServiceTest {
 		completableFuture.complete(null);
 	}
 
-
-	private void ensureRemoveInstrumentsThrowsAnException(final Exception exception) throws ExecutionException,
+    private void ensureRemoveInstrumentsThrowsAnException(final Exception exception) throws ExecutionException,
 			InterruptedException {
-		doReturn(removeInstrumentsCompletableFuture).when(instrumentClientMock).deleteInstrument(SUBSCRIPTION_ID);
+        doReturn(removeInstrumentsCompletableFuture).when(instrumentClientMock).delete(SUBSCRIPTION_ID);
 		doThrow(exception).when(removeInstrumentsCompletableFuture).get();
 	}
 
 	private void ensureUpdateInstrumentsThrowsAnException(final Exception exception) throws ExecutionException,
 			InterruptedException {
-		doReturn(updateInstrumentsCompletableFuture).when(instrumentClientMock).updateInstrument(eq(SUBSCRIPTION_ID),
-																								 any(UpdateInstrumentRequest.class));
+        doReturn(updateInstrumentsCompletableFuture).when(instrumentClientMock).update(eq(SUBSCRIPTION_ID), any(UpdateInstrumentRequest.class));
 		doThrow(exception).when(updateInstrumentsCompletableFuture).get();
 	}
 }
