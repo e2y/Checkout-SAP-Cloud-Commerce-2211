@@ -1,0 +1,19 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": []
+  },
+  "files": [
+    "projects/example-storefront/src/main.ts",
+    "projects/example-storefront/src/main.server.ts",
+    "projects/example-storefront/src/server.ts"
+  ],
+  "angularCompilerOptions": {
+    "entryModule": "projects/example-storefront/src/app/app.module.server#AppServerModule"
+  },
+  "include": [
+    "projects/**/*.d.ts"
+  ]
+}

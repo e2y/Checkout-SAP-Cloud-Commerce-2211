@@ -17,6 +17,7 @@ import de.hybris.platform.commercewebservicescommons.annotation.SiteChannelRestr
 import de.hybris.platform.commercewebservicescommons.dto.order.PaymentDetailsWsDTO;
 import de.hybris.platform.commercewebservicescommons.dto.user.AddressWsDTO;
 import de.hybris.platform.commercewebservicescommons.errors.exceptions.CartAddressException;
+import de.hybris.platform.util.Sanitizer;
 import de.hybris.platform.webservicescommons.cache.CacheControl;
 import de.hybris.platform.webservicescommons.cache.CacheControlDirective;
 import de.hybris.platform.webservicescommons.errors.exceptions.WebserviceValidationException;
@@ -24,7 +25,6 @@ import de.hybris.platform.webservicescommons.mapping.DataMapper;
 import de.hybris.platform.webservicescommons.mapping.FieldSetLevelHelper;
 import de.hybris.platform.webservicescommons.swagger.ApiBaseSiteIdUserIdAndCartIdParam;
 import de.hybris.platform.webservicescommons.swagger.ApiFieldsParam;
-import de.hybris.platform.webservicescommons.util.YSanitizer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -75,18 +75,18 @@ public class CheckoutComCartsController {
 
     @Secured({"ROLE_CUSTOMERGROUP", "ROLE_GUEST", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_TRUSTED_CLIENT", "ROLE_CLIENT"})
     @PostMapping(value = "/{cartId}/checkoutcompaymentdetails", consumes = {MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_XML_VALUE})
+            MediaType.APPLICATION_XML_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(operationId = "createCartPaymentDetails", description = "Defines and assigns details of a new credit card payment to the cart.", summary = "Defines the details of a new credit card, and assigns this payment option to the cart.")
     @ApiBaseSiteIdUserIdAndCartIdParam
     public PaymentDetailsWsDTO createCartPaymentDetails(@Parameter(description = """
-        Request body parameter that contains details such as the name on the card (accountHolderName), the card number (cardNumber), the card type (cardType.code),\s
-        the month of the expiry date (expiryMonth), the year of the expiry date (expiryYear), whether the payment details should be saved (saved), whether the payment details\s
-        should be set as default (defaultPaymentInfo), and the billing address (billingAddress.firstName, billingAddress.lastName, billingAddress.titleCode, billingAddress.country.isocode,\s
-        billingAddress.line1, billingAddress.line2, billingAddress.town, billingAddress.postalCode, billingAddress.region.isocode)
-
-        The DTO is in XML or .json format.
-        """, required = true) @RequestBody final PaymentDetailsWsDTO paymentDetails,
+                                                                Request body parameter that contains details such as the name on the card (accountHolderName), the card number (cardNumber), the card type (cardType.code),\s
+                                                                the month of the expiry date (expiryMonth), the year of the expiry date (expiryYear), whether the payment details should be saved (saved), whether the payment details\s
+                                                                should be set as default (defaultPaymentInfo), and the billing address (billingAddress.firstName, billingAddress.lastName, billingAddress.titleCode, billingAddress.country.isocode,\s
+                                                                billingAddress.line1, billingAddress.line2, billingAddress.town, billingAddress.postalCode, billingAddress.region.isocode)
+                                                                
+                                                                The DTO is in XML or .json format.
+                                                                """, required = true) @RequestBody final PaymentDetailsWsDTO paymentDetails,
                                                         @ApiFieldsParam @RequestParam(defaultValue = DEFAULT_FIELD_SET) final String fields) throws NoCheckoutCartException {
         validatePayment(paymentDetails);
 
@@ -103,19 +103,19 @@ public class CheckoutComCartsController {
 
     @Secured({"ROLE_CUSTOMERGROUP", "ROLE_GUEST", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_TRUSTED_CLIENT", "ROLE_CLIENT"})
     @PostMapping(value = "/{cartId}/checkoutcomapmpaymentdetails", consumes = {MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_XML_VALUE})
+            MediaType.APPLICATION_XML_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(operationId = "createCartPaymentDetails", description = "Defines and assigns details of a new APM payment to the cart.", summary = "Defines the details of a new APM, and assigns this payment option to the cart.")
     @ApiBaseSiteIdUserIdAndCartIdParam
     public void createCartAPMPaymentDetails(@Parameter(description =
-        """
-            Request body parameter that contains details such as the name on the card (accountHolderName), the card number (cardNumber), the card type (cardType.code),\s
-            the month of the expiry date (expiryMonth), the year of the expiry date (expiryYear), whether the payment details should be saved (saved), whether the payment details\s
-            should be set as default (defaultPaymentInfo), and the billing address (billingAddress.firstName, billingAddress.lastName, billingAddress.titleCode, billingAddress.country.isocode,\s
-            billingAddress.line1, billingAddress.line2, billingAddress.town, billingAddress.postalCode, billingAddress.region.isocode)
-
-            The DTO is in XML or .json format.
-            """, required = true) @RequestBody final PaymentDetailsWsDTO paymentDetails) throws NoCheckoutCartException {
+            """
+                    Request body parameter that contains details such as the name on the card (accountHolderName), the card number (cardNumber), the card type (cardType.code),\s
+                    the month of the expiry date (expiryMonth), the year of the expiry date (expiryYear), whether the payment details should be saved (saved), whether the payment details\s
+                    should be set as default (defaultPaymentInfo), and the billing address (billingAddress.firstName, billingAddress.lastName, billingAddress.titleCode, billingAddress.country.isocode,\s
+                    billingAddress.line1, billingAddress.line2, billingAddress.town, billingAddress.postalCode, billingAddress.region.isocode)
+                    
+                    The DTO is in XML or .json format.
+                    """, required = true) @RequestBody final PaymentDetailsWsDTO paymentDetails) throws NoCheckoutCartException {
         validatePayment(paymentDetails);
 
         final CheckoutComPaymentType paymentType = checkoutComPaymentTypeResolver.resolvePaymentMethod(paymentDetails.getType());
@@ -128,6 +128,7 @@ public class CheckoutComCartsController {
      * Endpoint that gets the billing address currently assigned to the cart.
      *
      * @return billing address from the cart
+     *
      * @queryparam fields Response configuration (list of fields, which should be returned in response)
      * @pathparam cartId of the cart
      * @security Permitted only for customers, guests, customer managers or trusted clients. Trusted client or customer
@@ -150,6 +151,7 @@ public class CheckoutComCartsController {
      *                billingAddress.country.isocode, billingAddress.line1, billingAddress.line2, billingAddress.town,
      *                billingAddress.postalCode, billingAddress.region.isocode),
      * @return Created billing address
+     *
      * @queryparam fields Response configuration (list of fields, which should be returned in response)
      * @bodyparams billingAddress(titleCode, firstName, lastName, line1, line2, town, postalCode, country ( isocode), region(isocode), defaultAddress)
      * @security Permitted only for customers, guests, customer managers or trusted clients. Trusted client or customer
@@ -165,25 +167,26 @@ public class CheckoutComCartsController {
 
     @Secured({"ROLE_CUSTOMERGROUP", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_GUEST", "ROLE_TRUSTED_CLIENT"})
     @PostMapping(value = "/{cartId}/addresses/checkoutcomdeliverypayment", consumes = {
-        MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+            MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(operationId = "createCartDeliveryAndBillingAddress", description = "Creates a delivery and a payment address for the cart.", summary = "Creates an address and assigns it to the cart as the delivery address and the payment address.")
     @ApiBaseSiteIdUserIdAndCartIdParam
     public AddressWsDTO createCartDeliveryAndBillingAddress(@Parameter(description =
-        """
-            Request body parameter that contains details such as the customer's first name (firstName), the customer's last name (lastName), the customer's title (titleCode), the customer's phone (phone),\s
-            the country (country.isocode), the first part of the address (line1), the second part of the address (line2), the town (town), the postal code (postalCode), and the region (region.isocode).
-
-            The DTO is in XML or .json format.
-            """, required = true) @RequestBody final AddressWsDTO address,
+                                                                    """
+                                                                            Request body parameter that contains details such as the customer's first name (firstName), the customer's last name (lastName), the customer's title (titleCode), the customer's phone (phone),\s
+                                                                            the country (country.isocode), the first part of the address (line1), the second part of the address (line2), the town (town), the postal code (postalCode), and the region (region.isocode).
+                                                                            
+                                                                            The DTO is in XML or .json format.
+                                                                            """, required = true) @RequestBody final AddressWsDTO address,
                                                             @ApiFieldsParam @RequestParam(defaultValue = DEFAULT_FIELD_SET) final String fields) {
         validate(address, OBJECT_NAME_ADDRESS, addressDTOValidator);
         AddressData addressData = dataMapper.map(address, AddressData.class, DEFAULT_FIELD_SET);
-        addressData = createAddressInternal(addressData);
-        addressData.setEmail(checkoutCustomerStrategy.getCurrentUserForCheckout().getContactEmail());
+        AddressData shippingAddressData = createShippingAddressInternal(addressData);
+        shippingAddressData.setEmail(checkoutCustomerStrategy.getCurrentUserForCheckout().getContactEmail());
         setCartDeliveryAddressInternal(addressData.getId());
-        checkoutComAddressFacade.setCartBillingDetails(addressData);
-        return dataMapper.map(addressData, AddressWsDTO.class, fields);
+        AddressData billingAddressData = createBillingAddressInternal(addressData);
+        checkoutComAddressFacade.setCartBillingDetails(billingAddressData);
+        return dataMapper.map(shippingAddressData, AddressWsDTO.class, fields);
     }
 
     @Secured({"ROLE_CUSTOMERGROUP", "ROLE_GUEST", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_TRUSTED_CLIENT"})
@@ -193,9 +196,19 @@ public class CheckoutComCartsController {
     @Operation(operationId = "replaceCartDeliveryAndBillingAddress", description = "Sets a delivery and payment address for the cart.", summary = "Sets a delivery and payment address for the cart. The address country must be placed among the delivery countries of the current base store.")
     @ApiBaseSiteIdUserIdAndCartIdParam
     public void replaceCartDeliveryAndBillingAddress(
-        @Parameter(description = "Address identifier", required = true) @RequestParam final String addressId) {
+            @Parameter(description = "Address identifier", required = true) @RequestParam final String addressId) {
         setCartDeliveryAddressInternal(addressId);
-        checkoutComAddressFacade.setCartBillingDetailsByAddressId(addressId);
+        setCartPaymentAddressByAddressId(addressId);
+    }
+
+    @Secured({"ROLE_CUSTOMERGROUP", "ROLE_GUEST", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_TRUSTED_CLIENT"})
+    @PutMapping(value = "/{cartId}/addresses/setbillingaddressbyid")
+    @ResponseStatus(HttpStatus.OK)
+    @SiteChannelRestriction(allowedSiteChannelsProperty = API_COMPATIBILITY_B2C_CHANNELS)
+    @Operation(operationId = "setbillingaddressbyid", description = "Sets a delivery and payment address for the cart.", summary = "Sets a delivery and payment address for the cart. The address country must be placed among the delivery countries of the current base store.")
+    @ApiBaseSiteIdUserIdAndCartIdParam
+    public void setBillingAddressOnCart(  @Parameter(description = "Address", required = true) @RequestBody final String addressId) {
+        setCartPaymentAddressByAddressId(addressId);
     }
 
     /**
@@ -207,7 +220,6 @@ public class CheckoutComCartsController {
         address.setEmail(checkoutCustomerStrategy.getCurrentUserForCheckout().getContactEmail());
         address.setVisibleInAddressBook(Boolean.FALSE);
         final AddressData addressData = dataMapper.map(address, AddressData.class, fields);
-        userFacade.addAddress(addressData);
         checkoutComAddressFacade.setCartBillingDetails(addressData);
         return dataMapper.map(addressData, AddressWsDTO.class, fields);
     }
@@ -246,13 +258,27 @@ public class CheckoutComCartsController {
      * @param addressData The shipping address to create
      * @return The shipping address
      */
-    protected AddressData createAddressInternal(final AddressData addressData) {
+    protected AddressData createShippingAddressInternal(final AddressData addressData) {
         addressData.setShippingAddress(true);
         addressData.setVisibleInAddressBook(true);
         userFacade.addAddress(addressData);
         if (addressData.isDefaultAddress()) {
             userFacade.setDefaultAddress(addressData);
         }
+        return addressData;
+    }
+
+    /**
+     * Creates a shipping address
+     *
+     * @param addressData The shipping address to create
+     * @return The shipping address
+     */
+    protected AddressData createBillingAddressInternal(final AddressData addressData) {
+        addressData.setShippingAddress(false);
+        addressData.setBillingAddress(true);
+        addressData.setVisibleInAddressBook(false);
+        userFacade.addAddress(addressData);
         return addressData;
     }
 
@@ -268,15 +294,24 @@ public class CheckoutComCartsController {
         final Errors errors = new BeanPropertyBindingResult(address, "addressData");
         deliveryAddressValidator.validate(address, errors);
         if (errors.hasErrors()) {
-            throw new CartAddressException("Address given by id " + sanitize(addressId) + " is not valid",
-                CartAddressException.NOT_VALID, addressId);
+            throw new CartAddressException("Address given by id " + addressId + " is not valid",
+                    CartAddressException.NOT_VALID, addressId);
         }
         if (checkoutFacade.setDeliveryAddress(address)) {
             return cartFacade.getSessionCart();
         }
         throw new CartAddressException(
-            "Address given by id " + sanitize(addressId) + " cannot be set as delivery address in this cart",
-            CartAddressException.CANNOT_SET, addressId);
+                "Address given by id " + addressId + " cannot be set as delivery address in this cart",
+                CartAddressException.CANNOT_SET, addressId);
+    }
+
+    /**
+     * Sets the given delivery address into the session cart
+     *
+     * @param addressId The address id
+     */
+    protected void setCartPaymentAddressByAddressId(final String addressId) {
+        checkoutComAddressFacade.setCartBillingDetailsByAddressId(addressId);
     }
 
     /**
@@ -286,6 +321,6 @@ public class CheckoutComCartsController {
      * @return The sanitized string
      */
     protected static String sanitize(final String input) {
-        return YSanitizer.sanitize(input);
+        return Sanitizer.sanitize(input);
     }
 }

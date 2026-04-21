@@ -1,28 +1,26 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.model.CheckoutComIdealPaymentInfoModel;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.apm.RequestIdealSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.IDEAL;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CheckoutComIdealPaymentRequestStrategyTest {
 
     private static final String PAYMENT_REFERENCE = "payment-refer-.,;[enc[]e";
-    private static final String DESCRIPTION_KEY = "description";
     private static final String CURRENCY_ISO_CODE = "BRL";
     private static final Long CHECKOUT_COM_TOTAL_PRICE = 10000L;
 
@@ -34,26 +32,22 @@ public class CheckoutComIdealPaymentRequestStrategyTest {
     @Mock
     private CheckoutComIdealPaymentInfoModel idealPaymentInfoMock;
 
-    @Before
-    public void setUp() {
-        when(cartMock.getPaymentInfo()).thenReturn(idealPaymentInfoMock);
-        when(idealPaymentInfoMock.getType()).thenReturn(IDEAL.name());
+    @Test
+    public void getRequestSourcePaymentRequest_WhenIdealPayment_ShouldCreateAlternativePaymentRequestWithTypeAndAdditionalInfo() {
         when(cartMock.getCheckoutComPaymentReference()).thenReturn(PAYMENT_REFERENCE);
+
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+
+        assertEquals(IDEAL.name().toLowerCase(), result.getSource().getType().name().toLowerCase());
+        assertEquals(PAYMENT_REFERENCE, ((RequestIdealSource) result.getSource()).getDescription());
     }
 
     @Test
-    public void getRequestSourcePaymentRequest_WhenIdealPayment_ShouldCreateAlternativePaymentRequestWithTypeAndAdditionalInfo() {
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
-
-        assertEquals(IDEAL.name().toLowerCase(), result.getSource().getType());
-        assertEquals(PAYMENT_REFERENCE, ((AlternativePaymentSource) result.getSource()).get(DESCRIPTION_KEY));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void getRequestSourcePaymentRequest_WhenPaymentReferenceMoreThan35CharWhenFormatted_shouldThrowException() {
         when(cartMock.getCheckoutComPaymentReference()).thenReturn("");
 
-        testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+        assertThatThrownBy(() -> testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

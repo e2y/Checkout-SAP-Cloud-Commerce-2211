@@ -1,5 +1,20 @@
 package com.checkout.hybris.fulfilmentprocess.listeners;
 
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.basecommerce.model.site.BaseSiteModel;
 import de.hybris.platform.commerceservices.enums.SiteChannel;
@@ -13,14 +28,13 @@ import de.hybris.platform.store.services.BaseStoreService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.Collections;
-import java.util.HashSet;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -34,34 +48,38 @@ public class DefaultCreateReturnEventListenerTest {
     private DefaultCreateReturnEventListener testObj;
 
     @Mock
+    private BusinessProcessService businessProcessServiceMock;
+    @Mock
+    private ModelService modelServiceMock;
+    @Mock
+    private BaseStoreService baseStoreServiceMock;
+
+    @Mock
     private CreateReturnEvent eventMock;
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ReturnRequestModel returnRequestMock;
     @Mock
     private BaseStoreModel baseStoreMock;
     @Mock
-    private BusinessProcessService businessProcessServiceMock;
-    @Captor
-    private ArgumentCaptor<String> processCodeArgumentCaptor;
-    @Mock
     private ReturnProcessModel businessProcessMock;
-    @Mock
-    private ModelService modelServiceMock;
-    @Mock
-    private BaseStoreService baseStoreServiceMock;
     @Mock
     private BaseSiteModel baseSiteMock;
 
+    @Captor
+    private ArgumentCaptor<String> processCodeArgumentCaptor;
+
     @Before
     public void setUp() {
-        testObj.setSupportedSiteChannels(new HashSet<>(Collections.singleton(SiteChannel.B2C)));
+        testObj.setSupportedSiteChannels(Set.of(SiteChannel.B2C));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void onSiteEvent_WhenNoReturnRequest_ShouldFail() {
         when(eventMock.getReturnRequest()).thenReturn(null);
 
-        testObj.onSiteEvent(eventMock);
+        assertThatThrownBy(() -> testObj.onSiteEvent(eventMock))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Parameter event.returnRequest can not be null");
     }
 
     @Test

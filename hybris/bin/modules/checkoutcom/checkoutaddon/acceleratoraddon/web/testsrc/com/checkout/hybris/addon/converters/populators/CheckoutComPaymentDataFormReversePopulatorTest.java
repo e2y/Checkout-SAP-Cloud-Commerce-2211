@@ -1,22 +1,23 @@
 package com.checkout.hybris.addon.converters.populators;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.facades.beans.APMPaymentInfoData;
 import com.google.common.collect.ImmutableMap;
 import de.hybris.bootstrap.annotations.UnitTest;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 @UnitTest
 public class CheckoutComPaymentDataFormReversePopulatorTest {
 
     private static final String TYPE_VALUE = "TYPE";
 
-    private CheckoutComPaymentDataFormReversePopulator testObj = new CheckoutComPaymentDataFormReversePopulator();
+    private final CheckoutComPaymentDataFormReversePopulator testObj = new CheckoutComPaymentDataFormReversePopulator();
 
-    private PaymentDataForm source = new PaymentDataForm();
-    private APMPaymentInfoData target = new APMPaymentInfoData();
+    private final PaymentDataForm source = new PaymentDataForm();
+    private final APMPaymentInfoData target = new APMPaymentInfoData();
 
     @Test
     public void populate_ShouldPopulateTargetCorrectly() {
@@ -27,14 +28,17 @@ public class CheckoutComPaymentDataFormReversePopulatorTest {
         assertEquals(TYPE_VALUE, target.getType());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenSourceNull_ShouldThrowException() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Parameter PaymentDataForm cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenTargetNull_ShouldThrowException() {
-        testObj.populate(source, null);
+        assertThatThrownBy(() -> testObj.populate(source, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Parameter APMPaymentInfoData cannot be null.");
     }
-
 }

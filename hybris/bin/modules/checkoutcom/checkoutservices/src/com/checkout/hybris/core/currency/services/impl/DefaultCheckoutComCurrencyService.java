@@ -9,7 +9,6 @@ import java.util.Currency;
 
 import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParameterNotNull;
 
-
 /**
  * Default implementation of the {@link CheckoutComCurrencyService}
  */
@@ -25,7 +24,7 @@ public class DefaultCheckoutComCurrencyService implements CheckoutComCurrencySer
      * {@inheritDoc}
      */
     @Override
-    public Long convertAmountIntoPennies(final String currencyIsoCode, final Double amount) {
+    public Long removeDecimalsFromCurrencyAmount(final String currencyIsoCode, final Double amount) {
         validateParameterNotNull(currencyIsoCode, "Currency code cannot be null");
         validateParameterNotNull(amount, "amount cannot be null");
 
@@ -38,7 +37,7 @@ public class DefaultCheckoutComCurrencyService implements CheckoutComCurrencySer
      * {@inheritDoc}
      */
     @Override
-    public BigDecimal convertAmountFromPennies(final String currencyIsoCode, final Long amountInPennies) {
+    public BigDecimal addDecimalsToAmountForGivenCurrency(final String currencyIsoCode, final Long amountInPennies) {
         validateParameterNotNull(currencyIsoCode, "Currency code cannot be null");
         validateParameterNotNull(amountInPennies, "amount cannot be null");
 

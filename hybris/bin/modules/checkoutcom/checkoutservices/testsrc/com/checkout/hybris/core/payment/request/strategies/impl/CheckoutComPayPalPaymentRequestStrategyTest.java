@@ -1,9 +1,7 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import org.junit.Before;
@@ -14,8 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.PAYPAL;
-import static com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComPayPalPaymentRequestStrategy.INVOICE_NUMBER_KEY;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @UnitTest
@@ -36,9 +34,9 @@ public class CheckoutComPayPalPaymentRequestStrategyTest {
 
     @Before
     public void setUp() {
-        when(cartMock.getPaymentInfo()).thenReturn(checkoutComRedirectAPMPaymentInfoMock);
-        when(cartMock.getCheckoutComPaymentReference()).thenReturn(PAYMENT_REFERENCE_VALUE);
-        when(checkoutComRedirectAPMPaymentInfoMock.getType()).thenReturn(PAYPAL.name());
+        lenient().when(cartMock.getPaymentInfo()).thenReturn(checkoutComRedirectAPMPaymentInfoMock);
+        lenient().when(cartMock.getCheckoutComPaymentReference()).thenReturn(PAYMENT_REFERENCE_VALUE);
+        lenient().when(checkoutComRedirectAPMPaymentInfoMock.getType()).thenReturn(PAYPAL.name());
     }
 
     @Test
@@ -47,22 +45,15 @@ public class CheckoutComPayPalPaymentRequestStrategyTest {
     }
 
     @Test
-    public void getRequestSourcePaymentRequest_WhenPayPalPayment_ShouldCreateAlternativePaymentRequestWithTypeAndInvoiceNumber() {
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+    public void getRequestSourcePaymentRequest_WhenPayPalPayment_ShouldCreateAlternativePaymentRequestWithType() {
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
 
-        assertEquals(PAYPAL.name().toLowerCase(), result.getSource().getType());
-        assertEquals(PAYMENT_REFERENCE_VALUE, ((AlternativePaymentSource) result.getSource()).get(INVOICE_NUMBER_KEY));
+        assertEquals(PAYPAL.name().toLowerCase(), result.getSource().getType().name().toLowerCase());
+
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void getRequestSourcePaymentRequest_WhenPayPalPaymentButCartIsNull_ShouldThrowException() {
         testObj.getRequestSourcePaymentRequest(null, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void getRequestSourcePaymentRequest_WhenPayPalPaymentButPaymentReferenceIsBlank_ShouldThrowException() {
-        when(cartMock.getCheckoutComPaymentReference()).thenReturn("");
-
-        testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
     }
 }

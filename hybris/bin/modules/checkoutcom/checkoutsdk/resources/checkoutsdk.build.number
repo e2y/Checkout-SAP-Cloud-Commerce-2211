@@ -1,0 +1,11 @@
+#Ant properties
+#Mon Apr 20 14:52:19 GMT 2026
+builddate=20260420 1452
+description=checkoutsdk
+group.id=de.hybris.platform
+module.name=platform-module
+name=checkoutsdk
+releasedate=20260302 1830
+vendor=hybris
+version=2211.50
+version.api=2211

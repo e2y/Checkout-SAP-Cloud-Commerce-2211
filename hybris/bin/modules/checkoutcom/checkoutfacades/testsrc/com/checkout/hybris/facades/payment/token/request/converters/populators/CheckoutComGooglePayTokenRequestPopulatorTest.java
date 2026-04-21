@@ -1,28 +1,26 @@
 package com.checkout.hybris.facades.payment.token.request.converters.populators;
 
 import com.checkout.hybris.facades.beans.GooglePayPaymentToken;
-import com.checkout.sdk.tokens.WalletTokenRequest;
+import com.checkout.tokens.GooglePayTokenRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import org.junit.Before;
 import org.junit.Test;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.GOOGLEPAY;
-import static com.checkout.hybris.facades.payment.token.request.converters.populators.CheckoutComApplePayTokenRequestPopulator.SIGNATURE_REQUEST_KEY;
-import static com.checkout.hybris.facades.payment.token.request.converters.populators.CheckoutComGooglePayTokenRequestPopulator.PROTOCOL_VERSION_REQUEST_KEY;
-import static com.checkout.hybris.facades.payment.token.request.converters.populators.CheckoutComGooglePayTokenRequestPopulator.SIGNED_MESSAGE_REQUEST_KEY;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @UnitTest
 public class CheckoutComGooglePayTokenRequestPopulatorTest {
 
     private static final String SIGNATURE = "signature";
-    public static final String PROTOCOL_VERSION = "protocol_version";
-    public static final String SIGNATURE_MESSAGE = "signature_message";
+    private static final String PROTOCOL_VERSION = "protocol_version";
+    private static final String SIGNATURE_MESSAGE = "signature_message";
 
-    private CheckoutComGooglePayTokenRequestPopulator testObj = new CheckoutComGooglePayTokenRequestPopulator();
+    private final CheckoutComGooglePayTokenRequestPopulator testObj = new CheckoutComGooglePayTokenRequestPopulator();
 
-    private GooglePayPaymentToken source = new GooglePayPaymentToken();
-    private WalletTokenRequest target = new WalletTokenRequest();
+    private final GooglePayPaymentToken source = new GooglePayPaymentToken();
+    private final GooglePayTokenRequest target = new GooglePayTokenRequest();
 
     @Before
     public void setUp() {
@@ -35,19 +33,19 @@ public class CheckoutComGooglePayTokenRequestPopulatorTest {
     public void populate_WhenEverythingIsFine_ShouldPopulateTheRequest() {
         testObj.populate(source, target);
 
-        assertEquals(PROTOCOL_VERSION, target.getTokenData().get(PROTOCOL_VERSION_REQUEST_KEY));
-        assertEquals(SIGNATURE_MESSAGE, target.getTokenData().get(SIGNED_MESSAGE_REQUEST_KEY));
-        assertEquals(SIGNATURE, target.getTokenData().get(SIGNATURE_REQUEST_KEY));
-        assertEquals(GOOGLEPAY.name().toLowerCase(), target.getType());
+        assertEquals(PROTOCOL_VERSION, target.getGooglePayTokenData().getProtocolVersion());
+        assertEquals(SIGNATURE_MESSAGE, target.getGooglePayTokenData().getSignedMessage());
+        assertEquals(SIGNATURE, target.getGooglePayTokenData().getSignature());
+        assertEquals(GOOGLEPAY.name(), target.getType().name());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenSourceNull_ShouldThrowException() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenTargetNull_ShouldThrowException() {
-        testObj.populate(source, null);
+        assertThatThrownBy(() -> testObj.populate(source, null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

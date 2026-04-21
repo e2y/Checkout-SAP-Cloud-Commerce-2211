@@ -213,6 +213,14 @@ public class DefaultCheckoutComMerchantConfigurationService implements CheckoutC
         return getConfigurationForSiteId(siteId).getNasSecretKey();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getProcessingChannelId() {
+        return getCurrentConfiguration().getChannelProcessingId();
+    }
+
     protected CheckoutComMerchantConfigurationModel getCurrentConfiguration() {
         final BaseSiteModel currentBaseSite = baseSiteService.getCurrentBaseSite();
         checkArgument(currentBaseSite != null, "Current base site cannot be null");

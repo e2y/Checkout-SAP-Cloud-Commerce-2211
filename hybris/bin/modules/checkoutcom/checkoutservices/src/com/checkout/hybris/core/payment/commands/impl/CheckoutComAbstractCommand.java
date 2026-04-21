@@ -1,6 +1,6 @@
 package com.checkout.hybris.core.payment.commands.impl;
 
-import com.checkout.sdk.CheckoutApiException;
+import com.checkout.CheckoutApiException;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import de.hybris.platform.payment.commands.result.AbstractResult;
 import de.hybris.platform.payment.dto.TransactionStatusDetails;
@@ -27,9 +27,8 @@ public abstract class CheckoutComAbstractCommand {
      */
     protected AbstractResult handleExecutionException(final ExecutionException e) {
         final Throwable cause = e.getCause();
-        if (cause instanceof CheckoutApiException) {
-            final CheckoutApiException apiException = (CheckoutApiException) cause;
-            final int httpStatusCode = apiException.getApiResponseInfo().getHttpStatusCode();
+        if (cause instanceof CheckoutApiException apiException) {
+            final int httpStatusCode = apiException.getHttpStatusCode();
             if (httpStatusCode >= 500) {
                 LOG.error("CheckoutApiException exception with status code [{}] found.", httpStatusCode);
                 throw new CheckoutComPaymentIntegrationException(cause.getMessage());

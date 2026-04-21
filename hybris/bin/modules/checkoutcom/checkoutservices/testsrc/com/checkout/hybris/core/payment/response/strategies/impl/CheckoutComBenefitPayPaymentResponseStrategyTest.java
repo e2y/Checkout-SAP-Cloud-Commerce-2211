@@ -6,9 +6,10 @@ import com.checkout.hybris.core.model.CheckoutComBenefitPayPaymentInfoModel;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationService;
-import com.checkout.sdk.payments.AlternativePaymentSourceResponse;
-import com.checkout.sdk.payments.GetPaymentResponse;
-import com.checkout.sdk.payments.PaymentPending;
+
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.payments.response.PaymentResponse;
+import com.checkout.payments.response.source.AlternativePaymentSourceResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import org.junit.Before;
@@ -35,7 +36,7 @@ public class CheckoutComBenefitPayPaymentResponseStrategyTest {
     private CheckoutComBenefitPayPaymentResponseStrategy testObj;
 
     @Mock
-    private PaymentPending pendingResponseMock;
+    private PaymentResponse pendingResponseMock;
     @Mock
     private CheckoutComPaymentIntegrationService checkoutComPaymentIntegrationServiceMock;
     @Mock

@@ -1,5 +1,19 @@
 package com.checkout.hybris.fulfilmentprocess.actions.returns;
 
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
@@ -7,6 +21,7 @@ import com.checkout.hybris.core.payment.services.CheckoutComPaymentService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentTransactionService;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.basecommerce.enums.ReturnStatus;
+import de.hybris.platform.basecommerce.model.site.BaseSiteModel;
 import de.hybris.platform.core.model.order.OrderModel;
 import de.hybris.platform.core.model.order.payment.InvoicePaymentInfoModel;
 import de.hybris.platform.payment.dto.TransactionStatus;
@@ -15,6 +30,7 @@ import de.hybris.platform.payment.model.PaymentTransactionModel;
 import de.hybris.platform.returns.model.ReturnProcessModel;
 import de.hybris.platform.returns.model.ReturnRequestModel;
 import de.hybris.platform.servicelayer.model.ModelService;
+import de.hybris.platform.site.BaseSiteService;
 import de.hybris.platform.task.RetryLaterException;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,16 +39,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -51,6 +57,8 @@ public class CheckoutComCaptureRefundActionTest {
 
     @Mock
     private ModelService modelServiceMock;
+    @Mock
+    private BaseSiteService baseSiteServiceMock;
     @Mock
     private ReturnProcessModel processMock;
     @Mock
@@ -73,6 +81,8 @@ public class CheckoutComCaptureRefundActionTest {
     private PaymentTransactionEntryModel paymentTransactionEntryMock;
     @Mock
     private CheckoutComPaymentTransactionService checkoutComPaymentTransactionServiceMock;
+    @Mock
+    private BaseSiteModel baseSiteModelMock;
 
     @Before
     public void setUp() {
@@ -87,6 +97,7 @@ public class CheckoutComCaptureRefundActionTest {
         when(checkoutComPaymentTransactionServiceMock.getPaymentTransaction(orderMock)).thenReturn(paymentTransactionMock);
         when(paymentTransactionMock.getInfo()).thenReturn(checkoutComCreditCardPaymentInfoMock);
         when(checkoutComPaymentTransactionServiceMock.findRefundEntryForActionId(paymentTransactionMock, ACTION_ID)).thenReturn(Optional.of(paymentTransactionEntryMock));
+        when(orderMock.getSite()).thenReturn(baseSiteModelMock);
     }
 
     @Test
@@ -113,6 +124,7 @@ public class CheckoutComCaptureRefundActionTest {
 
         final String result = testObj.execute(processMock);
 
+        verify(baseSiteServiceMock).setCurrentBaseSite(baseSiteModelMock, false);
         assertEquals(OK, result);
     }
 
@@ -125,6 +137,7 @@ public class CheckoutComCaptureRefundActionTest {
         final String result = testObj.execute(processMock);
 
         assertEquals(OUTCOME, result);
+        verify(baseSiteServiceMock).setCurrentBaseSite(baseSiteModelMock, false);
         verify(testObj).refundPayment(paymentTransactionMock, REFUND_AMOUNT);
         verify(testObj).evaluateProcessOutcome(returnRequestMock, paymentTransactionMock, paymentTransactionEntryMock);
     }
@@ -139,6 +152,7 @@ public class CheckoutComCaptureRefundActionTest {
         final String result = testObj.execute(processMock);
 
         assertEquals(OUTCOME, result);
+        verify(baseSiteServiceMock).setCurrentBaseSite(baseSiteModelMock, false);
         verify(testObj).refundPayment(paymentTransactionMock, REFUND_AMOUNT);
         verify(testObj).evaluateProcessOutcome(returnRequestMock, paymentTransactionMock, paymentTransactionEntryMock);
     }
@@ -152,6 +166,7 @@ public class CheckoutComCaptureRefundActionTest {
         final String result = testObj.execute(processMock);
 
         assertEquals(OUTCOME, result);
+        verify(baseSiteServiceMock).setCurrentBaseSite(baseSiteModelMock, false);
         verify(testObj, never()).refundPayment(paymentTransactionMock, REFUND_AMOUNT);
         verify(testObj).evaluateProcessOutcome(returnRequestMock, paymentTransactionMock, paymentTransactionEntryMock);
     }
@@ -165,11 +180,13 @@ public class CheckoutComCaptureRefundActionTest {
         assertEquals(refundEntryMock, result);
     }
 
-    @Test(expected = RetryLaterException.class)
+    @Test
     public void refundPayment_WhenPaymentIntegrationException_ShouldThrowRetryLaterException() {
         when(paymentServiceMock.refundFollowOn(paymentTransactionMock, REFUND_AMOUNT)).thenThrow(new CheckoutComPaymentIntegrationException("error"));
 
-        testObj.refundPayment(paymentTransactionMock, REFUND_AMOUNT);
+        assertThatThrownBy(() -> testObj.refundPayment(paymentTransactionMock, REFUND_AMOUNT))
+                .isInstanceOf(RetryLaterException.class)
+                .hasMessage("Payment Gateway exception during refund process.");
     }
 
     @Test
@@ -211,5 +228,4 @@ public class CheckoutComCaptureRefundActionTest {
         assertEquals(NOK, result);
         verify(testObj).setReturnRequestStatus(returnRequestMock, ReturnStatus.PAYMENT_REVERSAL_FAILED);
     }
-
 }

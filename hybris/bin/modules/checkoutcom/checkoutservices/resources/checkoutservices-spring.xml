@@ -10,6 +10,7 @@
     <import resource="spring/checkoutservices-strategies-spring.xml"/>
     <import resource="spring/checkoutservices-converters-spring.xml"/>
     <import resource="spring/checkoutservices-interceptors-spring.xml"/>
+    <import resource="spring/checkoutservices-hooks-spring.xml"/>
     <import resource="spring/checkoutservices-commands-spring.xml"/>
 
 </beans>

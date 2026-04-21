@@ -6,7 +6,11 @@ import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentReques
 import com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComCardPaymentRequestStrategy;
 import com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComMadaPaymentRequestStrategy;
 import com.checkout.hybris.core.payment.resolvers.CheckoutComPaymentTypeResolver;
-import com.checkout.sdk.payments.*;
+
+import com.checkout.payments.CaptureRequest;
+import com.checkout.payments.RefundRequest;
+import com.checkout.payments.VoidRequest;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.servicelayer.config.ConfigurationService;
@@ -66,7 +70,7 @@ public class DefaultCheckoutComRequestFactoryTest {
     @Mock
     private CheckoutComPaymentTypeResolver checkoutComPaymentTypeResolverMock;
     @Mock
-    private PaymentRequest<RequestSource> paymentRequestMock;
+    private PaymentRequest paymentRequestMock;
     private Map<String, Object> metadataMap = new HashMap<>();
 
 
@@ -82,7 +86,7 @@ public class DefaultCheckoutComRequestFactoryTest {
     }
 
     private void setUpConfiguration() {
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(GBP, TOTAL_PRICE)).thenReturn(CHECKOUT_COM_TOTAL_PRICE);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(GBP, TOTAL_PRICE)).thenReturn(CHECKOUT_COM_TOTAL_PRICE);
         when(configurationMock.getString(BUILD_VERSION_CONFIG)).thenReturn(HYBRIS_VERSION);
         when(configurationServiceMock.getConfiguration()).thenReturn(configurationMock);
         when(configurationMock.getString(CHECKOUTSERVICES_CONNECTOR_VERSION_CONFIG, DEFAULT_BUILD_VERSION)).thenReturn(CONNECTOR_VERSION);

@@ -23,6 +23,7 @@
           parent="abstractAction">
         <constructor-arg ref="paymentService"/>
         <constructor-arg ref="checkoutComPaymentTransactionService"/>
+        <constructor-arg ref="baseSiteService"/>
     </bean>
 
     <bean id="successCaptureAction" class="com.checkout.hybris.fulfilmentprocess.actions.returns.SuccessCaptureAction"

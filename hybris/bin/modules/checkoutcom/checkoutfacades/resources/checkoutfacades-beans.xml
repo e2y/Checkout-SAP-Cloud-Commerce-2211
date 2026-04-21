@@ -26,7 +26,7 @@
         <property name="checkoutComPaymentInfo" type="com.checkout.hybris.facades.beans.CheckoutComPaymentInfoData"/>
         <property name="baseStoreName" type="java.lang.String"/>
         <property name="qrCodeData" type="java.lang.String"/>
-        <property name="paymentType" type="java.lang.String"/>
+        <property name="checkoutPaymentType" type="java.lang.String"/>
     </bean>
 
     <bean class="com.checkout.hybris.facades.beans.APMPaymentInfoData">
@@ -277,7 +277,7 @@
 
     <bean class="com.checkout.data.apm.CheckoutComAPMConfigurationDataList">
         <property name="availableApmConfigurations"
-                  type="java.util.List&lt;com.checkout.data.apm.CheckoutComAPMConfigurationData>">
+                  type="java.util.List&lt;com.checkout.data.apm.CheckoutComAPMConfigurationData&gt;">
         </property>
     </bean>
 
@@ -287,7 +287,7 @@
         <property name="countryCode" type="java.lang.String"/>
         <property name="currencyCode" type="java.lang.String"/>
         <property name="total" type="com.checkout.hybris.facades.beans.ApplePayTotalData"/>
-        <property name="requiredBillingContactFields" type="java.util.List&lt;java.lang.String>"/>
+        <property name="requiredBillingContactFields" type="java.util.List&lt;java.lang.String&gt;"/>
     </bean>
 
     <bean class="com.checkout.hybris.facades.beans.ApplePayTotalData">
@@ -419,5 +419,47 @@
         <property name="metadata"
                   type="com.checkout.hybris.facades.beans.PlaidLinkMetadataResponse"/>
         <property name="customerConsents" type="java.lang.Boolean"/>
+    </bean>
+
+    <bean class="com.checkout.hybris.facades.beans.CheckoutComFlowUIConfigurationData">
+        <property name="colorAction" type="String"/>
+        <property name="colorBackground" type="String"/>
+        <property name="colorBorder" type="String"/>
+        <property name="colorDisabled" type="String"/>
+        <property name="colorError" type="String"/>
+        <property name="colorFormBackground" type="String"/>
+        <property name="colorFormBorder" type="String"/>
+        <property name="colorInverse" type="String"/>
+        <property name="colorOutline" type="String"/>
+        <property name="colorPrimary" type="String"/>
+        <property name="colorSecondary" type="String"/>
+        <property name="colorSuccess" type="String"/>
+        <property name="button" type="com.checkout.hybris.facades.beans.CheckoutComFlowElementUIConfigData"/>
+        <property name="footnote" type="com.checkout.hybris.facades.beans.CheckoutComFlowElementUIConfigData"/>
+        <property name="label" type="com.checkout.hybris.facades.beans.CheckoutComFlowElementUIConfigData"/>
+        <property name="subheading" type="com.checkout.hybris.facades.beans.CheckoutComFlowElementUIConfigData"/>
+        <property name="borderRadius"
+                  type="com.checkout.hybris.facades.beans.CheckoutComFlowAroundUIConfigurationData"/>
+    </bean>
+
+    <bean class="com.checkout.hybris.facades.beans.CheckoutComFlowElementUIConfigData">
+        <property name="fontFamily" type="String"/>
+        <property name="fontSize" type="String"/>
+        <property name="fontWeight" type="String"/>
+        <property name="letterSpacing" type="String"/>
+        <property name="lineHeight" type="String"/>
+    </bean>
+
+    <bean class="com.checkout.hybris.facades.beans.CheckoutComFlowAroundUIConfigurationData">
+        <property name="top" type="String"/>
+        <property name="bottom" type="String"/>
+        <property name="left" type="String"/>
+        <property name="right" type="String"/>
+    </bean>
+
+    <bean class="com.checkout.dto.payment.session.CheckoutComPaymentSessionResponseDTO">
+        <property name="id" type="String"/>
+        <property name="payment_session_token" type="String"/>
+        <property name="payment_session_secret" type="String"/>
     </bean>
 </beans>

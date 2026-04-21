@@ -176,4 +176,10 @@ public interface CheckoutComMerchantConfigurationService {
      * @return the secret key
      */
     String getSecretKeyForSite(String siteId);
+
+    /**
+     * Return the channel processing id from the merchant configuration
+     * @return the processing channel id
+     */
+    String getProcessingChannelId();
 }

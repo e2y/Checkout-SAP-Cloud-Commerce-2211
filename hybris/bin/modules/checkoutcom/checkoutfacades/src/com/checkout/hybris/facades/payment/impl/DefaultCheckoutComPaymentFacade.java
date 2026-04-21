@@ -11,9 +11,9 @@ import com.checkout.hybris.facades.beans.WalletPaymentInfoData;
 import com.checkout.hybris.facades.enums.WalletPaymentType;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentFacade;
 import com.checkout.hybris.facades.payment.token.request.converters.mappers.CheckoutComMappedPaymentTokenRequestConverter;
-import com.checkout.sdk.payments.GetPaymentResponse;
-import com.checkout.sdk.tokens.TokenResponse;
-import com.checkout.sdk.tokens.WalletTokenRequest;
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.tokens.TokenResponse;
+import com.checkout.tokens.WalletTokenRequest;
 import com.google.common.base.Preconditions;
 import de.hybris.platform.acceleratorfacades.payment.impl.DefaultPaymentFacade;
 import de.hybris.platform.core.model.order.CartModel;
@@ -144,7 +144,7 @@ public class DefaultCheckoutComPaymentFacade extends DefaultPaymentFacade implem
     protected WalletPaymentInfoData createWalletPaymentInfoDataResponse(final TokenResponse tokenResponse) {
         final WalletPaymentInfoData walletPaymentTokenData = new WalletPaymentInfoData();
         walletPaymentTokenData.setToken(tokenResponse.getToken());
-        walletPaymentTokenData.setType(tokenResponse.getType().toUpperCase());
+        walletPaymentTokenData.setType(tokenResponse.getType().name().toUpperCase());
         return walletPaymentTokenData;
     }
 }

@@ -15,15 +15,17 @@ import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationE
 import com.checkout.hybris.core.payment.services.CheckoutComApiService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationService;
-import com.checkout.sdk.CheckoutApi;
-import com.checkout.sdk.CheckoutApiException;
-import com.checkout.sdk.GsonSerializer;
-import com.checkout.sdk.common.ApiResponseInfo;
-import com.checkout.sdk.payments.*;
-import com.checkout.sdk.sources.SourceRequest;
-import com.checkout.sdk.sources.SourceResponse;
-import com.checkout.sdk.tokens.TokenResponse;
-import com.checkout.sdk.tokens.WalletTokenRequest;
+import com.checkout.CheckoutApi;
+import com.checkout.CheckoutApiException;
+import com.checkout.GsonSerializer;
+import com.checkout.instruments.create.CreateInstrumentSepaRequest;
+import com.checkout.instruments.create.CreateInstrumentSepaResponse;
+import com.checkout.payments.*;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.payments.response.PaymentResponse;
+import com.checkout.tokens.TokenResponse;
+import com.checkout.tokens.WalletTokenRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.hybris.platform.basecommerce.model.site.BaseSiteModel;
@@ -45,6 +47,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -96,11 +99,11 @@ public class DefaultCheckoutComPaymentIntegrationService implements CheckoutComP
      * {@inheritDoc}
      */
     @Override
-    public PaymentResponse authorizePayment(final PaymentRequest<RequestSource> paymentRequest) {
+    public PaymentResponse authorizePayment(final PaymentRequest paymentRequest) {
         final CheckoutApi checkoutApi = checkoutComApiService.createCheckoutApi();
 
         try {
-            return checkoutApi.paymentsClient().requestAsync(paymentRequest).get();
+            return checkoutApi.paymentsClient().requestPayment(paymentRequest).get();
         } catch (final ExecutionException | CancellationException e) {
             LOG.error("Error while authorizing the payment with Checkout.com for payment reference [{}]", paymentRequest.getReference());
             throw new CheckoutComPaymentIntegrationException(AUTHORIZATION_PROCESS_FAILED_WITH_EXCEPTION, e);
@@ -119,7 +122,7 @@ public class DefaultCheckoutComPaymentIntegrationService implements CheckoutComP
         final CheckoutApi checkoutApi = checkoutComApiService.createCheckoutApi();
 
         try {
-            final GetPaymentResponse getPaymentResponse = checkoutApi.paymentsClient().getAsync(paymentIdentifier).get();
+            final GetPaymentResponse getPaymentResponse = checkoutApi.paymentsClient().getPayment(paymentIdentifier).get();
             final GsonSerializer gsonSerializer = new GsonSerializer();
             final String paymentResponseJson = gsonSerializer.toJson(getPaymentResponse);
             paymentInfoService.saveResponseInOrderByPaymentReference(getPaymentResponse.getReference(), paymentResponseJson);
@@ -164,7 +167,7 @@ public class DefaultCheckoutComPaymentIntegrationService implements CheckoutComP
             }
         });
 
-        return checkoutApi.paymentsClient().captureAsync(paymentId, captureRequest).get();
+        return checkoutApi.paymentsClient().capturePayment(paymentId, captureRequest).get();
     }
 
     /**
@@ -179,7 +182,7 @@ public class DefaultCheckoutComPaymentIntegrationService implements CheckoutComP
             }
         });
 
-        return checkoutApi.paymentsClient().refundAsync(paymentId, refundRequest).get();
+        return checkoutApi.paymentsClient().refundPayment(paymentId, refundRequest).get();
     }
 
     /**
@@ -210,23 +213,23 @@ public class DefaultCheckoutComPaymentIntegrationService implements CheckoutComP
             }
         });
 
-        return checkoutApi.paymentsClient().voidAsync(paymentId, voidRequest).get();
+        return checkoutApi.paymentsClient().voidPayment(paymentId, voidRequest).get();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public SourceResponse setUpPaymentSource(final SourceRequest sourceRequest) {
+    public CreateInstrumentSepaResponse setUpSepaPaymentSource(final CreateInstrumentSepaRequest sourceRequest) {
         final CheckoutApi checkoutApi = checkoutComApiService.createCheckoutApi();
 
         try {
-            return checkoutApi.sourcesClient().requestAsync(sourceRequest).get();
+            return (CreateInstrumentSepaResponse) checkoutApi.instrumentsClient().create(sourceRequest).get();
         } catch (final ExecutionException | CancellationException e) {
-            LOG.error("Error while setting up the payment source with Checkout.com for payment reference [{}]", sourceRequest.getReference());
+            LOG.error("Error while setting up the payment source with Checkout.com for payment reference [{}]", sourceRequest.getInstrumentData().getMandateId());
             throw new CheckoutComPaymentIntegrationException(AUTHORIZATION_PROCESS_FAILED_WITH_EXCEPTION, e);
         } catch (final InterruptedException ie) {
-            LOG.error("Interrupt exception while setting up the payment source with Checkout.com for payment reference [{}]", sourceRequest.getReference());
+            LOG.error("Interrupt exception while setting up the payment source with Checkout.com for payment reference [{}]", sourceRequest.getInstrumentData().getMandateId());
             Thread.currentThread().interrupt();
             throw new CheckoutComPaymentIntegrationException("Source setup failed due to interrupt exception: ", ie);
         }
@@ -240,12 +243,12 @@ public class DefaultCheckoutComPaymentIntegrationService implements CheckoutComP
         final CheckoutApi checkoutApi = checkoutComApiService.createCheckoutApi();
 
         try {
-            return checkoutApi.tokensClient().requestAsync(walletTokenRequest).get();
+            return checkoutApi.tokensClient().requestWalletToken(walletTokenRequest).get();
         } catch (final ExecutionException | CancellationException e) {
-            LOG.error("Error while generating the payment token with Checkout.com for wallet type [{}].", walletTokenRequest.getWalletType());
+            LOG.error("Error while generating the payment token with Checkout.com for wallet type [{}].", walletTokenRequest.getType());
             throw new CheckoutComPaymentIntegrationException(AUTHORIZATION_PROCESS_FAILED_WITH_EXCEPTION, e);
         } catch (final InterruptedException ie) {
-            LOG.error("Interrupt exception while generating the payment token with Checkout.com for wallet type [{}]", walletTokenRequest.getWalletType());
+            LOG.error("Interrupt exception while generating the payment token with Checkout.com for wallet type [{}]", walletTokenRequest.getType());
             Thread.currentThread().interrupt();
             throw new CheckoutComPaymentIntegrationException("Generate wallet token failed due to interrupt exception: ", ie);
         }
@@ -433,13 +436,9 @@ public class DefaultCheckoutComPaymentIntegrationService implements CheckoutComP
      * @return the klarna exception
      */
     protected CheckoutApiException createKlarnaApiException(final Exception e) {
-        final ApiResponseInfo apiResponseInfo = new ApiResponseInfo();
-        if (e instanceof HttpStatusCodeException) {
-            final HttpStatusCodeException httpStatusCodeException = (HttpStatusCodeException) e;
-            apiResponseInfo.setHttpStatusCode(httpStatusCodeException.getStatusCode().value());
-        } else {
-            apiResponseInfo.setHttpStatusCode(HttpStatus.SC_SERVICE_UNAVAILABLE);
+        if (e instanceof HttpStatusCodeException httpStatusCodeException) {
+            return new CheckoutApiException(httpStatusCodeException.getStatusCode().value(), null, Map.of("errorMessage", "Klarna api integration failed."));
         }
-        return new CheckoutApiException(apiResponseInfo, "Klarna api integration failed.");
+        return new CheckoutApiException(HttpStatus.SC_SERVICE_UNAVAILABLE, null, Map.of("errorMessage", "Klarna api integration failed."));
     }
 }

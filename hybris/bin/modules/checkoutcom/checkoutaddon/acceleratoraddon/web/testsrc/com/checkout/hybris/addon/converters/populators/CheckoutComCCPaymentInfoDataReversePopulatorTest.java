@@ -1,16 +1,19 @@
 package com.checkout.hybris.addon.converters.populators;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.checkout.hybris.addon.converters.populators.CheckoutComCCPaymentInfoDataReversePopulator.SAVE_CARD_KEY;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commercefacades.order.data.CCPaymentInfoData;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.checkout.hybris.addon.converters.populators.CheckoutComCCPaymentInfoDataReversePopulator.SAVE_CARD_KEY;
-import static org.junit.Assert.*;
 
 @UnitTest
 public class CheckoutComCCPaymentInfoDataReversePopulatorTest {
@@ -32,11 +35,11 @@ public class CheckoutComCCPaymentInfoDataReversePopulatorTest {
     private static final String CARD_TYPE_KEY = "cardType";
     private static final String ACCOUNT_HOLDER_NAME_KEY = "accountHolderName";
 
-    private CheckoutComCCPaymentInfoDataReversePopulator testObj = new CheckoutComCCPaymentInfoDataReversePopulator();
+    private final CheckoutComCCPaymentInfoDataReversePopulator testObj = new CheckoutComCCPaymentInfoDataReversePopulator();
 
     private PaymentDataForm paymentDataForm;
     private CCPaymentInfoData ccPaymentInfoData;
-    private Map<String, Object> attributesMap = new HashMap();
+    private final Map<String, Object> attributesMap = new HashMap<>();
 
     @Before
     public void setUp() {
@@ -53,14 +56,18 @@ public class CheckoutComCCPaymentInfoDataReversePopulatorTest {
         paymentDataForm.setFormAttributes(attributesMap);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WithNullSource_ShouldThrowException() {
-        testObj.populate(null, ccPaymentInfoData);
+        assertThatThrownBy(() -> testObj.populate(null, ccPaymentInfoData))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Parameter paymentTokenForm cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WithNullTarget_ShouldThrowException() {
-        testObj.populate(paymentDataForm, null);
+        assertThatThrownBy(() -> testObj.populate(paymentDataForm, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Parameter ccPaymentInfoData cannot be null.");
     }
 
     @Test

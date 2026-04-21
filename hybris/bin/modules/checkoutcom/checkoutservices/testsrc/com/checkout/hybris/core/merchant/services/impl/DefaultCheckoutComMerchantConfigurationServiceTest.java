@@ -307,4 +307,14 @@ public class DefaultCheckoutComMerchantConfigurationServiceTest {
 
         assertEquals(NAS_SECRET_KEY, result);
     }
+
+    @Test
+    public void getProcessingChannelId_shouldReturnTheValueAsExpected() {
+        when(merchantConfigurationMock.getChannelProcessingId()).thenReturn("PROCESSING_CHANNEL");
+
+        final String result = testObj.getProcessingChannelId();
+
+        assertEquals("PROCESSING_CHANNEL", result);
+
+    }
 }

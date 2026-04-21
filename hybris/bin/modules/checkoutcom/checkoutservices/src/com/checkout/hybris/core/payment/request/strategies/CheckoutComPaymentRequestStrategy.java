@@ -1,7 +1,6 @@
 package com.checkout.hybris.core.payment.request.strategies;
 
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.platform.core.model.order.CartModel;
 
 /**
@@ -15,5 +14,5 @@ public interface CheckoutComPaymentRequestStrategy {
      * @param cart the session cart
      * @return the payment request
      */
-    PaymentRequest<RequestSource> createPaymentRequest(CartModel cart);
+    PaymentRequest createPaymentRequest(CartModel cart);
 }

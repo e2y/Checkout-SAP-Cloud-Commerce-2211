@@ -1,5 +1,11 @@
 package com.checkout.hybris.addon.converters.populators;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.acceleratorstorefrontcommons.forms.AddressForm;
 import de.hybris.platform.commercefacades.i18n.I18NFacade;
@@ -12,9 +18,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -41,8 +44,8 @@ public class CheckoutComAddressDataReversePopulatorTest {
     @Mock
     private RegionData regionDataMock;
 
-    private AddressForm source = new AddressForm();
-    private AddressData target = new AddressData();
+    private final AddressForm source = new AddressForm();
+    private final AddressData target = new AddressData();
 
     @Before
     public void setUp() {
@@ -78,13 +81,17 @@ public class CheckoutComAddressDataReversePopulatorTest {
         assertEquals(ADDRESS_ID, target.getId());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenSourceNull_ShouldThrowException() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("AddressForm cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenTargetNull_ShouldThrowException() {
-        testObj.populate(source, null);
+        assertThatThrownBy(() -> testObj.populate(source, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("AddressData cannot be null.");
     }
 }

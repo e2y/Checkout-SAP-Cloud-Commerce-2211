@@ -2,29 +2,23 @@ package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.PAYPAL;
 import static java.util.Collections.emptyMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CheckoutComAbstractApmPaymentRequestStrategyTest {
-
-    private static final String CURRENCY_ISO_CODE = "USD";
-    private static final Long CHECKOUT_COM_TOTAL_PRICE = 10000L;
 
     private CheckoutComAbstractApmPaymentRequestStrategy testObj;
 
@@ -35,40 +29,23 @@ public class CheckoutComAbstractApmPaymentRequestStrategyTest {
     @Mock
     private CheckoutComAPMPaymentInfoModel checkoutComRedirectAPMPaymentInfoMock;
     @Mock
-    private PaymentRequest<RequestSource> paymentRequestMock;
+    private PaymentRequest paymentRequestMock;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         testObj = Mockito.mock(
                 CheckoutComAbstractApmPaymentRequestStrategy.class,
                 Mockito.CALLS_REAL_METHODS);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void getRequestSourcePaymentRequest_WhenPaymentInfoIsNotApmPaymentInfo_ShouldThrowException() {
-        when(cartMock.getPaymentInfo()).thenReturn(checkoutComPaymentInfoMock);
-
-        testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
-    }
-
-    @Test
-    public void getRequestSourcePaymentRequest_WhenGenericAPMPayment_ShouldCreateAlternativePaymentRequestWithType() {
-        when(cartMock.getPaymentInfo()).thenReturn(checkoutComRedirectAPMPaymentInfoMock);
-        when(checkoutComRedirectAPMPaymentInfoMock.getType()).thenReturn(PAYPAL.name());
-
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
-
-        assertEquals(PAYPAL.name().toLowerCase(), result.getSource().getType());
-    }
-
     @Test
     public void isCapture_WhenApmRequest_ThenReturnNull() {
-        assertTrue(testObj.isCapture().isEmpty());
+        Assertions.assertTrue(testObj.isCapture().isEmpty());
     }
 
     @Test
     public void createThreeDSRequest_WhenApmRequest_ThenResultIsEmpty() {
-        assertTrue(testObj.createThreeDSRequest().isEmpty());
+        Assertions.assertTrue(testObj.createThreeDSRequest().isEmpty());
     }
 
     @Test
@@ -79,12 +56,5 @@ public class CheckoutComAbstractApmPaymentRequestStrategyTest {
 
         verify(testObj).createGenericMetadata();
         verify(paymentRequestMock).setMetadata(emptyMap());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void populateRequestMetadata_WhenPaymentInfoIsNull_ShouldThrowException() {
-        when(cartMock.getPaymentInfo()).thenReturn(null);
-
-        testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
     }
 }

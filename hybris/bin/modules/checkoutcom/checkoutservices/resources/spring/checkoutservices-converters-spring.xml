@@ -53,4 +53,60 @@
         <constructor-arg name="checkoutComCurrencyService" ref="checkoutComCurrencyService"/>
     </bean>
 
+
+    <alias name="defaultCheckoutComFlowBillingAddressPopulator" alias="checkoutComFlowBillingAddressPopulator"/>
+    <bean id="defaultCheckoutComFlowBillingAddressPopulator"
+          class="com.checkout.hybris.core.flow.paymentsession.populators.DefaultCheckoutComFlowBillingAddressPopulator">
+        <constructor-arg name="checkoutComPhoneNumberStrategy" ref="checkoutComPhoneNumberStrategy"/>
+    </bean>
+
+    <alias name="defaultCheckoutComFlowCommonPopulator" alias="checkoutComFlowCommonPopulator"/>
+    <bean id="defaultCheckoutComFlowCommonPopulator"
+          class="com.checkout.hybris.core.flow.paymentsession.populators.DefaultCheckoutComFlowCommonPopulator">
+        <constructor-arg name="checkoutComMerchantConfigurationService" ref="checkoutComMerchantConfigurationService"/>
+        <constructor-arg name="checkoutComCurrencyService" ref="checkoutComCurrencyService"/>
+        <constructor-arg name="configurationService" ref="configurationService"/>
+    </bean>
+
+    <alias name="defaultCheckoutComFlowCustomerPopulator" alias="checkoutComFlowCustomerPopulator"/>
+    <bean id="defaultCheckoutComFlowCustomerPopulator"
+          class="com.checkout.hybris.core.flow.paymentsession.populators.DefaultCheckoutComFlowCustomerPopulator"/>
+
+    <alias name="defaultCheckoutComFlowItemsPopulator" alias="checkoutComFlowItemsPopulator"/>
+    <bean id="defaultCheckoutComFlowItemsPopulator"
+          class="com.checkout.hybris.core.flow.paymentsession.populators.DefaultCheckoutComFlowItemsPopulator">
+        <constructor-arg name="checkoutComCurrencyService" ref="checkoutComCurrencyService"/>
+    </bean>
+
+    <alias name="defaultCheckoutComFlowProcessingPopulator" alias="checkoutComFlowProcessingPopulator"/>
+    <bean id="defaultCheckoutComFlowProcessingPopulator"
+          class="com.checkout.hybris.core.flow.paymentsession.populators.DefaultCheckoutComFlowProcessingPopulator">
+        <constructor-arg name="checkoutComCurrencyService" ref="checkoutComCurrencyService"/>
+    </bean>
+
+    <alias name="defaultCheckoutComFlowShippingAddressPopulator" alias="checkoutComFlowShippingAddressPopulator"/>
+    <bean id="defaultCheckoutComFlowShippingAddressPopulator"
+          class="com.checkout.hybris.core.flow.paymentsession.populators.DefaultCheckoutComFlowShippingAddressPopulator">
+        <constructor-arg name="checkoutComPhoneNumberStrategy" ref="checkoutComPhoneNumberStrategy"/>
+    </bean>
+
+    <alias name="defaultCheckoutComFlowUrlsPopulator" alias="checkoutComFlowUrlsPopulator"/>
+    <bean id="defaultCheckoutComFlowUrlsPopulator"
+          class="com.checkout.hybris.core.flow.paymentsession.populators.DefaultCheckoutComFlowUrlsPopulator"/>
+
+    <alias name="defaultCheckoutComFlowCartPaymentSessionRequestConverter" alias="checkoutComFlowCartPaymentSessionRequestConverter"/>
+    <bean id="defaultCheckoutComFlowCartPaymentSessionRequestConverter" class="com.checkout.hybris.core.flow.paymentsession.converters.DefaultCheckoutComFlowCartPaymentSessionRequestConverter">
+        <constructor-arg name="populatorList">
+            <list>
+                <ref bean="checkoutComFlowBillingAddressPopulator"/>
+                <ref bean="checkoutComFlowCustomerPopulator"/>
+                <ref bean="checkoutComFlowItemsPopulator"/>
+                <ref bean="checkoutComFlowProcessingPopulator"/>
+                <ref bean="checkoutComFlowShippingAddressPopulator"/>
+                <ref bean="checkoutComFlowUrlsPopulator"/>
+                <ref bean="checkoutComFlowCommonPopulator"/>
+            </list>
+        </constructor-arg>
+    </bean>
+
 </beans>

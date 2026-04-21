@@ -52,6 +52,7 @@
         <constructor-arg ref="checkoutComPaymentRequestStrategyMapper"/>
         <constructor-arg ref="checkoutComCartModelToPaymentL2AndL3Converter"/>
         <constructor-arg ref="checkoutPaymentRequestServicesWrapper"/>
+        <constructor-arg ref="checkoutComMerchantConfigurationService"/>
     </bean>
 
     <alias name="defaultCheckoutComCardPaymentRequestStrategy" alias="checkoutComCardPaymentRequestStrategy"/>
@@ -97,14 +98,6 @@
           class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComEpsPaymentRequestStrategy"
           parent="checkoutComAbstractApmPaymentRequestStrategy"/>
 
-    <alias name="defaultCheckoutComPTwentyFourPaymentRequestStrategy"
-           alias="checkoutComPTwentyFourPaymentRequestStrategy"/>
-    <bean id="defaultCheckoutComPTwentyFourPaymentRequestStrategy"
-          class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComPTwentyFourPaymentRequestStrategy"
-          parent="checkoutComAbstractApmPaymentRequestStrategy">
-        <constructor-arg ref="addressService"/>
-    </bean>
-
     <alias name="defaultCheckoutComKnetPaymentRequestStrategy" alias="checkoutComKnetPaymentRequestStrategy"/>
     <bean id="defaultCheckoutComKnetPaymentRequestStrategy"
           class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComKnetPaymentRequestStrategy"
@@ -122,10 +115,7 @@
           class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComAlipayPaymentRequestStrategy"
           parent="checkoutComAbstractApmPaymentRequestStrategy"/>
 
-    <alias name="defaultCheckoutComPoliPaymentRequestStrategy" alias="checkoutComPoliPaymentRequestStrategy"/>
-    <bean id="defaultCheckoutComPoliPaymentRequestStrategy"
-          class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComPoliPaymentRequestStrategy"
-          parent="checkoutComAbstractApmPaymentRequestStrategy"/>
+
     <alias name="defaultCheckoutComPayPalPaymentRequestStrategy" alias="checkoutComPayPalPaymentRequestStrategy"/>
     <bean id="defaultCheckoutComPayPalPaymentRequestStrategy"
           class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComPayPalPaymentRequestStrategy"
@@ -149,10 +139,7 @@
           parent="checkoutComAbstractApmPaymentRequestStrategy">
     </bean>
 
-    <alias name="defaultCheckoutComSepaPaymentRequestStrategy" alias="checkoutComSepaPaymentRequestStrategy"/>
-    <bean id="defaultCheckoutComSepaPaymentRequestStrategy"
-          class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComSepaPaymentRequestStrategy"
-          parent="checkoutComAbstractApmPaymentRequestStrategy"/>
+
 
     <alias name="defaultCheckoutComApplePayPaymentRequestStrategy" alias="checkoutComApplePayPaymentRequestStrategy"/>
     <bean id="defaultCheckoutComApplePayPaymentRequestStrategy"
@@ -170,11 +157,12 @@
           parent="checkoutComAbstractApmPaymentRequestStrategy">
     </bean>
 
-    <alias name="defaultCheckoutComOxxoPaymentRequestStrategy" alias="checkoutComOxxoPaymentRequestStrategy"/>
-    <bean id="defaultCheckoutComOxxoPaymentRequestStrategy"
-          class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComOxxoPaymentRequestStrategy"
+    <alias name="defaultCheckoutComPTwentyFourPaymentRequestStrategy"
+           alias="checkoutComPTwentyFourPaymentRequestStrategy"/>
+    <bean id="defaultCheckoutComPTwentyFourPaymentRequestStrategy"
+          class="com.checkout.hybris.core.payment.request.strategies.impl.CheckoutComPTwentyFourPaymentRequestStrategy"
           parent="checkoutComAbstractApmPaymentRequestStrategy">
-        <constructor-arg ref="checkoutComOxxoPaymentRequestService"/>
+        <constructor-arg ref="addressService"/>
     </bean>
 
     <!--Checkout com response strategies-->
@@ -206,13 +194,6 @@
           parent="checkoutComAbstractPaymentResponseStrategy">
         <constructor-arg ref="paymentInfoService"/>
         <constructor-arg ref="checkoutComPaymentIntegrationService"/>
-    </bean>
-
-    <alias name="defaultCheckoutComFawryPaymentResponseStrategy" alias="checkoutComFawryPaymentResponseStrategy"/>
-    <bean id="defaultCheckoutComFawryPaymentResponseStrategy"
-          class="com.checkout.hybris.core.payment.response.strategies.impl.CheckoutComFawryPaymentResponseStrategy"
-          parent="checkoutComAbstractPaymentResponseStrategy">
-        <constructor-arg ref="paymentInfoService"/>
     </bean>
 
     <alias name="defaultCheckoutComAchPaymentResponseStrategy" alias="checkoutComAchPaymentResponseStrategy"/>
