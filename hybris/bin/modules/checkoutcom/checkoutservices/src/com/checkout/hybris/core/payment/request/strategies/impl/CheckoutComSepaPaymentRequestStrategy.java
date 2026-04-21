@@ -1,25 +1,30 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.AccountHolder;
+import com.checkout.common.Address;
+import com.checkout.common.CountryCode;
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
-import com.checkout.hybris.core.merchantconfiguration.BillingDescriptor;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComSepaPaymentInfoModel;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.common.Address;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.sources.SourceData;
-import com.checkout.sdk.sources.SourceRequest;
-import com.checkout.sdk.sources.SourceResponse;
+import com.checkout.instruments.create.CreateInstrumentRequest;
+import com.checkout.instruments.create.CreateInstrumentSepaRequest;
+import com.checkout.instruments.create.CreateInstrumentSepaResponse;
+import com.checkout.instruments.create.InstrumentData;
+import com.checkout.payments.PaymentType;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestIdSource;
 import de.hybris.platform.core.model.order.CartModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.SEPA;
+import java.time.Instant;
+
 import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParameterNotNull;
 
 /**
@@ -29,21 +34,8 @@ public class CheckoutComSepaPaymentRequestStrategy extends CheckoutComAbstractAp
 
     protected static final Logger LOG = LogManager.getLogger(CheckoutComSepaPaymentRequestStrategy.class);
 
-    protected static final String ACCOUNT_IBAN_KEY = "account_iban";
-    protected static final String MANDATE_TYPE_KEY = "mandate_type";
-    protected static final String FIRST_NAME_KEY = "first_name";
-    protected static final String LAST_NAME_KEY = "last_name";
-    protected static final String BILLING_DESCRIPTOR_KEY = "billing_descriptor";
-    protected static final String PAYMENT_SOURCE_ID_KEY = "id";
-
-    public CheckoutComSepaPaymentRequestStrategy(final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper,
-                                                 final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                 final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                 final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter) {
-        super(checkoutComPhoneNumberStrategy,
-            checkoutComPaymentRequestStrategyMapper,
-            checkoutComCartModelToPaymentL2AndL3Converter,
-            checkoutPaymentRequestServicesWrapper);
+    protected CheckoutComSepaPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
     }
 
     /**
@@ -51,46 +43,51 @@ public class CheckoutComSepaPaymentRequestStrategy extends CheckoutComAbstractAp
      */
     @Override
     public CheckoutComPaymentType getStrategyKey() {
-        return SEPA;
+        return CheckoutComPaymentType.SEPA;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PaymentRequest<RequestSource> createPaymentRequest(final CartModel cart) {
+    protected PaymentRequest getRequestSourcePaymentRequest(CartModel cart, String currencyIsoCode, Long amount) {
+        if (cart.getPaymentInfo() instanceof CheckoutComSepaPaymentInfoModel) {
+            return PaymentRequest.builder().amount(amount).currency(Currency.valueOf(currencyIsoCode)).build();
+        }
+        throw new IllegalArgumentException(
+            String.format("Strategy called with unsupported paymentInfo type : [%s] while trying to authorize cart: " +
+                "[%s]", cart.getPaymentInfo().getClass(), cart.getCode()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PaymentRequest createPaymentRequest(final CartModel cart) {
         validateParameterNotNull(cart, "Cart model cannot be null");
 
         final String currencyIsoCode = cart.getCurrency().getIsocode();
-        final Long amount = checkoutPaymentRequestServicesWrapper.checkoutComCurrencyService
-            .convertAmountIntoPennies(currencyIsoCode, cart.getTotalPrice());
+        final Long amount = checkoutPaymentRequestServicesWrapper.checkoutComCurrencyService.removeDecimalsFromCurrencyAmount(currencyIsoCode, cart.getTotalPrice());
 
-        final PaymentRequest<RequestSource> paymentRequest = super.getRequestSourcePaymentRequest(cart, currencyIsoCode,
-                                                                                                  amount);
+        final CreateInstrumentSepaResponse sourceResponse = createSepaPaymentInstrument(cart);
+        validateParameterNotNull(sourceResponse, "Checkout.com SourceResponse from set up payment source cannot be null");
+        validateParameterNotNull(sourceResponse.getId(), "Checkout.com SourceResponse Id from set up payment source response cannot be null");
 
-        final SourceResponse sourceResponse = getCheckoutComSourceResponse(cart);
-        validateParameterNotNull(sourceResponse,
-                                 "Checkout.com SourceResponse from set up payment source cannot be null");
-        validateParameterNotNull(sourceResponse.getSource(),
-                                 "Checkout.com SourceResponse Id from set up payment source response cannot be null");
-
-        final AlternativePaymentSource source = (AlternativePaymentSource) paymentRequest.getSource();
-        source.put(PAYMENT_SOURCE_ID_KEY, sourceResponse.getSource().getId());
-        ((AlternativePaymentSource) paymentRequest.getSource()).setType(PAYMENT_SOURCE_ID_KEY);
+        final PaymentRequest paymentRequest = getRequestSourcePaymentRequest(cart, currencyIsoCode, amount);
+        paymentRequest.setSource(RequestIdSource.builder().id(sourceResponse.getId()).build());
 
         populatePaymentRequest(cart, paymentRequest);
-        createCustomerRequestFromSource(sourceResponse.getSource()).ifPresent(paymentRequest::setCustomer);
+        createCustomerRequestFromSource(sourceResponse).ifPresent(paymentRequest::setCustomer);
 
         return paymentRequest;
     }
 
-
-    protected SourceResponse getCheckoutComSourceResponse(final CartModel cart) {
-        SourceResponse sourceResponse = null;
+    protected CreateInstrumentSepaResponse createSepaPaymentInstrument(final CartModel cart) {
+        CreateInstrumentSepaResponse sourceResponse = null;
         if (cart.getPaymentInfo() instanceof CheckoutComSepaPaymentInfoModel sepaPaymentInfo) {
             try {
                 sourceResponse = checkoutPaymentRequestServicesWrapper.checkoutComPaymentIntegrationService
-                    .setUpPaymentSource(createSourceRequest(cart, sepaPaymentInfo));
+                    .setUpSepaPaymentSource(createSourceRequest(cart, sepaPaymentInfo));
             } catch (final CheckoutComPaymentIntegrationException e) {
                 LOG.error("Error setting the payment source with checkout.com endpoint for sepa payment and cart [{}]", cart.getCode());
             }
@@ -101,19 +98,31 @@ public class CheckoutComSepaPaymentRequestStrategy extends CheckoutComAbstractAp
     }
 
     /**
-     * Creates the source request for the set up payment source request to checkout.com
+     * Creates the source request for the set-up payment source request to checkout.com
      *
      * @param cart            the cart model
      * @param sepaPaymentInfo the payment info for SEPA
-     * @return {@link SourceData} the populated SourceRequest
+     * @return {@link CreateInstrumentRequest} the populated CreateInstrumentRequest
      */
-    protected SourceRequest createSourceRequest(final CartModel cart, final CheckoutComSepaPaymentInfoModel sepaPaymentInfo) {
-        final SourceRequest sourceRequest = new SourceRequest();
-        sourceRequest.setBillingAddress(createAddress(sepaPaymentInfo));
-        sourceRequest.setReference(cart.getCheckoutComPaymentReference());
-        sourceRequest.setType(SEPA.name());
-        sourceRequest.setSourceData(createSourceData(sepaPaymentInfo));
-        return sourceRequest;
+    protected CreateInstrumentSepaRequest createSourceRequest(final CartModel cart, final CheckoutComSepaPaymentInfoModel sepaPaymentInfo) {
+        final AccountHolder accountHolder = AccountHolder.builder()
+            .billingAddress(createAddress(sepaPaymentInfo))
+            .firstName(sepaPaymentInfo.getFirstName())
+            .lastName(sepaPaymentInfo.getLastName())
+            .build();
+        final InstrumentData instrumentData = InstrumentData.builder()
+            .accoountNumber(sepaPaymentInfo.getAccountIban())
+            .mandateId(cart.getCheckoutComPaymentReference())
+            .paymentType(PaymentType.valueOf(sepaPaymentInfo.getPaymentType().getCode()))
+            .country(CountryCode.valueOf(sepaPaymentInfo.getCountry()))
+            .currency(Currency.valueOf(cart.getCurrency().getIsocode()))
+            .dateOfSignature(Instant.now())
+            .build();
+
+        return CreateInstrumentSepaRequest.builder()
+            .accountHolder(accountHolder)
+            .instrumentData(instrumentData)
+            .build();
     }
 
     /**
@@ -126,28 +135,8 @@ public class CheckoutComSepaPaymentRequestStrategy extends CheckoutComAbstractAp
         final Address address = new Address();
         address.setAddressLine1(sepaPaymentInfo.getAddressLine1());
         address.setCity(sepaPaymentInfo.getCity());
-        address.setCountry(sepaPaymentInfo.getCountry());
+        address.setCountry(CountryCode.valueOf(sepaPaymentInfo.getCountry()));
         address.setZip(sepaPaymentInfo.getPostalCode());
         return address;
-    }
-
-    /**
-     * Creates the SourceData for the SourceRequest, with all mandatory fields
-     *
-     * @param sepaPaymentInfo the payment info for SEPA
-     * @return the populate SourceData
-     */
-    protected SourceData createSourceData(final CheckoutComSepaPaymentInfoModel sepaPaymentInfo) {
-        final SourceData sourceData = new SourceData();
-        sourceData.put(FIRST_NAME_KEY, sepaPaymentInfo.getFirstName());
-        sourceData.put(LAST_NAME_KEY, sepaPaymentInfo.getLastName());
-        sourceData.put(ACCOUNT_IBAN_KEY, sepaPaymentInfo.getAccountIban());
-        sourceData.put(MANDATE_TYPE_KEY, sepaPaymentInfo.getPaymentType().getCode().toLowerCase());
-
-        final BillingDescriptor billingDescriptor = checkoutPaymentRequestServicesWrapper
-            .checkoutComMerchantConfigurationService.getBillingDescriptor();
-        validateParameterNotNull(billingDescriptor, "BillingDescriptor cannot be null");
-        sourceData.put(BILLING_DESCRIPTOR_KEY, billingDescriptor.getBillingDescriptorName());
-        return sourceData;
     }
 }

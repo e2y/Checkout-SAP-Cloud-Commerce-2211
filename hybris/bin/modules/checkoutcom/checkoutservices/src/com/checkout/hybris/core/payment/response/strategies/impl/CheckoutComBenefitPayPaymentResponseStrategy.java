@@ -9,9 +9,9 @@ import com.checkout.hybris.core.payment.response.mappers.CheckoutComPaymentRespo
 import com.checkout.hybris.core.payment.response.strategies.CheckoutComPaymentResponseStrategy;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationService;
-import com.checkout.sdk.payments.AlternativePaymentSourceResponse;
-import com.checkout.sdk.payments.GetPaymentResponse;
-import com.checkout.sdk.payments.PaymentPending;
+import com.checkout.payments.response.GetPaymentResponse;
+import com.checkout.payments.response.PaymentResponse;
+import com.checkout.payments.response.source.AlternativePaymentSourceResponse;
 import com.google.common.base.Preconditions;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import org.apache.commons.lang.StringUtils;
@@ -53,7 +53,7 @@ public class CheckoutComBenefitPayPaymentResponseStrategy extends CheckoutComAbs
      * {@inheritDoc}
      */
     @Override
-    public AuthorizeResponse handlePendingPaymentResponse(final PaymentPending paymentPendingResponse, final PaymentInfoModel paymentInfo) {
+    public AuthorizeResponse handlePendingPaymentResponse(final PaymentResponse paymentPendingResponse, final PaymentInfoModel paymentInfo) {
         validateParameterNotNull(paymentPendingResponse, "Payment response cannot be null");
         Preconditions.checkArgument(StringUtils.isNotBlank(paymentPendingResponse.getId()), "Payment id cannot be null");
         Preconditions.checkArgument(paymentInfo instanceof CheckoutComBenefitPayPaymentInfoModel, "Payment info null or unsupported type");

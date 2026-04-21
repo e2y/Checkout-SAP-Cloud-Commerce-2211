@@ -1,8 +1,13 @@
 package com.checkout.hybris.core.payment.request;
 
 
-import com.checkout.sdk.payments.*;
+import com.checkout.payments.CaptureRequest;
+import com.checkout.payments.RefundRequest;
+import com.checkout.payments.VoidRequest;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.platform.core.model.order.CartModel;
+import de.hybris.platform.payment.commands.request.FollowOnRefundRequest;
+
 
 import java.math.BigDecimal;
 
@@ -17,7 +22,7 @@ public interface CheckoutComRequestFactory {
      * @param cartModel the session cart
      * @return the payment request
      */
-    PaymentRequest<RequestSource> createPaymentRequest(CartModel cartModel);
+    PaymentRequest createPaymentRequest(CartModel cartModel);
 
     /**
      * Creates the capture request to Checkout.com
@@ -38,6 +43,15 @@ public interface CheckoutComRequestFactory {
      * @return RefundRequest
      */
     RefundRequest createRefundPaymentRequest(BigDecimal amount, String paymentReference, String currencyCode);
+
+    /**
+     * Creates the refund request to Checkout.com
+     *
+     * @param followOnRefundRequest
+     * @param paymentReference the unique payment reference ID
+     * @return RefundRequest
+     */
+    RefundRequest createRefundPaymentRequest(FollowOnRefundRequest followOnRefundRequest, String paymentReference);
 
     /**
      * Creates the void request to Checkout.com

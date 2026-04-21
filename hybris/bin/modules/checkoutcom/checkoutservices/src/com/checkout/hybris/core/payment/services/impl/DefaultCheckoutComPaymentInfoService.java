@@ -10,8 +10,8 @@ import com.checkout.hybris.core.model.PayloadModel;
 import com.checkout.hybris.core.order.daos.CheckoutComOrderDao;
 import com.checkout.hybris.core.payment.daos.CheckoutComPaymentInfoDao;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.CardSourceResponse;
-import com.checkout.sdk.payments.ResponseSource;
+import com.checkout.payments.response.source.CardResponseSource;
+import com.checkout.payments.response.source.ResponseSource;
 import de.hybris.platform.commerceservices.service.data.CommerceCheckoutParameter;
 import de.hybris.platform.core.model.ItemModel;
 import de.hybris.platform.core.model.order.AbstractOrderModel;
@@ -168,12 +168,12 @@ public class DefaultCheckoutComPaymentInfoService extends DefaultPaymentInfoServ
     public void addSubscriptionIdToUserPayment(final CheckoutComCreditCardPaymentInfoModel paymentInfo, final ResponseSource source) {
         validateParameterNotNull(paymentInfo, "PaymentInfo cannot be null");
 
-        if (paymentInfo.getMarkToSave() && source instanceof CardSourceResponse && ((CardSourceResponse) source).getId() != null) {
+        if (paymentInfo.getMarkToSave() && source instanceof CardResponseSource && ((CardResponseSource) source).getId() != null) {
             paymentInfo.getUser().getPaymentInfos().stream()
                     .filter(CheckoutComCreditCardPaymentInfoModel.class::isInstance)
                     .filter(paymentInfoModel -> paymentInfoModel.getCode().equalsIgnoreCase(paymentInfo.getCode()))
                     .findAny()
-                    .ifPresent(userPayment -> updateUserPaymentInfo((CardSourceResponse) source, (CheckoutComCreditCardPaymentInfoModel) userPayment));
+                    .ifPresent(userPayment -> updateUserPaymentInfo((CardResponseSource) source, (CheckoutComCreditCardPaymentInfoModel) userPayment));
         }
     }
 
@@ -217,7 +217,7 @@ public class DefaultCheckoutComPaymentInfoService extends DefaultPaymentInfoServ
         return paymentInfoDao.findPaymentInfosByPaymentId(paymentId);
     }
 
-    protected void updateUserPaymentInfo(final CardSourceResponse source, final CheckoutComCreditCardPaymentInfoModel userPayment) {
+    protected void updateUserPaymentInfo(final CardResponseSource source, final CheckoutComCreditCardPaymentInfoModel userPayment) {
         userPayment.setSaved(true);
         userPayment.setSubscriptionId(source.getId());
         callSuperModelService().save(userPayment);

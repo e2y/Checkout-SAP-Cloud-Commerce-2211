@@ -23,11 +23,15 @@ import de.hybris.platform.webservicescommons.mapping.FieldSetLevelHelper;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.validation.Validator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @UnitTest
@@ -103,11 +107,13 @@ public class CheckoutComCartsControllerTest {
         verify(checkoutComPaymentInfoFacadeMock).addPaymentInfoToCart(paymentInfoMock);
     }
 
-    @Test(expected = NoCheckoutCartException.class)
-    public void createCartPaymentDetails_WhenHasNoCheckoutCart_ShouldThrowNoCheckoutCartException() throws NoCheckoutCartException {
+    @Test
+    public void createCartPaymentDetails_WhenHasNoCheckoutCart_ShouldThrowNoCheckoutCartException() {
         when(checkoutFacadeMock.hasCheckoutCart()).thenReturn(Boolean.FALSE);
 
-        testObj.createCartPaymentDetails(paymentDetailsWsDtoMock, StringUtils.EMPTY);
+        assertThatThrownBy(() -> testObj.createCartPaymentDetails(paymentDetailsWsDtoMock, StringUtils.EMPTY))
+                .isInstanceOf(NoCheckoutCartException.class)
+                .hasMessage("Cannot add PaymentInfo. There was no checkout cart created yet!");
     }
 
     @Test
@@ -136,16 +142,13 @@ public class CheckoutComCartsControllerTest {
         when(customerModelMock.getContactEmail()).thenReturn(CUSTOMER_EMAIL);
         when(dataMapperMock.map(addressDataMock, AddressWsDTO.class, DEFAULT_FIELD_SET)).thenReturn(addressWsDTOTwoMock);
 
-
         testObj.addBillingAddressToCart(addressWsDTOMock, DEFAULT_FIELD_SET);
 
-        final InOrder inOrder = Mockito.inOrder(addressWsDTOMock, addressDataMock, dataMapperMock, userFacadeMock, checkoutComAddressFacadeMock);
-        inOrder.verify(addressWsDTOMock).setEmail(CUSTOMER_EMAIL);
-        inOrder.verify(addressWsDTOMock).setVisibleInAddressBook(Boolean.FALSE);
-        inOrder.verify(dataMapperMock, times(1)).map(eq(addressWsDTOMock), eq(AddressData.class), anyString());
-        inOrder.verify(userFacadeMock).addAddress(addressDataMock);
-        inOrder.verify(checkoutComAddressFacadeMock).setCartBillingDetails(addressDataMock);
-        inOrder.verify(dataMapperMock, times(1)).map(eq(addressDataMock), eq(AddressWsDTO.class), anyString());
+        verify(addressWsDTOMock).setEmail(CUSTOMER_EMAIL);
+        verify(addressWsDTOMock).setVisibleInAddressBook(Boolean.FALSE);
+        verify(dataMapperMock, times(1)).map(eq(addressWsDTOMock), eq(AddressData.class), anyString());
+        verify(checkoutComAddressFacadeMock).setCartBillingDetails(addressDataMock);
+        verify(dataMapperMock, times(1)).map(eq(addressDataMock), eq(AddressWsDTO.class), anyString());
     }
 
     @Test
@@ -157,7 +160,6 @@ public class CheckoutComCartsControllerTest {
         verify(checkoutComAddressFacadeMock).setCartBillingDetailsByAddressId(ADDRESS_ID);
 
         final AddressData addressData = addressDataArgumentCaptor.getValue();
-
         assertThat(addressData.getId()).isEqualTo(ADDRESS_ID);
     }
 
@@ -181,7 +183,7 @@ public class CheckoutComCartsControllerTest {
 
         verify(addressDataMock).setShippingAddress(Boolean.TRUE);
         verify(addressDataMock).setVisibleInAddressBook(Boolean.TRUE);
-        verify(userFacadeMock).addAddress(addressDataMock);
+        verify(userFacadeMock, times(2)).addAddress(addressDataMock);
         verify(userFacadeMock).setDefaultAddress(addressDataMock);
         verify(checkoutComAddressFacadeMock).setCartBillingDetails(addressDataMock);
 
@@ -201,7 +203,7 @@ public class CheckoutComCartsControllerTest {
 
         verify(addressDataMock).setShippingAddress(Boolean.TRUE);
         verify(addressDataMock).setVisibleInAddressBook(Boolean.TRUE);
-        verify(userFacadeMock).addAddress(addressDataMock);
+        verify(userFacadeMock, times(2)).addAddress(addressDataMock);
         verify(userFacadeMock, never()).setDefaultAddress(addressDataMock);
         verify(checkoutComAddressFacadeMock).setCartBillingDetails(addressDataMock);
 

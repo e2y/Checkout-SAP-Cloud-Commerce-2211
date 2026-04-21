@@ -1,5 +1,14 @@
 package com.checkout.hybris.events.order.process.daos.impl;
 
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.processengine.model.BusinessProcessModel;
 import de.hybris.platform.servicelayer.search.FlexibleSearchQuery;
@@ -14,19 +23,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultCheckoutComProcessDefinitionDaoTest {
 
-    protected static final String ORDER_PROCESS_NAME = "orderProcessName";
+    private static final String ORDER_PROCESS_NAME = "orderProcessName";
     private static final String ORDER_CODE = "orderCode";
     private static final String REFUND_ACTION_ID = "refundActionId";
     private static final String QUERY_PARAM_ORDER_CODE = "orderCode";
@@ -38,7 +39,7 @@ public class DefaultCheckoutComProcessDefinitionDaoTest {
     @Mock
     private FlexibleSearchService flexibleSearchServiceMock;
     @Mock
-    private SearchResult searchResultMock;
+    private SearchResult<BusinessProcessModel> searchResultMock;
     @Mock
     private BusinessProcessModel businessProcessModelMock;
     @Captor
@@ -48,17 +49,21 @@ public class DefaultCheckoutComProcessDefinitionDaoTest {
     public void setUp() {
         final List<BusinessProcessModel> resultMock = Collections.singletonList(businessProcessModelMock);
         when(searchResultMock.getResult()).thenReturn(resultMock);
-        when(flexibleSearchServiceMock.search(queryArgumentCaptor.capture())).thenReturn(searchResultMock);
+        when(flexibleSearchServiceMock.<BusinessProcessModel>search(queryArgumentCaptor.capture())).thenReturn(searchResultMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void findWaitingOrderProcesses_WhenOrderCodeNull_ShouldThrowException() {
-        testObj.findWaitingOrderProcesses(null, ORDER_PROCESS_NAME);
+        assertThatThrownBy(() -> testObj.findWaitingOrderProcesses(null, ORDER_PROCESS_NAME))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Order code must not be null");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void findWaitingOrderProcesses_WhenOrderProcessCodeNull_ShouldThrowException() {
-        testObj.findWaitingOrderProcesses(ORDER_CODE, null);
+        assertThatThrownBy(() -> testObj.findWaitingOrderProcesses(ORDER_CODE, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Order process definition name must not be null");
     }
 
     @Test
@@ -74,9 +79,11 @@ public class DefaultCheckoutComProcessDefinitionDaoTest {
         assertEquals(ORDER_CODE, queryArgumentCaptorValue.getQueryParameters().get(QUERY_PARAM_ORDER_CODE));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void findWaitingReturnProcesses_WhenRefundActionIdNull_ShouldThrowException() {
-        testObj.findWaitingReturnProcesses(null);
+        assertThatThrownBy(() -> testObj.findWaitingReturnProcesses(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("refundActionId must not be null");
     }
 
     @Test
@@ -92,9 +99,11 @@ public class DefaultCheckoutComProcessDefinitionDaoTest {
         assertEquals(REFUND_ACTION_ID, queryArgumentCaptorValue.getQueryParameters().get(QUERY_PARAM_REFUND_ACTION_ID));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void findWaitingVoidProcesses_WhenOrderCodeNull_ShouldThrowException() {
-        testObj.findWaitingVoidProcesses(null);
+        assertThatThrownBy(() -> testObj.findWaitingVoidProcesses(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Order code must not be null");
     }
 
     @Test

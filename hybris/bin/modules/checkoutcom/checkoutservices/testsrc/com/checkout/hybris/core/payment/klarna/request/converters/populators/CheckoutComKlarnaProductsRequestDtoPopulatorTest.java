@@ -75,10 +75,10 @@ public class CheckoutComKlarnaProductsRequestDtoPopulatorTest {
     public void setUp() {
         when(sourceMock.getCurrency()).thenReturn(currencyModelMock);
         when(currencyModelMock.getIsocode()).thenReturn(CURRENCY_CODE);
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(CURRENCY_CODE, CHECKOUTCOM_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_AMOUNT_LONG);
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(CURRENCY_CODE, CHECKOUTCOM_DISCOUNT_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_DISCOUNT_AMOUNT_LONG);
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(CURRENCY_CODE, CHECKOUTCOM_PAYMENT_COST_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_PAYMENT_COST_AMOUNT_LONG);
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(CURRENCY_CODE, CHECKOUTCOM_TAXAMOUNT_DOUBLE)).thenReturn(0L).thenReturn(CHECKOUTCOM_TAXAMOUNT_LONG);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(CURRENCY_CODE, CHECKOUTCOM_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_AMOUNT_LONG);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(CURRENCY_CODE, CHECKOUTCOM_DISCOUNT_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_DISCOUNT_AMOUNT_LONG);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(CURRENCY_CODE, CHECKOUTCOM_PAYMENT_COST_AMOUNT_DOUBLE)).thenReturn(CHECKOUTCOM_PAYMENT_COST_AMOUNT_LONG);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(CURRENCY_CODE, CHECKOUTCOM_TAXAMOUNT_DOUBLE)).thenReturn(0L).thenReturn(CHECKOUTCOM_TAXAMOUNT_LONG);
 
         when(sourceMock.getTotalTax()).thenReturn(CHECKOUTCOM_AMOUNT_DOUBLE);
         when(sourceMock.getEntries()).thenReturn(Arrays.asList(entry1Mock, entry2Mock));

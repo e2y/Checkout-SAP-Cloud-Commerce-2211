@@ -1,16 +1,17 @@
 package com.checkout.hybris.occ.controllers;
 
 import com.checkout.dto.order.CheckoutPlaceOrderDto;
-import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
 import com.checkout.hybris.facades.beans.AuthorizeResponseData;
+import com.checkout.hybris.facades.cart.validators.impl.CheckoutComPlaceOrderCartValidator;
+import com.checkout.hybris.facades.flow.CheckoutComFlowConfigurationFacade;
+import com.checkout.hybris.facades.flow.CheckoutComFlowPaymentInfoFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import com.checkout.hybris.occ.exceptions.NoCheckoutCartException;
 import com.checkout.hybris.occ.exceptions.PlaceOrderException;
-import com.checkout.hybris.facades.cart.validators.impl.CheckoutComPlaceOrderCartValidator;
-import com.checkout.sdk.payments.GetPaymentResponse;
+import com.checkout.payments.response.GetPaymentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.hybris.platform.acceleratorfacades.order.AcceleratorCheckoutFacade;
 import de.hybris.platform.commercefacades.order.CartFacade;
@@ -28,7 +29,6 @@ import de.hybris.platform.webservicescommons.mapping.DataMapper;
 import de.hybris.platform.webservicescommons.mapping.FieldSetLevelHelper;
 import de.hybris.platform.webservicescommons.swagger.ApiBaseSiteIdUserIdAndCartIdParam;
 import de.hybris.platform.webservicescommons.swagger.ApiFieldsParam;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang.StringUtils;
@@ -75,6 +75,11 @@ public class CheckoutComOrdersController {
     private CheckoutComCheckoutFlowFacade checkoutFlowFacade;
     @Resource(name = "checkoutComPlaceOrderCartValidator")
     private CheckoutComPlaceOrderCartValidator checkoutComPlaceOrderCartValidator;
+    @Resource(name = "checkoutComFlowConfigurationFacade")
+    protected CheckoutComFlowConfigurationFacade checkoutComFlowConfigurationFacade;
+    @Resource(name = "checkoutComFlowPaymentInfoFacade")
+    protected CheckoutComFlowPaymentInfoFacade checkoutComFlowPaymentInfoFacade;
+
 
     @Secured({"ROLE_CUSTOMERGROUP", "ROLE_CLIENT", "ROLE_CUSTOMERMANAGERGROUP", "ROLE_TRUSTED_CLIENT", "ROLE_GUEST"})
     @PostMapping(value = "/direct-place-order")
@@ -87,7 +92,6 @@ public class CheckoutComOrdersController {
             throws PaymentAuthorizationException, InvalidCartException, NoCheckoutCartException, PlaceOrderException {
 
         validateCartForPlaceOrder();
-
 
         //authorize
         final AuthorizeResponseData authorizeResponseData = checkoutFlowFacade.authorizePayment();
@@ -152,7 +156,7 @@ public class CheckoutComOrdersController {
             throw new PlaceOrderException(CHECKOUTCOM_OCC_PLACE_ORDER_FAILED);
         }
 
-        paymentDetails.ifPresent(responseDetails -> checkoutComPaymentInfoFacade.processPaymentDetails(responseDetails));
+        handlePaymentDetails(paymentDetails);
 
         try {
             return dataMapper.map(checkoutFacade.placeOrder(), OrderWsDTO.class, fields);
@@ -161,6 +165,17 @@ public class CheckoutComOrdersController {
             checkoutFlowFacade.removePaymentInfoFromSessionCart();
             throw new PlaceOrderException(CHECKOUTCOM_OCC_PLACE_ORDER_FAILED);
         }
+    }
+
+    private void handlePaymentDetails(final Optional<GetPaymentResponse> paymentDetails) {
+        paymentDetails.ifPresent(responseDetails -> {
+            if (checkoutComFlowConfigurationFacade.isFlowEnabled()) {
+                checkoutComFlowPaymentInfoFacade.addPaymentInfoToCart(responseDetails);
+            } else {
+                checkoutComPaymentInfoFacade.processPaymentDetails(responseDetails);
+            }
+
+        });
     }
 
     /**

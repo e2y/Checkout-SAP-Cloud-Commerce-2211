@@ -95,9 +95,11 @@
           class="com.checkout.hybris.facades.address.impl.DefaultCheckoutComAddressFacade">
         <constructor-arg name="addressService" ref="addressService"/>
         <constructor-arg name="addressConverter" ref="addressConverter"/>
+        <constructor-arg name="addressReversePopulator" ref="addressReversePopulator"/>
         <constructor-arg name="cartService" ref="cartService"/>
         <constructor-arg name="checkoutFlowFacade" ref="checkoutFlowFacade"/>
         <constructor-arg name="i18NFacade" ref="i18NFacade"/>
+        <constructor-arg name="modelService" ref="modelService"/>
     </bean>
 
     <alias name="defaultCheckoutComWalletOrderFacade" alias="checkoutComWalletOrderFacade"/>
@@ -219,6 +221,28 @@
         <property name="add" ref="checkoutComACHConsentPlaceOrderHook"/>
     </bean>
 
+    <alias name="defaultCheckoutComFlowConfigurationFacade" alias="checkoutComFlowConfigurationFacade"/>
+    <bean id="defaultCheckoutComFlowConfigurationFacade"
+          class="com.checkout.hybris.facades.flow.impl.DefaultCheckoutComFlowConfigurationFacade">
+        <constructor-arg name="baseSiteService" ref="baseSiteService"/>
+        <constructor-arg name="checkoutComFlowUIConfigurationConverter" ref="checkoutComFlowUIConfigurationConverter"/>
+    </bean>
+
+    <alias name="defaultCheckoutComFlowPaymentSessionFacade" alias="checkoutComFlowPaymentSessionFacade"/>
+    <bean id="defaultCheckoutComFlowPaymentSessionFacade" class="com.checkout.hybris.facades.flow.impl.DefaultCheckoutComFlowPaymentSessionFacade">
+        <constructor-arg name="checkoutComFlowPaymentSessionService" ref="checkoutComFlowPaymentSessionService"/>
+        <constructor-arg name="checkoutComFlowConfigurationFacade" ref="checkoutComFlowConfigurationFacade"/>
+        <constructor-arg name="paymentSessionResponseConverter" ref="checkoutComPaymentSessionResponseConverter"/>
+    </bean>
+
+    <alias name="defaultCheckoutComFlowPaymentInfoFacade" alias="checkoutComFlowPaymentInfoFacade"/>
+    <bean id="defaultCheckoutComFlowPaymentInfoFacade" class="com.checkout.hybris.facades.flow.impl.DefaultCheckoutComFlowPaymentInfoFacade">
+        <constructor-arg name="cartService" ref="cartService"/>
+        <constructor-arg name="paymentInfoService" ref="paymentInfoService"/>
+        <constructor-arg name="checkoutComFlowAPMPaymentInfoReverseConverter" ref="checkoutComFlowAPMPaymentInfoReverseConverter"/>
+        <constructor-arg name="checkoutComFlowCCPaymentInfoReverseConverter" ref="checkoutComFlowCCPaymentInfoReverseConverter"/>
+    </bean>
+
     <beans profile="!dev">
         <alias name="defaultCheckoutComAchFacade" alias="checkoutComACHFacade"/>
         <bean id="defaultCheckoutComAchFacade"
@@ -257,8 +281,7 @@
         </util:list>
 
         <bean class="com.checkout.hybris.facades.payment.ach.magicvalues.impl.MagicPostalCodeValuesAchCheckoutAchFactoryImpl">
-            <constructor-arg name="strategies"
-                             ref="postalCodeMagicValuesCheckoutAchStrategy"/>
+            <constructor-arg name="strategies" ref="postalCodeMagicValuesCheckoutAchStrategy"/>
         </bean>
     </beans>
 </beans>

@@ -1,5 +1,11 @@
 package com.checkout.hybris.events.facades.impl;
 
+import java.lang.reflect.Type;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+
 import com.checkout.hybris.events.beans.CheckoutComPaymentEventObject;
 import com.checkout.hybris.events.payments.CheckoutComPaymentEvent;
 import com.google.gson.Gson;
@@ -9,14 +15,10 @@ import de.hybris.platform.servicelayer.event.EventService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.lang.reflect.Type;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.verify;
 
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
@@ -30,11 +32,14 @@ public class DefaultCheckoutComEventFacadeTest {
     @Mock
     private EventService eventServiceMock;
 
-    private ArgumentCaptor<CheckoutComPaymentEvent> eventArgumentCaptor = ArgumentCaptor.forClass(CheckoutComPaymentEvent.class);
+    @Captor
+    private ArgumentCaptor<CheckoutComPaymentEvent> eventArgumentCaptor;
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void publishPaymentEvent_WhenNullBody_ShouldThrowException() {
-        testObj.publishPaymentEvent(null);
+        assertThatThrownBy(() -> testObj.publishPaymentEvent(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Event body cannot be null or empty.");
     }
 
     @Test

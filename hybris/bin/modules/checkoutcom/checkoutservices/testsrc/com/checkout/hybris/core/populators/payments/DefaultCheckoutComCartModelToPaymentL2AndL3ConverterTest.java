@@ -1,10 +1,12 @@
 package com.checkout.hybris.core.populators.payments;
 
+import com.checkout.common.CountryCode;
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.currency.services.CheckoutComCurrencyService;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.Product;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.payments.TokenSource;
+import com.checkout.payments.ProductRequest;
+import com.checkout.payments.request.PaymentCustomerRequest;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestTokenSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.c2l.CountryModel;
 import de.hybris.platform.core.model.c2l.CurrencyModel;
@@ -72,7 +74,7 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 	@InjectMocks
 	private DefaultCheckoutComCartModelToPaymentL2AndL3Converter testObj;
 
-	private PaymentRequest<RequestSource> paymentRequest;
+    private com.checkout.payments.request.PaymentRequest paymentRequest;
 
 	@Mock
 	private CheckoutComCurrencyService checkoutComCurrencyServiceMock;
@@ -96,7 +98,15 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 
 	@Before
 	public void setUp() {
-		paymentRequest = PaymentRequest.fromSource(new TokenSource("cardToken"), USD, TOTAL_PRICE_WITH_PENNIES);
+        paymentRequest = PaymentRequest.builder()
+            .source(
+                RequestTokenSource.builder()
+                    .token("cardToken")
+                    .build()
+            )
+            .amount(TOTAL_PRICE_WITH_PENNIES)
+            .currency(Currency.valueOf(USD))
+            .build();
 	}
 
 	@Test
@@ -127,8 +137,8 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 		assertThat(paymentRequest.getProcessing().getOrderId()).isEqualTo(CART_CODE);
 		assertThat(paymentRequest.getProcessing().getTaxAmount()).isEqualTo(TOTAL_TAX_WITH_PENNIES);
 		assertThat(paymentRequest.getAmount()).isEqualTo(TOTAL_PRICE_WITH_PENNIES);
-		assertThat(paymentRequest.getCurrency()).isEqualTo(USD);
-		assertThat(paymentRequest.getCustomer().getTaxNumber()).isEqualTo(TAX_NUMBER);
+        assertThat(paymentRequest.getCurrency()).isEqualTo(Currency.valueOf(USD));
+        assertThat(((PaymentCustomerRequest) paymentRequest.getCustomer()).getTaxNumber()).isEqualTo(TAX_NUMBER);
 	}
 
 	@Test
@@ -144,7 +154,7 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 
 		testObj.populateL3Fields(cartModel, paymentRequest);
 
-		assertThat(paymentRequest.getShipping().getAddress().getCountry()).isEqualTo(USA);
+        assertThat(paymentRequest.getShipping().getAddress().getCountry()).isEqualTo(CountryCode.valueOf(USA));
 		assertThat(paymentRequest.getShipping().getAddress().getZip()).isEqualTo(POSTAL_CODE);
 		assertThat(paymentRequest.getProcessing().getDiscountAmount()).isEqualTo(DISCOUNTED_AMOUNT_WITH_PENNIES);
 		assertThat(paymentRequest.getProcessing().getShippingAmount()).isEqualTo(SHIPPING_AMOUNT_WITH_PENNIES);
@@ -156,10 +166,10 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 						  CANON_R6_TAXES_WITH_PENNIES);
 	}
 
-	private void assertItemIsEqual(final Product product, final String productName, final String productCode,
-								   final int quantity, final Long totalPrice, final Long basePrice,
-								   final String unitOfMeasure,
-								   final Long taxPrice) {
+	private void assertItemIsEqual(final ProductRequest product, final String productName, final String productCode,
+                                   final int quantity, final Long totalPrice, final Long basePrice,
+                                   final String unitOfMeasure,
+                                   final Long taxPrice) {
 		assertThat(product.getName()).isEqualTo(productName);
 		assertThat(product.getCommodityCode()).isEqualTo(productCode);
 		assertThat(product.getReference()).isEqualTo(productCode);
@@ -260,7 +270,7 @@ public class DefaultCheckoutComCartModelToPaymentL2AndL3ConverterTest {
 
 	private void mockCheckoutComCurrencyServiceCallToPennies(final String currency, final double originAmount,
 															 final Long targetAmount) {
-		when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(currency, originAmount)).thenReturn(targetAmount);
+		when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(currency, originAmount)).thenReturn(targetAmount);
 	}
 
 }

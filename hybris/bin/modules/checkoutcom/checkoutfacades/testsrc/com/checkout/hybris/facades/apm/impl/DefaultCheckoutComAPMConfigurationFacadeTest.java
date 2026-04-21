@@ -15,9 +15,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
-import static com.checkout.sdk.common.Currency.GBP;
-import static java.util.Locale.UK;
+import static com.checkout.common.Currency.GBP;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
@@ -49,31 +49,31 @@ public class DefaultCheckoutComAPMConfigurationFacadeTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void isAvailable_WhenCountryCodeIsNull_ShouldThrowException() {
-        testObj.isAvailable(apmConfigurationModelMock, null, GBP);
+        testObj.isAvailable(apmConfigurationModelMock, null, GBP.name());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void isAvailable_WhenCurrencyCodeIsNull_ShouldThrowException() {
-        testObj.isAvailable(apmConfigurationModelMock, UK.getCountry(), null);
+        testObj.isAvailable(apmConfigurationModelMock, Locale.UK.getCountry(), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void isAvailable_WhenApmConfigurationIsNull_ShouldThrowException() {
-        testObj.isAvailable(null, UK.getCountry(), GBP);
+        testObj.isAvailable(null, Locale.UK.getCountry(), GBP.name());
     }
 
     @Test
     public void isAvailable_WhenApmIsAvailable_ShouldReturnTrue() {
-        when(checkoutComAPMConfigurationServiceMock.isApmAvailable(apmConfigurationModelMock, UK.getCountry(), GBP)).thenReturn(true);
+        when(checkoutComAPMConfigurationServiceMock.isApmAvailable(apmConfigurationModelMock, Locale.UK.getCountry(), GBP.name())).thenReturn(true);
 
-        assertTrue(testObj.isAvailable(apmConfigurationModelMock, UK.getCountry(), GBP));
+        assertTrue(testObj.isAvailable(apmConfigurationModelMock, Locale.UK.getCountry(), GBP.name()));
     }
 
     @Test
     public void isAvailable_WhenApmIsNotAvailable_ShouldReturnFalse() {
-        when(checkoutComAPMConfigurationServiceMock.isApmAvailable(apmConfigurationModelMock, UK.getCountry(), GBP)).thenReturn(false);
+        when(checkoutComAPMConfigurationServiceMock.isApmAvailable(apmConfigurationModelMock, Locale.UK.getCountry(), GBP.name())).thenReturn(false);
 
-        assertFalse(testObj.isAvailable(apmConfigurationModelMock, UK.getCountry(), GBP));
+        assertFalse(testObj.isAvailable(apmConfigurationModelMock, Locale.UK.getCountry(), GBP.name()));
     }
 
     @Test(expected = IllegalArgumentException.class)

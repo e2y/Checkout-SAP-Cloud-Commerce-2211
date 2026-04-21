@@ -1,13 +1,14 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComKlarnaAPMPaymentInfoModel;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.platform.core.model.order.CartModel;
 
 import java.util.Optional;
@@ -20,12 +21,9 @@ import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.KLAR
 @SuppressWarnings("java:S107")
 public class CheckoutComKlarnaPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
 
-    public CheckoutComKlarnaPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                   final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                   final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                   final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-            checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+
+    protected CheckoutComKlarnaPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
     }
 
     /**
@@ -40,12 +38,15 @@ public class CheckoutComKlarnaPaymentRequestStrategy extends CheckoutComAbstract
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
+                                                            final String currencyIsoCode, final Long amount) {
 
         final CheckoutComKlarnaAPMPaymentInfoModel klarnaPaymentInfo = (CheckoutComKlarnaAPMPaymentInfoModel) cart.getPaymentInfo();
-
-        return PaymentRequest.forKlarna(klarnaPaymentInfo.getPaymentContext());
+        return PaymentRequest.builder()
+                .currency(Currency.valueOf(currencyIsoCode))
+                .amount(amount)
+                .paymentContextId(klarnaPaymentInfo.getPaymentContext())
+                .build();
     }
 
     /**

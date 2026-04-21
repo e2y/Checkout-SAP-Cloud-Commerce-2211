@@ -31,4 +31,10 @@ public interface CheckoutComMerchantConfigurationFacade {
      */
     Optional<GooglePaySettingsData> getGooglePaySettings();
 
+    /**
+     * Returns the enviroment of the CheckoutComMerchantConfiguration for the current base site
+     * @return the environment type
+     */
+    String getCheckoutComMerchantEnvironment();
+
 }

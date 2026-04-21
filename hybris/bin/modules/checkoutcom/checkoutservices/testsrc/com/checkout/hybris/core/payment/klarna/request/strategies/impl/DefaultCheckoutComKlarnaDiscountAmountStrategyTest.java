@@ -46,7 +46,7 @@ public class DefaultCheckoutComKlarnaDiscountAmountStrategyTest {
         when(cartMock.getCurrency()).thenReturn(currencyMock);
         when(currencyMock.getIsocode()).thenReturn(CURRENCY_CODE);
         when(cartMock.getEntries()).thenReturn(Arrays.asList(entry1Mock, entry2Mock, entry3Mock, entry4Mock, entry5Mock, entry6Mock));
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(CURRENCY_CODE, TOTAL_ORDER_DISCOUNT)).thenReturn(TOTAL_DISCOUNT_PENNIES);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(CURRENCY_CODE, TOTAL_ORDER_DISCOUNT)).thenReturn(TOTAL_DISCOUNT_PENNIES);
         when(cartMock.getTotalDiscounts()).thenReturn(TOTAL_ORDER_DISCOUNT);
     }
 
@@ -54,7 +54,7 @@ public class DefaultCheckoutComKlarnaDiscountAmountStrategyTest {
     public void applyDiscountsToKlarnaOrderLines_ShouldSplitTheDiscountCorrectly() {
         testObj.applyDiscountsToKlarnaOrderLines(cartMock, Arrays.asList(product1DtoMock, product2DtoMock, product3DtoMock, product4DtoMock, product5DtoMock, product6DtoMock));
 
-        verify(checkoutComCurrencyServiceMock).convertAmountIntoPennies(CURRENCY_CODE, TOTAL_ORDER_DISCOUNT);
+        verify(checkoutComCurrencyServiceMock).removeDecimalsFromCurrencyAmount(CURRENCY_CODE, TOTAL_ORDER_DISCOUNT);
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -1,11 +1,11 @@
 #Ant properties
-#Mon Mar 17 11:14:04 GMT 2025
-version.api=2211
-vendor=hybris
-group.id=de.hybris.platform
-name=checkoutocc
+#Mon Apr 20 14:52:19 GMT 2026
+builddate=20260420 1452
 description=checkoutocc
-builddate=20250317 1114
-releasedate=20241129 0309
-version=2211.32
+group.id=de.hybris.platform
 module.name=platform-module
+name=checkoutocc
+releasedate=20260302 1830
+vendor=hybris
+version=2211.50
+version.api=2211

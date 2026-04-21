@@ -1,34 +1,35 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.Address;
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComApplePayPaymentInfoModel;
-import com.checkout.sdk.common.Address;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.payments.TokenSource;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestTokenSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.APPLEPAY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static de.hybris.platform.mediaweb.assertions.assertj.Assertions.assertThat;
+import static de.hybris.platform.mediaweb.assertions.assertj.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 @UnitTest
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CheckoutComApplePayPaymentRequestStrategyTest {
 
     private static final String CURRENCY_ISO_CODE = "USD";
@@ -53,31 +54,33 @@ public class CheckoutComApplePayPaymentRequestStrategyTest {
     @Mock
     private CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationServiceMock;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ReflectionTestUtils.setField(testObj, "checkoutPaymentRequestServicesWrapper", checkoutPaymentRequestServicesWrapperMock);
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "checkoutComMerchantConfigurationService", checkoutComMerchantConfigurationServiceMock);
+    }
+
+    @Test
+    public void getRequestSourcePaymentRequest_WhenPaymentInfoIsNotCheckoutComApplePayPaymentInfo_ShouldThrowException() {
+        when(cartMock.getPaymentInfo()).thenReturn(paymentInfoMock);
+
+        assertThatThrownBy(() -> testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+
+    @Test
+    public void getRequestSourcePaymentRequest_WhenCheckoutComApplePayPaymentInfo_ShouldReturnPaymentRequest() {
         when(cartMock.getPaymentInfo()).thenReturn(applePayPaymentInfoMock);
         when(applePayPaymentInfoMock.getToken()).thenReturn(PAYMENT_TOKEN_VALUE);
         when(cartMock.getPaymentAddress()).thenReturn(addressModelMock);
         doReturn(addressMock).when(testObj).createAddress(addressModelMock);
-    }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void getRequestSourcePaymentRequest_WhenPaymentInfoIsNotCheckoutComApplePayPaymentInfo_ShouldThrowException() {
-        when(cartMock.getPaymentInfo()).thenReturn(paymentInfoMock);
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
 
-        testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
-    }
-
-    @Test
-    public void getRequestSourcePaymentRequest_WhenCheckoutComApplePayPaymentInfo_ShouldReturnPaymentRequest() {
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
-
-        assertEquals(PAYMENT_TOKEN_VALUE, ((TokenSource) result.getSource()).getToken());
-        assertEquals(CURRENCY_ISO_CODE, result.getCurrency());
+        assertEquals(PAYMENT_TOKEN_VALUE, ((RequestTokenSource) result.getSource()).getToken());
+        assertEquals(Currency.valueOf(CURRENCY_ISO_CODE), result.getCurrency());
         assertEquals(CHECKOUT_COM_TOTAL_PRICE, result.getAmount());
-        assertEquals(addressMock, ((TokenSource) result.getSource()).getBillingAddress());
+        assertEquals(addressMock, ((RequestTokenSource) result.getSource()).getBillingAddress());
     }
 
     @Test
@@ -91,6 +94,6 @@ public class CheckoutComApplePayPaymentRequestStrategyTest {
 
         final Optional<Boolean> result = testObj.isCapture();
 
-        assertTrue(result.get());
+        assertThat(result).contains(true);
     }
 }

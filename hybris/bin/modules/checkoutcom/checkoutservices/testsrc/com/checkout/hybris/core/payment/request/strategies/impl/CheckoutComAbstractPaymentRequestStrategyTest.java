@@ -2,7 +2,6 @@ package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
 import com.checkout.hybris.core.currency.services.CheckoutComCurrencyService;
-import com.checkout.hybris.core.enums.PaymentTypes;
 import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.merchantconfiguration.BillingDescriptor;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
@@ -10,8 +9,14 @@ import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentReques
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
 import com.checkout.hybris.core.url.services.CheckoutComUrlService;
-import com.checkout.sdk.common.Phone;
-import com.checkout.sdk.payments.*;
+import com.checkout.common.CountryCode;
+import com.checkout.common.CustomerRequest;
+import com.checkout.common.Phone;
+import com.checkout.payments.PaymentType;
+import com.checkout.payments.RiskRequest;
+import com.checkout.payments.ShippingDetails;
+import com.checkout.payments.request.PaymentCustomerRequest;
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.cms2.model.site.CMSSiteModel;
 import de.hybris.platform.cms2.servicelayer.services.CMSSiteService;
@@ -41,7 +46,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
     private static final String DISPLAY_CUSTOMER_NAME = "Customer Name";
     private static final String SITE_ID_KEY = "site_id";
     private static final String LINE_2 = "LINE_2";
-    private static final String UK_COUNTRY_CODE = "UK";
+    private static final String UK_COUNTRY_CODE = "GB";
     private static final String UK_STATE = "United kingdom";
     private static final String POST_CODE = "POST_CODE";
     private static final double TOTAL_PRICE = 100D;
@@ -86,9 +91,9 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
     @Mock
     private CMSSiteModel currentSiteMock;
     @Mock
-    private PaymentRequest<RequestSource> paymentRequestMock;
+    private PaymentRequest paymentRequestMock;
     @Mock
-    private CustomerRequest customerRequestMock;
+    private PaymentCustomerRequest customerRequestMock;
     @Mock
     private ShippingDetails shippingDetailsMock;
     @Mock
@@ -98,7 +103,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
     @Captor
     private ArgumentCaptor<RiskRequest> riskRequestCaptor;
     @Captor
-    private ArgumentCaptor<com.checkout.sdk.payments.BillingDescriptor> billingDescriptorCaptor;
+    private ArgumentCaptor<com.checkout.payments.BillingDescriptor> billingDescriptorCaptor;
 
 
     @Before
@@ -115,6 +120,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "cmsSiteService", cmsSiteServiceMock);
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "checkoutComMerchantConfigurationService", checkoutComMerchantConfigurationServiceMock);
         ReflectionTestUtils.setField(checkoutPaymentRequestServicesWrapperMock, "checkoutComCurrencyService", checkoutComCurrencyServiceMock);
+        ReflectionTestUtils.setField(testObj, "checkoutComMerchantConfigurationService", checkoutComMerchantConfigurationServiceMock);
 
         setUpCart();
         setUpAddress();
@@ -131,7 +137,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
     }
 
     private void setUpConfiguration() {
-        when(checkoutComCurrencyServiceMock.convertAmountIntoPennies(GBP, TOTAL_PRICE)).thenReturn(CHECKOUT_COM_TOTAL_PRICE);
+        when(checkoutComCurrencyServiceMock.removeDecimalsFromCurrencyAmount(GBP, TOTAL_PRICE)).thenReturn(CHECKOUT_COM_TOTAL_PRICE);
         when(checkoutComUrlServiceMock.getFullUrl(CHECKOUT_COM_PAYMENT_REDIRECT_PAYMENT_SUCCESS, true)).thenReturn(CHECKOUT_COM_PAYMENT_REDIRECT_PAYMENT_SUCCESS);
         when(checkoutComUrlServiceMock.getFullUrl(CHECKOUT_COM_PAYMENT_REDIRECT_PAYMENT_FAILURE, true)).thenReturn(CHECKOUT_COM_PAYMENT_REDIRECT_PAYMENT_FAILURE);
         when(cmsSiteServiceMock.getCurrentSite()).thenReturn(currentSiteMock);
@@ -177,7 +183,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
         doNothing().when(testObj).populatePaymentRequest(any(CartModel.class), any(PaymentRequest.class));
         doReturn(paymentRequestMock).when(testObj).getRequestSourcePaymentRequest(any(CartModel.class), anyString(), anyLong());
 
-        final PaymentRequest<RequestSource> result = testObj.createPaymentRequest(cartModelMock);
+        final PaymentRequest result = testObj.createPaymentRequest(cartModelMock);
 
         verify(testObj).populatePaymentRequest(cartModelMock, paymentRequestMock);
         assertSame(paymentRequestMock, result);
@@ -192,7 +198,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
         testObj.populatePaymentRequest(cartModelMock, paymentRequestMock);
 
         verify(paymentRequestMock).setReference(CART_REFERENCE);
-        verify(paymentRequestMock).setPaymentType(PaymentTypes.REGULAR.getCode());
+        verify(paymentRequestMock).setPaymentType(PaymentType.REGULAR);
         verify(paymentRequestMock).setCustomer(customerRequestMock);
         verify(paymentRequestMock).setShipping(shippingDetailsMock);
         verify(paymentRequestMock, never()).setCapture(anyBoolean());
@@ -204,7 +210,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
         assertEquals(BILLING_DESCRIPTOR_CITY, billingDescriptorCaptor.getValue().getCity());
 
         verify(paymentRequestMock).setRisk(riskRequestCaptor.capture());
-        assertTrue(riskRequestCaptor.getValue().isEnabled());
+        assertTrue(riskRequestCaptor.getValue().getEnabled());
     }
 
     @Test
@@ -216,17 +222,17 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
         testObj.populatePaymentRequest(cartModelMock, paymentRequestMock);
 
         verify(paymentRequestMock).setReference(CART_REFERENCE);
-        verify(paymentRequestMock).setPaymentType(PaymentTypes.REGULAR.getCode());
+        verify(paymentRequestMock).setPaymentType(PaymentType.REGULAR);
         verify(paymentRequestMock).setCustomer(customerRequestMock);
         verify(paymentRequestMock).setShipping(shippingDetailsMock);
         verify(paymentRequestMock, never()).setCapture(anyBoolean());
         verify(paymentRequestMock).setSuccessUrl(CHECKOUT_COM_PAYMENT_REDIRECT_PAYMENT_SUCCESS);
         verify(paymentRequestMock).setFailureUrl(CHECKOUT_COM_PAYMENT_REDIRECT_PAYMENT_FAILURE);
 
-        verify(paymentRequestMock, never()).setBillingDescriptor(any(com.checkout.sdk.payments.BillingDescriptor.class));
+        verify(paymentRequestMock, never()).setBillingDescriptor(any(com.checkout.payments.BillingDescriptor.class));
 
         verify(paymentRequestMock).setRisk(riskRequestCaptor.capture());
-        assertTrue(riskRequestCaptor.getValue().isEnabled());
+        assertTrue(riskRequestCaptor.getValue().getEnabled());
     }
 
     @Test
@@ -250,7 +256,7 @@ public class CheckoutComAbstractPaymentRequestStrategyTest {
         assertEquals(LINE_1, result.getAddress().getAddressLine1());
         assertEquals(LINE_2, result.getAddress().getAddressLine2());
         assertEquals(TOWN, result.getAddress().getCity());
-        assertEquals(UK_COUNTRY_CODE, result.getAddress().getCountry());
+        assertEquals(CountryCode.GB, result.getAddress().getCountry());
         assertEquals(UK_STATE, result.getAddress().getState());
         assertEquals(POST_CODE, result.getAddress().getZip());
     }

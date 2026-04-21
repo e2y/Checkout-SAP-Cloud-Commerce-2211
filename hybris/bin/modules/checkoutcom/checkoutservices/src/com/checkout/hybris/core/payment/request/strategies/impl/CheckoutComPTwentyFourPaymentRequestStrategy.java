@@ -1,14 +1,16 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.CountryCode;
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.address.services.CheckoutComAddressService;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.apm.RequestP24Source;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
@@ -25,21 +27,13 @@ import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParamete
 @SuppressWarnings("java:S107")
 public class CheckoutComPTwentyFourPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
 
-    protected static final String PAYMENT_COUNTRY_KEY = "payment_country";
-    protected static final String ACCOUNT_HOLDER_KEY = "account_holder_name";
-    protected static final String ACCOUNT_HOLDER_EMAIL_KEY = "account_holder_email";
-
     protected final CheckoutComAddressService addressService;
 
-    public CheckoutComPTwentyFourPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                        final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                        final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                        final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper,
-                                                        final CheckoutComAddressService addressService) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-            checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+    protected CheckoutComPTwentyFourPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService, final CheckoutComAddressService addressService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
         this.addressService = addressService;
     }
+
 
     /**
      * {@inheritDoc}
@@ -53,11 +47,8 @@ public class CheckoutComPTwentyFourPaymentRequestStrategy extends CheckoutComAbs
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
-        final PaymentRequest<RequestSource> paymentRequest = super.getRequestSourcePaymentRequest(cart, currencyIsoCode, amount);
-        final AlternativePaymentSource source = (AlternativePaymentSource) paymentRequest.getSource();
-
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
+                                                            final String currencyIsoCode, final Long amount) {
         final PaymentInfoModel paymentInfo = cart.getPaymentInfo();
         final AddressModel billingAddress = paymentInfo.getBillingAddress();
 
@@ -66,13 +57,20 @@ public class CheckoutComPTwentyFourPaymentRequestStrategy extends CheckoutComAbs
 
         final String countryIsoCode = billingAddress.getCountry().getIsocode();
         checkArgument(StringUtils.isNotEmpty(countryIsoCode), "Billing address country code cannot be null");
-        final CustomerModel customer = (CustomerModel) paymentInfo.getUser();
+        final CustomerModel customer = (CustomerModel) cart.getUser();
         validateParameterNotNull(customer, "Customer model cannot be null");
         checkArgument(StringUtils.isNotEmpty(customer.getContactEmail()), "Customer email cannot be null");
 
-        source.put(PAYMENT_COUNTRY_KEY, countryIsoCode);
-        source.put(ACCOUNT_HOLDER_KEY, addressService.getCustomerFullNameFromAddress(billingAddress));
-        source.put(ACCOUNT_HOLDER_EMAIL_KEY, customer.getContactEmail());
+        final RequestP24Source requestP24Source = RequestP24Source.builder()
+                .paymentCountry(CountryCode.valueOf(countryIsoCode))
+                .accountHolderEmail(customer.getContactEmail())
+                .accountHolderName(addressService.getCustomerFullNameFromAddress(billingAddress))
+                .build();
+        final PaymentRequest paymentRequest = PaymentRequest.builder()
+                .currency(Currency.valueOf(currencyIsoCode)).amount(amount).source(requestP24Source).build();
+
+        validateParameterNotNull(customer, "Customer model cannot be null");
+        checkArgument(StringUtils.isNotEmpty(customer.getContactEmail()), "Customer email cannot be null");
 
         return paymentRequest;
     }

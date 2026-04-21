@@ -1,5 +1,17 @@
 package com.checkout.hybris.events.daos.impl;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+import static com.checkout.hybris.events.enums.CheckoutComPaymentEventStatus.FAILED;
+import static com.checkout.hybris.events.enums.CheckoutComPaymentEventType.PAYMENT_APPROVED;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.events.enums.CheckoutComPaymentEventType;
 import com.checkout.hybris.events.model.CheckoutComPaymentEventModel;
 import de.hybris.bootstrap.annotations.UnitTest;
@@ -15,20 +27,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.*;
-
-import static com.checkout.hybris.events.enums.CheckoutComPaymentEventStatus.FAILED;
-import static com.checkout.hybris.events.enums.CheckoutComPaymentEventType.PAYMENT_APPROVED;
-import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultCheckoutComPaymentEventDaoTest {
 
-    private static final Set<CheckoutComPaymentEventType> EVENT_TYPES = new HashSet<>(asList(PAYMENT_APPROVED));
+    private static final Set<CheckoutComPaymentEventType> EVENT_TYPES = Set.of(PAYMENT_APPROVED);
 
     @InjectMocks
     private DefaultCheckoutComPaymentEventDao testObj;
@@ -36,7 +39,7 @@ public class DefaultCheckoutComPaymentEventDaoTest {
     @Mock
     private FlexibleSearchService flexibleSearchServiceMock;
     @Mock
-    private SearchResult searchResultMock;
+    private SearchResult<CheckoutComPaymentEventModel> searchResultMock;
     @Mock
     private CheckoutComPaymentEventModel checkoutComPaymentEventModelMock;
     @Captor
@@ -46,12 +49,14 @@ public class DefaultCheckoutComPaymentEventDaoTest {
     public void setUp() {
         final List<CheckoutComPaymentEventModel> resultMock = Collections.singletonList(checkoutComPaymentEventModelMock);
         when(searchResultMock.getResult()).thenReturn(resultMock);
-        when(flexibleSearchServiceMock.search(queryArgumentCaptor.capture())).thenReturn(searchResultMock);
+        when(flexibleSearchServiceMock.<CheckoutComPaymentEventModel>search(queryArgumentCaptor.capture())).thenReturn(searchResultMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void findPaymentEventToProcessForTypes_WhenEventTypeSetIsEmpty_ShouldThrowException() {
-        testObj.findPaymentEventToProcessForTypes(Collections.emptySet());
+        assertThatThrownBy(() -> testObj.findPaymentEventToProcessForTypes(Collections.emptySet()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Payment event types are null or empty.");
     }
 
     @Test
@@ -63,7 +68,7 @@ public class DefaultCheckoutComPaymentEventDaoTest {
 
         verify(flexibleSearchServiceMock).search(queryArgumentCaptor.capture());
         final FlexibleSearchQuery value = queryArgumentCaptor.getValue();
-        assertEquals(asList(PAYMENT_APPROVED.getCode()), value.getQueryParameters().get("checkoutComPaymentEventTypes"));
+        assertEquals(List.of(PAYMENT_APPROVED.getCode()), value.getQueryParameters().get("checkoutComPaymentEventTypes"));
     }
 
     @Test(expected = IllegalArgumentException.class)

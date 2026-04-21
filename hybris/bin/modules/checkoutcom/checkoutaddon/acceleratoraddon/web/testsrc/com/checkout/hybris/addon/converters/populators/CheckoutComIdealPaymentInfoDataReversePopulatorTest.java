@@ -1,20 +1,21 @@
 package com.checkout.hybris.addon.converters.populators;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.facades.beans.IdealPaymentInfoData;
 import de.hybris.bootstrap.annotations.UnitTest;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 @UnitTest
 public class CheckoutComIdealPaymentInfoDataReversePopulatorTest {
 
-    private CheckoutComIdealPaymentInfoDataReversePopulator testObj = new CheckoutComIdealPaymentInfoDataReversePopulator();
+    private final CheckoutComIdealPaymentInfoDataReversePopulator testObj = new CheckoutComIdealPaymentInfoDataReversePopulator();
 
-    private PaymentDataForm source = new PaymentDataForm();
-    private IdealPaymentInfoData target = new IdealPaymentInfoData();
+    private final PaymentDataForm source = new PaymentDataForm();
+    private final IdealPaymentInfoData target = new IdealPaymentInfoData();
 
     @Test
     public void populate_ShouldPopulateTargetCorrectly() {
@@ -23,13 +24,17 @@ public class CheckoutComIdealPaymentInfoDataReversePopulatorTest {
         assertEquals(CheckoutComPaymentType.IDEAL.name(), target.getType());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenSourceNull_ShouldThrowException() {
-        testObj.populate(null, target);
+        assertThatThrownBy(() -> testObj.populate(null, target))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("PaymentDataForm cannot be null.");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void populate_WhenTargetNull_ShouldThrowException() {
-        testObj.populate(source, null);
+        assertThatThrownBy(() -> testObj.populate(source, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("IdealPaymentInfoData cannot be null.");
     }
 }

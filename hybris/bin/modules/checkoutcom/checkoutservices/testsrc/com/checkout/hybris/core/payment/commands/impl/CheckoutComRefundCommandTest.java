@@ -1,13 +1,12 @@
 package com.checkout.hybris.core.payment.commands.impl;
 
-import com.checkout.sdk.CheckoutApiException;
-import com.checkout.sdk.common.ApiResponseInfo;
+import com.checkout.CheckoutApiException;
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.core.payment.request.CheckoutComRequestFactory;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationService;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentTransactionService;
-import com.checkout.sdk.payments.RefundRequest;
-import com.checkout.sdk.payments.RefundResponse;
+import com.checkout.payments.RefundRequest;
+import com.checkout.payments.RefundResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.payment.commands.request.FollowOnRefundRequest;
 import de.hybris.platform.payment.commands.result.RefundResult;
@@ -25,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -110,20 +110,14 @@ public class CheckoutComRefundCommandTest {
 
     @Test(expected = CheckoutComPaymentIntegrationException.class)
     public void perform_WhenExecutionExceptionWithError500_ShouldThrowPaymentIntegrationException() throws ExecutionException, InterruptedException {
-        final ApiResponseInfo apiResponseInfo = new ApiResponseInfo();
-        apiResponseInfo.setHttpStatusCode(503);
-
-        when(checkoutComPaymentIntegrationServiceMock.refundPayment(refundRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(apiResponseInfo)));
+        when(checkoutComPaymentIntegrationServiceMock.refundPayment(refundRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(503, Map.of(), Map.of())));
 
         testObj.perform(refundRequestMock);
     }
 
     @Test
     public void perform_WhenExecutionExceptionWithNonError500_ShouldReturnInvalidRequestErrorRefundResult() throws ExecutionException, InterruptedException {
-        final ApiResponseInfo apiResponseInfo = new ApiResponseInfo();
-        apiResponseInfo.setHttpStatusCode(404);
-
-        when(checkoutComPaymentIntegrationServiceMock.refundPayment(refundRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(apiResponseInfo)));
+        when(checkoutComPaymentIntegrationServiceMock.refundPayment(refundRequest, PAYMENT_ID)).thenThrow(new ExecutionException(new CheckoutApiException(404, Map.of(), Map.of())));
 
         final RefundResult result = testObj.perform(refundRequestMock);
 

@@ -2,9 +2,8 @@ package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComMerchantConfigurationModel;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.apm.RequestQPaySource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.basecommerce.model.site.BaseSiteModel;
 import de.hybris.platform.core.model.order.CartModel;
@@ -17,6 +16,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.QPAY;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @UnitTest
@@ -25,7 +25,6 @@ public class CheckoutComQPayPaymentRequestStrategyTest {
 
     private static final String CURRENCY_ISO_CODE = "USD";
     private static final Long CHECKOUT_COM_TOTAL_PRICE = 10000L;
-    private static final String DESCRIPTION_KEY = "description";
     private static final String ELETRONICS_MERCHANT_CODE = "eletronics";
 
     @InjectMocks
@@ -42,11 +41,11 @@ public class CheckoutComQPayPaymentRequestStrategyTest {
 
     @Before
     public void setUp() {
-        when(cartMock.getPaymentInfo()).thenReturn(checkoutComAPMPaymentInfoMock);
-        when(cartMock.getSite()).thenReturn(siteMock);
+        lenient().when(cartMock.getPaymentInfo()).thenReturn(checkoutComAPMPaymentInfoMock);
+        lenient().when(cartMock.getSite()).thenReturn(siteMock);
         when(siteMock.getCheckoutComMerchantConfiguration()).thenReturn(merchantConfigurationMock);
         when(merchantConfigurationMock.getCode()).thenReturn(ELETRONICS_MERCHANT_CODE);
-        when(checkoutComAPMPaymentInfoMock.getType()).thenReturn(QPAY.name());
+        lenient().when(checkoutComAPMPaymentInfoMock.getType()).thenReturn(QPAY.name());
     }
 
     @Test
@@ -56,10 +55,10 @@ public class CheckoutComQPayPaymentRequestStrategyTest {
 
     @Test
     public void getRequestSourcePaymentRequest_WhenQPayPayment_ShouldCreateAlternativePaymentRequestWithTypeAndDescription() {
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
 
-        assertEquals(QPAY.name().toLowerCase(), result.getSource().getType());
-        assertEquals(ELETRONICS_MERCHANT_CODE, ((AlternativePaymentSource) result.getSource()).get(DESCRIPTION_KEY));
+        assertEquals(QPAY.name().toLowerCase(), result.getSource().getType().name().toLowerCase());
+        assertEquals(ELETRONICS_MERCHANT_CODE, ((RequestQPaySource) result.getSource()).getDescription());
     }
 
     @Test(expected = IllegalArgumentException.class)

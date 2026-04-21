@@ -2,8 +2,8 @@ package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.currency.services.CheckoutComCurrencyService;
 import com.checkout.hybris.core.model.CheckoutComKlarnaAPMPaymentInfoModel;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+
+import com.checkout.payments.request.PaymentRequest;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import org.junit.Before;
@@ -50,7 +50,7 @@ public class CheckoutComKlarnaPaymentRequestStrategyTest {
 
     @Test
     public void getRequestSourcePaymentRequest_WhenEverythingIsCorrect_ShouldPopulateTheRequest() {
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartModelMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartModelMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
 
         assertEquals(KLARNA_PAYMENT_CONTEXT_VALUE, result.getPaymentContextId());
     }

@@ -6,7 +6,7 @@ import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.response.mappers.CheckoutComPaymentResponseStrategyMapper;
 import com.checkout.hybris.core.payment.response.strategies.CheckoutComPaymentResponseStrategy;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.PaymentPending;
+import com.checkout.payments.response.PaymentResponse;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import org.apache.commons.collections.MapUtils;
 import org.apache.logging.log4j.LogManager;
@@ -45,23 +45,23 @@ public class CheckoutComMultibancoPaymentResponseStrategy extends CheckoutComAbs
      * {@inheritDoc}
      */
     @Override
-    public AuthorizeResponse handlePendingPaymentResponse(final PaymentPending paymentPendingResponse, final PaymentInfoModel paymentInfo) {
-        validateParameterNotNull(paymentPendingResponse, "Payment pending response cannot be null");
-        checkArgument(MapUtils.isNotEmpty(paymentPendingResponse.getLinks()), "Payment response links cannot be empty.");
-        checkArgument(paymentPendingResponse.getLinks().containsKey(MULTIBANCO_REDIRECT_LINK_KEY), "Redirect Multibanco link is missing.");
+    public AuthorizeResponse handlePendingPaymentResponse(final PaymentResponse paymentResponse, final PaymentInfoModel paymentInfo) {
+        validateParameterNotNull(paymentResponse, "Payment pending response cannot be null");
+        checkArgument(MapUtils.isNotEmpty(paymentResponse.getLinks()), "Payment response links cannot be empty.");
+        checkArgument(paymentResponse.getLinks().containsKey(MULTIBANCO_REDIRECT_LINK_KEY), "Redirect Multibanco link is missing.");
         checkArgument(paymentInfo instanceof CheckoutComAPMPaymentInfoModel, "Payment info null or not valid for APMs.");
 
-        paymentInfoService.addPaymentId(paymentPendingResponse.getId(), paymentInfo);
+        paymentInfoService.addPaymentId(paymentResponse.getId(), paymentInfo);
 
-        return populateAuthorizeResponse(paymentPendingResponse, (CheckoutComAPMPaymentInfoModel) paymentInfo);
+        return populateAuthorizeResponse(paymentResponse, (CheckoutComAPMPaymentInfoModel) paymentInfo);
     }
 
-    protected AuthorizeResponse populateAuthorizeResponse(final PaymentPending paymentPendingResponse, final CheckoutComAPMPaymentInfoModel paymentInfo) {
+    protected AuthorizeResponse populateAuthorizeResponse(final PaymentResponse paymentResponse, final CheckoutComAPMPaymentInfoModel paymentInfo) {
         final AuthorizeResponse response = new AuthorizeResponse();
         response.setIsRedirect(true);
         response.setIsSuccess(true);
         response.setIsDataRequired(paymentInfo.getUserDataRequired());
-        response.setRedirectUrl(paymentPendingResponse.getLinks().get(MULTIBANCO_REDIRECT_LINK_KEY).getHref());
+        response.setRedirectUrl(paymentResponse.getLinks().get(MULTIBANCO_REDIRECT_LINK_KEY).getHref());
 
         return response;
     }

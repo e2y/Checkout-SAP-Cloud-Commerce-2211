@@ -19,6 +19,8 @@
                 
         <requires-extension name="solrserver"/>
                 
+        <requires-extension name="checkoutsdk"/>
+                
         <coremodule generated="true" manager="com.checkout.hybris.core.jalo.CheckoutservicesManager" packageroot="com.checkout.hybris.core"/>
             
     </extension>

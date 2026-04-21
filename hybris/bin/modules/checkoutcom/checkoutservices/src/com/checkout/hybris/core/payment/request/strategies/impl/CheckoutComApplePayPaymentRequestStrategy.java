@@ -1,14 +1,15 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.model.CheckoutComApplePayPaymentInfoModel;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
-import com.checkout.sdk.payments.TokenSource;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.RequestTokenSource;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.core.model.order.payment.PaymentInfoModel;
 import de.hybris.platform.core.model.user.AddressModel;
@@ -23,12 +24,9 @@ import static java.lang.String.format;
  */
 public class CheckoutComApplePayPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
 
-    public CheckoutComApplePayPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                     final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                     final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                     final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-              checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+
+    protected CheckoutComApplePayPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
     }
 
     /**
@@ -43,13 +41,12 @@ public class CheckoutComApplePayPaymentRequestStrategy extends CheckoutComAbstra
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart, final String currencyIsoCode, final Long amount) {
         final PaymentInfoModel paymentInfo = cart.getPaymentInfo();
         if (paymentInfo instanceof CheckoutComApplePayPaymentInfoModel) {
             return createTokenSourcePaymentRequest((CheckoutComApplePayPaymentInfoModel) paymentInfo, currencyIsoCode, amount, cart.getPaymentAddress());
         } else {
-            throw new IllegalArgumentException(format("Strategy called with unsupported paymentInfo type : [%s] while trying to authorize cart: [%s]", paymentInfo.getClass().toString(), cart.getCode()));
+            throw new IllegalArgumentException(format("Strategy called with unsupported paymentInfo type : [%s] while trying to authorize cart: [%s]", paymentInfo.getClass(), cart.getCode()));
         }
     }
 
@@ -62,16 +59,22 @@ public class CheckoutComApplePayPaymentRequestStrategy extends CheckoutComAbstra
      * @param billingAddress  to set in the request
      * @return paymentRequest to send to Checkout.com
      */
-    protected PaymentRequest<RequestSource> createTokenSourcePaymentRequest(final CheckoutComApplePayPaymentInfoModel paymentInfo, final String currencyIsoCode, final Long amount, final AddressModel billingAddress) {
-        final PaymentRequest<RequestSource> paymentRequest = PaymentRequest.fromSource(new TokenSource(paymentInfo.getToken()), currencyIsoCode, amount);
-        ((TokenSource) paymentRequest.getSource()).setBillingAddress(billingAddress != null ? createAddress(billingAddress) : null);
-        return paymentRequest;
+    protected PaymentRequest createTokenSourcePaymentRequest(final CheckoutComApplePayPaymentInfoModel paymentInfo, final String currencyIsoCode, final Long amount, final AddressModel billingAddress) {
+        return PaymentRequest.builder()
+            .amount(amount)
+            .currency(Currency.valueOf(currencyIsoCode))
+            .source(
+                RequestTokenSource.builder()
+                    .token(paymentInfo.getToken())
+                    .billingAddress(billingAddress != null ? createAddress(billingAddress) : null)
+                    .build()
+            ).build();
     }
 
     /**
      * ApplePay is like card payments. Capture or auto-capture depends on the merchant configuration
      *
-     * @return tru is we auto-capture, false otherwise
+     * @return true is we auto-capture, false otherwise
      */
     @Override
     protected Optional<Boolean> isCapture() {

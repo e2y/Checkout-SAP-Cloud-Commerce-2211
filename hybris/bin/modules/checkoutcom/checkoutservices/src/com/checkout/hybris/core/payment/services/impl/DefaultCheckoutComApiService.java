@@ -1,10 +1,11 @@
 package com.checkout.hybris.core.payment.services.impl;
 
-import com.checkout.sdk.CheckoutApi;
-import com.checkout.sdk.CheckoutApiImpl;
 import com.checkout.hybris.core.enums.EnvironmentType;
 import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.payment.services.CheckoutComApiService;
+import com.checkout.CheckoutApi;
+import com.checkout.CheckoutSdkBuilder;
+import com.checkout.Environment;
 
 public class DefaultCheckoutComApiService implements CheckoutComApiService {
 	private final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService;
@@ -16,7 +17,6 @@ public class DefaultCheckoutComApiService implements CheckoutComApiService {
 	@Override
 	public CheckoutApi createCheckoutApi() {
 		return createCheckoutComApi();
-
 	}
 
 	protected CheckoutApi createCheckoutComApi() {
@@ -30,6 +30,10 @@ public class DefaultCheckoutComApiService implements CheckoutComApiService {
 
 	protected CheckoutApi createCheckoutComApi(final String secretKey, final String publicKey,
 											   final boolean useSandbox) {
-		return CheckoutApiImpl.create(secretKey, useSandbox, publicKey);
-	}
+        return new CheckoutSdkBuilder.CheckoutStaticKeysSdkBuilder()
+            .publicKey(publicKey)
+            .secretKey(secretKey)
+            .environment(useSandbox ? Environment.SANDBOX : Environment.PRODUCTION)
+            .build();
+    }
 }

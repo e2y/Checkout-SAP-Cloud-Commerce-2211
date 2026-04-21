@@ -6,7 +6,7 @@ import com.checkout.hybris.core.payment.services.CheckoutComPaymentIntegrationSe
 import com.checkout.hybris.core.url.services.CheckoutComUrlService;
 import de.hybris.platform.cms2.servicelayer.services.CMSSiteService;
 
-public class CheckoutPaymentRequestServicesWrapper {
+public class  CheckoutPaymentRequestServicesWrapper {
     protected final CheckoutComUrlService checkoutComUrlService;
     protected final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService;
     protected final CheckoutComCurrencyService checkoutComCurrencyService;

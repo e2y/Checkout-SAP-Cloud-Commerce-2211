@@ -1,5 +1,14 @@
 package com.checkout.hybris.occ.controllers;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.checkout.hybris.commercefacades.user.CheckoutComUserFacade;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commercefacades.order.data.CCPaymentInfoData;
@@ -14,17 +23,15 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.mockito.Mockito.*;
-
 @UnitTest
 @RunWith(MockitoJUnitRunner.class)
 public class CheckoutComPaymentDetailsControllerTest {
 
+    private final String paymentDetailId = "paymentDetailId";
+
     @Spy
     @InjectMocks
     private CheckoutComPaymentDetailsController testObj;
-    private final String paymentDetailId = "paymentDetailId";
-    private final PaymentDetailsWsDTO paymentDetails = new PaymentDetailsWsDTO();
 
     @Mock
     private CheckoutComUserFacade checkoutComUserFacade;
@@ -32,51 +39,37 @@ public class CheckoutComPaymentDetailsControllerTest {
     @Mock
     private DataMapper dataMapperMock;
 
+    private final PaymentDetailsWsDTO paymentDetails = new PaymentDetailsWsDTO();
     private final CCPaymentInfoData ccPaymentInfoData = new CCPaymentInfoData();
-
 
     @Test
     public void replacePaymentDetails_shouldCallUpdateCCPaymentInfo() {
-        ensureValidationDoesNotFail();
-        ensureDataMapperDoesNotFail();
-        ensureCheckoutComUserFacadeReturnsCCPaymentInfoDataForId(paymentDetailId, ccPaymentInfoData);
-        ensureUpdateCCPaymentInfoDoesNothing();
+        doNothing().when(testObj).validate(any(), any(), any());
+        doNothing().when(dataMapperMock).map(any(), any(), any(), anyBoolean());
+        doNothing().when(checkoutComUserFacade).updateCCPaymentInfo(ccPaymentInfoData);
+        when(checkoutComUserFacade.getCCPaymentInfoForCode(paymentDetailId)).thenReturn(ccPaymentInfoData);
 
         testObj.replacePaymentDetails(paymentDetailId, paymentDetails);
 
         verify(checkoutComUserFacade).updateCCPaymentInfo(ccPaymentInfoData);
     }
 
-    @Test(expected = RequestParameterException.class)
+    @Test
     public void getPaymentInfo_shouldThrowException_whenGetCCPaymentFails() {
 
-		doThrow(new PK.PKException("")).when(checkoutComUserFacade).getCCPaymentInfoForCode(paymentDetailId);
+        doThrow(new PK.PKException("")).when(checkoutComUserFacade).getCCPaymentInfoForCode(paymentDetailId);
 
-		testObj.getPaymentInfo(paymentDetailId);
+        assertThatThrownBy(() -> testObj.getPaymentInfo(paymentDetailId))
+                .isInstanceOf(RequestParameterException.class)
+                .hasMessage("Payment details [paymentDetailId] not found.");
     }
 
-	@Test(expected = RequestParameterException.class)
-	public void getPaymentInfo_shouldThrowException_whenPaymentIsNull() {
+    @Test
+    public void getPaymentInfo_shouldThrowException_whenPaymentIsNull() {
+        doReturn(null).when(checkoutComUserFacade).getCCPaymentInfoForCode(paymentDetailId);
 
-		doReturn(null).when(checkoutComUserFacade).getCCPaymentInfoForCode(paymentDetailId);
-
-		testObj.getPaymentInfo(paymentDetailId);
-	}
-
-    private void ensureCheckoutComUserFacadeReturnsCCPaymentInfoDataForId(final String paymentDetailId,
-                                                                          final CCPaymentInfoData ccPaymentInfoData) {
-        when(checkoutComUserFacade.getCCPaymentInfoForCode(paymentDetailId)).thenReturn(ccPaymentInfoData);
-    }
-
-    private void ensureUpdateCCPaymentInfoDoesNothing() {
-        doNothing().when(checkoutComUserFacade).updateCCPaymentInfo(ccPaymentInfoData);
-    }
-
-    private void ensureDataMapperDoesNotFail() {
-        doNothing().when(dataMapperMock).map(any(), any(), any(), anyBoolean());
-    }
-
-    private void ensureValidationDoesNotFail() {
-        doNothing().when(testObj).validate(any(), any(), any());
+        assertThatThrownBy(() -> testObj.getPaymentInfo(paymentDetailId))
+                .isInstanceOf(RequestParameterException.class)
+                .hasMessage("Payment details [paymentDetailId] not found.");
     }
 }

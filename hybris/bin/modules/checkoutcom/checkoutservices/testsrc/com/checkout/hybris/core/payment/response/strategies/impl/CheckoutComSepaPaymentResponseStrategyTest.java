@@ -3,7 +3,8 @@ package com.checkout.hybris.core.payment.response.strategies.impl;
 import com.checkout.hybris.core.authorisation.AuthorizeResponse;
 import com.checkout.hybris.core.model.CheckoutComSepaPaymentInfoModel;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
-import com.checkout.sdk.payments.PaymentPending;
+
+import com.checkout.payments.response.PaymentResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +27,7 @@ public class CheckoutComSepaPaymentResponseStrategyTest {
     private CheckoutComSepaPaymentResponseStrategy testObj;
 
     @Mock
-    private PaymentPending pendingResponseMock;
+    private PaymentResponse pendingResponseMock;
     @Mock
     private CheckoutComSepaPaymentInfoModel sepaPaymentInfoMock;
     @Mock

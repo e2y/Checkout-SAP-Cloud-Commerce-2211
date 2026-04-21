@@ -2,6 +2,8 @@ package com.checkout.hybris.facades.address;
 
 import de.hybris.platform.commercefacades.user.data.AddressData;
 
+import java.util.List;
+
 /**
  * Handles the address operations for checkout.com
  */
@@ -22,11 +24,13 @@ public interface CheckoutComAddressFacade {
     void setCartBillingDetails(AddressData addressData);
 
     /**
-     * Sets billing details to the session cart (payment address) given an address Id
+     * Sets billing details to the session cart (payment address) given an address
      *
-     * @param addressId the address id
+     * @param addressId the address
      */
-    void setCartBillingDetailsByAddressId(String addressId);
+    void setCartBillingDetailsByAddress(AddressData addressId);
+
+    void setCartBillingDetailsByAddressId(final String addressId);
 
     void setAddressDataCountry(String countryCode, AddressData addressData);
 

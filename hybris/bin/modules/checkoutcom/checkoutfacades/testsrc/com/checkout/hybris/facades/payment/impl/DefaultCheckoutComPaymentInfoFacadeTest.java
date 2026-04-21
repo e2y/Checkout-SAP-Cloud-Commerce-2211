@@ -6,15 +6,15 @@ import com.checkout.hybris.core.model.CheckoutComBenefitPayPaymentInfoModel;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
 import com.checkout.hybris.core.payment.details.mappers.CheckoutComUpdatePaymentInfoStrategyMapper;
 import com.checkout.hybris.core.payment.details.strategies.CheckoutComUpdatePaymentInfoStrategy;
-import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.resolvers.CheckoutComPaymentTypeResolver;
 import com.checkout.hybris.core.payment.services.CheckoutComPaymentInfoService;
 import com.checkout.hybris.facades.beans.*;
 import com.checkout.hybris.facades.payment.converters.CheckoutComApmMappedPaymentInfoReverseConverter;
-import com.checkout.sdk.payments.GetPaymentResponse;
+import com.checkout.payments.response.GetPaymentResponse;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commercefacades.order.data.CCPaymentInfoData;
 import de.hybris.platform.commercefacades.order.data.CartData;
+import de.hybris.platform.core.enums.CreditCardType;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.order.CartService;
 import de.hybris.platform.servicelayer.dto.converter.Converter;
@@ -29,8 +29,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.*;
-import static de.hybris.platform.constants.GeneratedCoreConstants.Enumerations.CreditCardType.VISA;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @UnitTest
@@ -85,9 +86,9 @@ public class DefaultCheckoutComPaymentInfoFacadeTest {
         when(cartServiceMock.hasSessionCart()).thenReturn(true);
         when(cartDataMock.getPaymentInfo()).thenReturn(ccPaymentInfoDataMock);
         when(ccPaymentInfoDataMock.getPaymentToken()).thenReturn("token");
-        when(apmPaymentInfoDataMock.getType()).thenReturn(CheckoutComPaymentType.BENEFITPAY.name());
-        when(checkoutComPaymentTypeResolverMock.resolvePaymentMethod(CheckoutComPaymentType.BENEFITPAY.name())).thenReturn(CheckoutComPaymentType.BENEFITPAY);
-        when(checkoutComApmMappedPaymentInfoReverseConverterMock.convertAPMPaymentInfoData(apmPaymentInfoDataMock, CheckoutComPaymentType.BENEFITPAY)).thenReturn(benefitPayPaymentInfoMock);
+        when(apmPaymentInfoDataMock.getType()).thenReturn(BENEFITPAY.name());
+        when(checkoutComPaymentTypeResolverMock.resolvePaymentMethod(BENEFITPAY.name())).thenReturn(BENEFITPAY);
+        when(checkoutComApmMappedPaymentInfoReverseConverterMock.convertAPMPaymentInfoData(apmPaymentInfoDataMock, BENEFITPAY)).thenReturn(benefitPayPaymentInfoMock);
         when(checkoutComCCPaymentInfoReverseConverterMock.convert(ccPaymentInfoDataMock)).thenReturn(checkoutComCreditCardPaymentInfoModelMock);
         when(checkoutComAchPaymentInfoReverseConverterMock.convert(achPaymentInfoDataMock)).thenReturn(checkoutComAchPaymentInfoModelMock);
     }
@@ -117,7 +118,7 @@ public class DefaultCheckoutComPaymentInfoFacadeTest {
     @Test
     public void addPaymentInfoToCart_WhenCCPaymentInfoDataAndCardTypeNotNull_ShouldSetThePaymentToSessionCart() {
         doNothing().when(paymentInfoServiceMock).createPaymentInfo(checkoutComCreditCardPaymentInfoModelMock, cartModelMock);
-        when(ccPaymentInfoDataMock.getCardType()).thenReturn(VISA);
+        when(ccPaymentInfoDataMock.getCardType()).thenReturn(CreditCardType.VISA.getCode());
 
         testObj.addPaymentInfoToCart(ccPaymentInfoDataMock);
 
@@ -136,7 +137,7 @@ public class DefaultCheckoutComPaymentInfoFacadeTest {
         final InOrder inOrder = inOrder(cartServiceMock, checkoutComApmMappedPaymentInfoReverseConverterMock, paymentInfoServiceMock, benefitPayPaymentInfoMock);
         inOrder.verify(cartServiceMock).hasSessionCart();
         inOrder.verify(cartServiceMock).getSessionCart();
-        inOrder.verify(checkoutComApmMappedPaymentInfoReverseConverterMock).convertAPMPaymentInfoData(apmPaymentInfoDataMock, CheckoutComPaymentType.BENEFITPAY);
+        inOrder.verify(checkoutComApmMappedPaymentInfoReverseConverterMock).convertAPMPaymentInfoData(apmPaymentInfoDataMock, BENEFITPAY);
         inOrder.verify(paymentInfoServiceMock).createPaymentInfo(benefitPayPaymentInfoMock, cartModelMock);
     }
 

@@ -1,9 +1,9 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.apm.RequestKnetSource;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.core.model.order.CartModel;
 import de.hybris.platform.servicelayer.i18n.CommonI18NService;
@@ -16,6 +16,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.KNET;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @UnitTest
@@ -24,7 +25,6 @@ public class CheckoutComKnetPaymentRequestStrategyTest {
 
     private static final String CURRENCY_ISO_CODE = "USD";
     private static final Long CHECKOUT_COM_TOTAL_PRICE = 10000L;
-    private static final String LANGUAGE_KEY = "language";
     private static final String EN_LANGUAGE_VALUE = "en";
 
     @InjectMocks
@@ -39,14 +39,14 @@ public class CheckoutComKnetPaymentRequestStrategyTest {
 
     @Test
     public void getRequestSourcePaymentRequest_WhenKnetPayment_ShouldCreateAlternativePaymentRequestWithTypeAndLanguage() {
-        when(cartMock.getPaymentInfo()).thenReturn(checkoutComAPMPaymentInfoMock);
-        when(checkoutComAPMPaymentInfoMock.getType()).thenReturn(KNET.name());
+        lenient().when(cartMock.getPaymentInfo()).thenReturn(checkoutComAPMPaymentInfoMock);
+        lenient().when(checkoutComAPMPaymentInfoMock.getType()).thenReturn(KNET.name());
         when(commonI18NServiceMock.getCurrentLanguage().getIsocode()).thenReturn(EN_LANGUAGE_VALUE);
 
-        final PaymentRequest<RequestSource> result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
+        final PaymentRequest result = testObj.getRequestSourcePaymentRequest(cartMock, CURRENCY_ISO_CODE, CHECKOUT_COM_TOTAL_PRICE);
 
-        assertEquals(KNET.name().toLowerCase(), result.getSource().getType());
-        assertEquals(EN_LANGUAGE_VALUE, ((AlternativePaymentSource) result.getSource()).get(LANGUAGE_KEY));
+        assertEquals(KNET.name().toLowerCase(), result.getSource().getType().name().toLowerCase());
+        assertEquals(EN_LANGUAGE_VALUE, ((RequestKnetSource) result.getSource()).getLanguage());
     }
 
     @Test

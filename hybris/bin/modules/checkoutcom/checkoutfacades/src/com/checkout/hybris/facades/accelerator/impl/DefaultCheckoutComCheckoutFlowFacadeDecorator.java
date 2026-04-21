@@ -1,5 +1,6 @@
 package com.checkout.hybris.facades.accelerator.impl;
 
+import com.checkout.GsonSerializer;
 import com.checkout.hybris.core.address.services.CheckoutComAddressService;
 import com.checkout.hybris.core.authorisation.AuthorizeResponse;
 import com.checkout.hybris.core.model.CheckoutComAPMPaymentInfoModel;
@@ -13,11 +14,9 @@ import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
 import com.checkout.hybris.facades.beans.AuthorizeResponseData;
 import com.checkout.hybris.facades.beans.CheckoutComPaymentInfoData;
 import com.checkout.hybris.facades.constants.CheckoutFacadesConstants;
-import com.checkout.sdk.GsonSerializer;
-import com.checkout.sdk.payments.PaymentProcessed;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.PaymentResponse;
-import com.checkout.sdk.payments.RequestSource;
+import com.checkout.payments.PaymentStatus;
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.response.PaymentResponse;
 import de.hybris.platform.acceleratorfacades.flow.CheckoutFlowFacade;
 import de.hybris.platform.commercefacades.order.data.CartData;
 import de.hybris.platform.core.model.order.CartModel;
@@ -25,6 +24,8 @@ import de.hybris.platform.core.model.user.AddressModel;
 import de.hybris.platform.servicelayer.dto.converter.Converter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Optional;
 
 import static de.hybris.platform.servicelayer.util.ServicesUtil.validateParameterNotNull;
 
@@ -45,7 +46,6 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecorator extends CheckoutComAb
     protected final CheckoutComPaymentService paymentService;
     protected final Converter<AuthorizeResponse, AuthorizeResponseData> authorizeResponseConverter;
 
-
     public DefaultCheckoutComCheckoutFlowFacadeDecorator(final CheckoutFlowFacade checkoutFlowFacade,
                                                          final CheckoutComAddressService addressService,
                                                          final CheckoutComRequestFactory checkoutComRequestFactory,
@@ -63,9 +63,9 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecorator extends CheckoutComAb
     }
 
     /**
-     * Checks if there is no payment info. Changes all the ootb logic.
+     * Checks if there is no paymentResponse info. Changes all the ootb logic.
      *
-     * @return true if there is not payment info in the checkout cart, false otherwise
+     * @return true if there is not paymentResponse info in the checkout cart, false otherwise
      */
     @Override
     public boolean hasNoPaymentInfo() {
@@ -97,7 +97,7 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecorator extends CheckoutComAb
 
         final PaymentResponse paymentResponse;
         try {
-            final PaymentRequest<RequestSource> request = checkoutComRequestFactory.createPaymentRequest(cart);
+            final PaymentRequest request = checkoutComRequestFactory.createPaymentRequest(cart);
             paymentResponse = checkoutComPaymentIntegrationService.authorizePayment(request);
             final GsonSerializer gsonSerializer = new GsonSerializer();
             final String requestJson = gsonSerializer.toJson(request);
@@ -111,17 +111,25 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecorator extends CheckoutComAb
             authorizeResponseData.setIsSuccess(false);
             return authorizeResponseData;
         }
-        final PaymentProcessed payment = paymentResponse.getPayment();
 
-        if (isApprovedPayment(payment)) {
-            return handleApprovedPaymentResponse(authorizeResponseData, cart, payment);
+        if (isApprovedPayment(paymentResponse)) {
+            return handleApprovedPaymentResponse(authorizeResponseData, cart, paymentResponse);
         } else if (isPendingPayment(paymentResponse)) {
-            return authorizeResponseConverter.convert(paymentService.handlePendingPaymentResponse(paymentResponse.getPending(), cart.getPaymentInfo()));
-        } else if (isFailedPayment(payment)) {
-            handleFailedPaymentResponse(cart, payment);
+            return authorizeResponseConverter.convert(paymentService.handlePendingPaymentResponse(paymentResponse, cart.getPaymentInfo()));
+        } else if (isFailedPayment(paymentResponse)) {
+            handleFailedPaymentResponse(cart, paymentResponse);
         }
 
-        LOG.error("Payment authorization response returned: approved [{}], pending [{}]", payment == null ? "null" : payment.isApproved(), paymentResponse.isPending());
+        LOG.error("Payment authorization response returned: approved [{}], status [{}]",
+            Optional.ofNullable(paymentResponse)
+                .map(PaymentResponse::isApproved)
+                .map(approved -> Boolean.toString(approved))
+                .orElse("null"),
+            Optional.ofNullable(paymentResponse)
+                .map(PaymentResponse::getStatus)
+                .map(PaymentStatus::name)
+                .orElse("null")
+        );
         return authorizeResponseData;
     }
 
@@ -146,7 +154,7 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecorator extends CheckoutComAb
         if (getCartService().hasSessionCart()) {
             final CartModel sessionCart = getCartService().getSessionCart();
 
-            validateParameterNotNull(sessionCart.getPaymentInfo(), "PaymentInfo cannot be null once selected an existing payment method.");
+            validateParameterNotNull(sessionCart.getPaymentInfo(), "PaymentInfo cannot be null once selected an existing paymentResponse method.");
             final AddressModel clonedAddressFromPaymentInfo = addressService.cloneAddress(sessionCart.getPaymentInfo().getBillingAddress());
             addressService.setCartPaymentAddress(sessionCart, clonedAddressFromPaymentInfo);
         }
@@ -206,33 +214,33 @@ public class DefaultCheckoutComCheckoutFlowFacadeDecorator extends CheckoutComAb
         }
     }
 
-    protected boolean isApprovedPayment(final PaymentProcessed payment) {
-        return payment != null && payment.isApproved() && payment.getResponseCode().equalsIgnoreCase(APPROVED_RESPONSE_CODE);
+    protected boolean isApprovedPayment(final PaymentResponse paymentResponse) {
+        return paymentResponse != null && paymentResponse.isApproved() && paymentResponse.getResponseCode().equalsIgnoreCase(APPROVED_RESPONSE_CODE);
     }
 
     protected AuthorizeResponseData handleApprovedPaymentResponse(
-            final AuthorizeResponseData authorizeResponseData, final CartModel cartModel, final PaymentProcessed payment) {
+        final AuthorizeResponseData authorizeResponseData, final CartModel cartModel, final PaymentResponse paymentResponse) {
         LOG.debug("Payment authorization success for cart with code [{}]. The redirect is not needed.", cartModel.getCode());
         if (cartModel.getPaymentInfo() instanceof CheckoutComCreditCardPaymentInfoModel) {
-            paymentInfoService.addSubscriptionIdToUserPayment((CheckoutComCreditCardPaymentInfoModel) cartModel.getPaymentInfo(), payment.getSource());
+            paymentInfoService.addSubscriptionIdToUserPayment((CheckoutComCreditCardPaymentInfoModel) cartModel.getPaymentInfo(), paymentResponse.getSource());
         }
-        paymentInfoService.addPaymentId(payment.getId(), cartModel.getPaymentInfo());
+        paymentInfoService.addPaymentId(paymentResponse.getId(), cartModel.getPaymentInfo());
         authorizeResponseData.setIsSuccess(true);
         authorizeResponseData.setIsRedirect(false);
         return authorizeResponseData;
     }
 
-    protected void handleFailedPaymentResponse(final CartModel cartModel, final PaymentProcessed payment) {
-        LOG.debug("Storing failed payment ID in for cart with code [{}].", cartModel.getCode());
-        paymentInfoService.addPaymentId(payment.getId(), cartModel.getPaymentInfo());
+    protected void handleFailedPaymentResponse(final CartModel cartModel, final PaymentResponse paymentResponse) {
+        LOG.debug("Storing failed paymentResponse ID in for cart with code [{}].", cartModel.getCode());
+        paymentInfoService.addPaymentId(paymentResponse.getId(), cartModel.getPaymentInfo());
     }
 
     protected boolean isPendingPayment(final PaymentResponse paymentResponse) {
-        return paymentResponse.isPending() && paymentResponse.getPending() != null;
+        return paymentResponse != null && PaymentStatus.PENDING.equals(paymentResponse.getStatus());
     }
 
-    protected boolean isFailedPayment(final PaymentProcessed payment) {
-        return payment != null && !payment.isApproved();
+    protected boolean isFailedPayment(final PaymentResponse paymentResponse) {
+        return paymentResponse != null && !paymentResponse.isApproved();
     }
 
     protected ExpressCheckoutResult callSuperExpressCheckoutResult() {

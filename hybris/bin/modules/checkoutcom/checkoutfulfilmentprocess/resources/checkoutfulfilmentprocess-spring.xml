@@ -161,6 +161,7 @@
         <property name="orderCancelRecordsHandler" ref="orderCancelRecordsHandler"/>
         <property name="completeCancelStatusChangeStrategy" ref="setCancellledStrategy"/>
         <property name="notificationServiceAdapter" ref="checkoutComCancelNotificationServiceAdapter"/>
+        <property name="calculationService" ref="calculationService"/>
     </bean>
 
     <alias name="defaultCheckoutComCancelFinishedEventListener" alias="checkoutComCancelFinishedEventListener"/>

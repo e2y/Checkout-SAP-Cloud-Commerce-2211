@@ -4,8 +4,6 @@ import com.checkout.hybris.facades.address.CheckoutComAddressFacade;
 import com.checkout.hybris.facades.beans.GooglePayPaymentContact;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.commercefacades.user.data.AddressData;
-import de.hybris.platform.commercefacades.user.data.CountryData;
-import de.hybris.platform.commercefacades.user.data.RegionData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,13 +34,9 @@ public class CheckoutComGooglePayAddressReversePopulatorTest {
 
     @Mock
     private CheckoutComAddressFacade checkoutComAddressFacadeMock;
-    @Mock
-    private CountryData countryMock;
-    @Mock
-    private RegionData regionDataMock;
 
-    private GooglePayPaymentContact source = new GooglePayPaymentContact();
-    private AddressData target = new AddressData();
+    private final GooglePayPaymentContact source = new GooglePayPaymentContact();
+    private final AddressData target = new AddressData();
 
     @Before
     public void setUp() {

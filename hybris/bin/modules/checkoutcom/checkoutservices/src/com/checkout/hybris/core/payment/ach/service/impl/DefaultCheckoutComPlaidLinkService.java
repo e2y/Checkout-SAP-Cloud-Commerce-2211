@@ -22,7 +22,7 @@ public class DefaultCheckoutComPlaidLinkService implements CheckoutComPlaidLinkS
     protected static final String CLIENT_ID = "clientId";
     protected static final String SECRET = "secret";
 
-     protected final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService;
+    protected final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService;
 
     public DefaultCheckoutComPlaidLinkService(final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
         this.checkoutComMerchantConfigurationService = checkoutComMerchantConfigurationService;
@@ -31,10 +31,8 @@ public class DefaultCheckoutComPlaidLinkService implements CheckoutComPlaidLinkS
     protected PlaidApi getPlaidLinkClient() {
         final CheckoutComACHConfigurationModel achConfiguration = checkoutComMerchantConfigurationService.getACHConfiguration();
         final ApiClient apiClient = new ApiClient(Map.of(CLIENT_ID, achConfiguration.getClientId(),
-                SECRET, achConfiguration.getSecret()));
-        if (AchEnv.DEVELOPMENT.equals(achConfiguration.getAchEnv())) {
-            apiClient.setPlaidAdapter(ApiClient.Development);
-        } else if (AchEnv.PRODUCTION.equals(achConfiguration.getAchEnv())) {
+            SECRET, achConfiguration.getSecret()));
+        if (AchEnv.PRODUCTION.equals(achConfiguration.getAchEnv())) {
             apiClient.setPlaidAdapter(ApiClient.Production);
         } else {
             apiClient.setPlaidAdapter(ApiClient.Sandbox);
@@ -51,34 +49,34 @@ public class DefaultCheckoutComPlaidLinkService implements CheckoutComPlaidLinkS
 
     protected LinkTokenCreateRequest getLinkTokenCreateRequest(final CustomerModel customer) {
         final CheckoutComACHConfigurationModel achConfiguration =
-                checkoutComMerchantConfigurationService.getACHConfiguration();
+            checkoutComMerchantConfigurationService.getACHConfiguration();
         final LinkTokenCreateRequestUser user = new LinkTokenCreateRequestUser()
-                .clientUserId(customer.getCustomerID());
+            .clientUserId(customer.getCustomerID());
         final DepositoryFilter depositoryFilter = new DepositoryFilter()
-                .accountSubtypes(List.of(AccountSubtype.SAVINGS, AccountSubtype.CHECKING));
+            .accountSubtypes(List.of(DepositoryAccountSubtype.SAVINGS, DepositoryAccountSubtype.CHECKING));
         final LinkTokenAccountFilters accountFilters = new LinkTokenAccountFilters()
-                .depository(depositoryFilter);
+            .depository(depositoryFilter);
 
         return new LinkTokenCreateRequest()
-                .user(user)
-                .clientName(achConfiguration.getClientName())
-                .products(List.of(Products.AUTH))
-                .accountFilters(accountFilters)
-                .countryCodes(List.of(CountryCode.US))
-                .language(achConfiguration.getLanguage().getIsocode());
+            .user(user)
+            .clientName(achConfiguration.getClientName())
+            .products(List.of(Products.AUTH))
+            .accountFilters(accountFilters)
+            .countryCodes(List.of(CountryCode.US))
+            .language(achConfiguration.getLanguage().getIsocode());
     }
 
     @Override
     public ItemPublicTokenExchangeResponse itemPublicTokenExchange(final String publicToken) throws IOException {
         final ItemPublicTokenExchangeRequest itemPublicTokenExchangeRequest = getItemPublicTokenExchangeRequest(
-                publicToken);
+            publicToken);
 
         return getPlaidLinkClient().itemPublicTokenExchange(itemPublicTokenExchangeRequest).execute().body();
     }
 
     protected ItemPublicTokenExchangeRequest getItemPublicTokenExchangeRequest(final String publicToken) {
         return new ItemPublicTokenExchangeRequest()
-                .publicToken(publicToken);
+            .publicToken(publicToken);
     }
 
     @Override
@@ -90,7 +88,7 @@ public class DefaultCheckoutComPlaidLinkService implements CheckoutComPlaidLinkS
 
     protected AuthGetRequest getAuthGetRequest(final String accessToken) {
         return new AuthGetRequest()
-                .accessToken(accessToken);
+            .accessToken(accessToken);
     }
 
     @Override
@@ -102,10 +100,10 @@ public class DefaultCheckoutComPlaidLinkService implements CheckoutComPlaidLinkS
 
     protected AccountsGetRequest getAccountsGetRequest(final String accessToken, final String accountId) {
         final AccountsGetRequestOptions accountsGetRequestOptions = new AccountsGetRequestOptions()
-                .accountIds(List.of(accountId));
+            .accountIds(List.of(accountId));
         return new AccountsGetRequest()
-                .accessToken(accessToken)
-                .options(accountsGetRequestOptions);
+            .accessToken(accessToken)
+            .options(accountsGetRequestOptions);
     }
 
     @Override
@@ -117,10 +115,10 @@ public class DefaultCheckoutComPlaidLinkService implements CheckoutComPlaidLinkS
 
     protected IdentityGetRequest getIdentityGetRequest(final String accessToken, final String accountId) {
         final IdentityGetRequestOptions identityGetRequestOptions = new IdentityGetRequestOptions()
-                .accountIds(List.of(accountId));
+            .accountIds(List.of(accountId));
 
         return new IdentityGetRequest()
-                .accessToken(accessToken)
-                .options(identityGetRequestOptions);
+            .accessToken(accessToken)
+            .options(identityGetRequestOptions);
     }
 }

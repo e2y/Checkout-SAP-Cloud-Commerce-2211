@@ -1,13 +1,15 @@
 package com.checkout.hybris.core.payment.request.strategies.impl;
 
+import com.checkout.common.Currency;
 import com.checkout.hybris.core.address.strategies.CheckoutComPhoneNumberStrategy;
+import com.checkout.hybris.core.merchant.services.CheckoutComMerchantConfigurationService;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.request.mappers.CheckoutComPaymentRequestStrategyMapper;
 import com.checkout.hybris.core.payment.request.strategies.CheckoutComPaymentRequestStrategy;
 import com.checkout.hybris.core.populators.payments.CheckoutComCartModelToPaymentL2AndL3Converter;
-import com.checkout.sdk.payments.AlternativePaymentSource;
-import com.checkout.sdk.payments.PaymentRequest;
-import com.checkout.sdk.payments.RequestSource;
+
+import com.checkout.payments.request.PaymentRequest;
+import com.checkout.payments.request.source.apm.RequestBenefitSource;
 import de.hybris.platform.core.model.order.CartModel;
 
 import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.BENEFITPAY;
@@ -17,15 +19,8 @@ import static com.checkout.hybris.core.payment.enums.CheckoutComPaymentType.BENE
  */
 public class CheckoutComBenefitPayPaymentRequestStrategy extends CheckoutComAbstractApmPaymentRequestStrategy {
 
-    protected static final String INTEGRATION_TYPE_SOURCE_KEY = "integration_type";
-    protected static final String INTEGRATION_TYPE_SOURCE_VALUE = "web";
-
-    public CheckoutComBenefitPayPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy,
-                                                       final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper,
-                                                       final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter,
-                                                       final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper) {
-        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper,
-              checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper);
+    protected CheckoutComBenefitPayPaymentRequestStrategy(final CheckoutComPhoneNumberStrategy checkoutComPhoneNumberStrategy, final CheckoutComPaymentRequestStrategyMapper checkoutComPaymentRequestStrategyMapper, final CheckoutComCartModelToPaymentL2AndL3Converter checkoutComCartModelToPaymentL2AndL3Converter, final CheckoutPaymentRequestServicesWrapper checkoutPaymentRequestServicesWrapper, final CheckoutComMerchantConfigurationService checkoutComMerchantConfigurationService) {
+        super(checkoutComPhoneNumberStrategy, checkoutComPaymentRequestStrategyMapper, checkoutComCartModelToPaymentL2AndL3Converter, checkoutPaymentRequestServicesWrapper, checkoutComMerchantConfigurationService);
     }
 
     /**
@@ -40,12 +35,13 @@ public class CheckoutComBenefitPayPaymentRequestStrategy extends CheckoutComAbst
      * {@inheritDoc}
      */
     @Override
-    protected PaymentRequest<RequestSource> getRequestSourcePaymentRequest(final CartModel cart,
-                                                                           final String currencyIsoCode, final Long amount) {
-        final PaymentRequest<RequestSource> paymentRequest = super.getRequestSourcePaymentRequest(cart, currencyIsoCode, amount);
-        final AlternativePaymentSource source = (AlternativePaymentSource) paymentRequest.getSource();
-        source.put(INTEGRATION_TYPE_SOURCE_KEY, INTEGRATION_TYPE_SOURCE_VALUE);
-
-        return paymentRequest;
+    protected PaymentRequest getRequestSourcePaymentRequest(final CartModel cart,
+                                                            final String currencyIsoCode, final Long amount) {
+        RequestBenefitSource requestBenefitSource = new RequestBenefitSource();
+        return PaymentRequest.builder()
+                .source(requestBenefitSource)
+                .currency(Currency.valueOf(currencyIsoCode))
+                .amount(amount)
+                .build();
     }
 }
