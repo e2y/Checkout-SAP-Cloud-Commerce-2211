@@ -1,9 +1,0 @@
-{
-  "applications": [
-    {
-      "name": "example-storefront",
-      "path": "checkout-spartacus-connector/example-storefront"
-    }
-  ],
-  "nodeVersion": "20"
-}
