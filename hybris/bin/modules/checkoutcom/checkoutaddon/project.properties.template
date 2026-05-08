@@ -12,6 +12,7 @@ checkoutaddon.javascript.paths.responsive=\
     /responsive/common/js/applepay.js;\
     /responsive/common/js/googlepay.js;\
     /responsive/common/js/klarna.js;\
+    /responsive/common/js/checkoutcomFlow.js;\
     /responsive/common/js/checkoutcomjavascript.js;\
     /responsive/common/js/qrcode.min.js
 

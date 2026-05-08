@@ -1,12 +1,15 @@
 # Checkout.com Connector for SAP Commerce Cloud
+
 Checkout.com provides an end-to-end platform that helps you move faster, instead of holding you back. With flexible tools, granular data and deep insights, it’s the payments tech that unleashes your potential. So you can innovate, adapt to your markets, create outstanding customer experiences, and make smart decisions faster.
-The Connector for SAP Commerce Cloud (formerly Hybris) enables customers to implement a global payment strategy through a single integration in a secure, compliant and unified approach. 
+The Connector for SAP Commerce Cloud (formerly Hybris) enables customers to implement a global payment strategy through a single integration in a secure, compliant and unified approach.
 
 ## Release Compatibility
+
 This release is compatible with:
+
 - SAP Commerce: B2C Accelerator of SAP Commerce Cloud 2211. It is advised to install the latest patch version of SAP Commerce Cloud.
 - SAP Commerce REST API (OCC).
-- SAP Commerce Composable 2211.43.
+- SAP Commerce Composable 2211.50.
 - Java 17.
 - Checkout.com Java SDK version 7.3.1.
 
@@ -22,28 +25,29 @@ The Connector contains several extensions. Follow the following steps to include
 
 1. Unzip the supplied plugin zip file
 
-2. Copy the extracted folders to the ${HYBRIS_BIN_DIR} of your SAP Commerce installation.
+2. Copy the extracted folders to the `${HYBRIS_BIN_DIR}` of your SAP Commerce installation.
 
-3. Run the ```ant clean``` command from within your bin/platform directory.
+3. Run the `ant clean` command from within your `bin/platform` directory.
 
-5. Copy the following lines into your localextensions.xml after <path dir="${HYBRIS_BIN_DIR}"/>. The extensions do not rely on any absolute paths so it is also possible to place the extensions in a different location (such as ${HYBRIS_BIN_DIR}/custom).
-Run the command ```<path autoload="true" dir="${HYBRIS_BIN_DIR}/modules/checkoutcom"/>```
+4. Copy the following lines into your `localextensions.xml` after `<path dir="${HYBRIS_BIN_DIR}"/>`. The extensions do not rely on any absolute paths so it is also possible to place the extensions in a different location (such as `${HYBRIS_BIN_DIR}/custom`).
+   Run the command `<path autoload="true" dir="${HYBRIS_BIN_DIR}/modules/checkoutcom"/>`
 
-6. Run the commands below to install specific add-ons of the yaccelatorstorefront (replace "yacceleratorstorefront" with your custom storefront if relevant)
+5. Run the commands below to install specific add-ons of the yaccelatorstorefront (replace "yacceleratorstorefront" with your custom storefront if relevant)
 
 ### Add-ons:
-- B2C Accelerator: ```ant addoninstall -Daddonnames="checkoutaddon" -DaddonStorefront.yacceleratorstorefront="yacceleratorstorefront"```
+
+- B2C Accelerator: `ant addoninstall -Daddonnames="checkoutaddon" -DaddonStorefront.yacceleratorstorefront="yacceleratorstorefront"`
 
 ### Optional
 
 1. The checkoutsampledataaddon is optional, and can be installed by running the command:
-```ant addoninstall -Daddonnames="checkoutsampledataaddon" -DaddonStorefront.yacceleratorstorefront="yacceleratorstorefront"```
+   `ant addoninstall -Daddonnames="checkoutsampledataaddon" -DaddonStorefront.yacceleratorstorefront="yacceleratorstorefront"`
 
-2. Run the ```ant clean all``` command from within your bin/platform directory.
+2. Run the `ant clean all` command from within your bin/platform directory.
 
-3. Run ```hybrisserver.sh``` to startup the SAP Commerce server.
+3. Run `hybrisserver.sh` to startup the SAP Commerce server.
 
-4. Update your running system.using ```ant updatesystem```
+4. Update your running system.using `ant updatesystem`
 
 Except for setting up your hosts file, the Checkout.com Connector will work initially without any external setup needed.
 
@@ -62,54 +66,60 @@ For local installations, the recipe generates a local.properties file with the p
 For cloud installations, generate a manifest.json that reflects different properties files per environment and aspect, languages packs and add-ons.
 
 Install the Connector using recipes. Run the following commands:
+
 - Create a solution from the accelerator templates and install the addons.
-```HYBRIS_HOME/installer$ ./install.sh -r [RECIPE_NAME] setup```
+  `HYBRIS_HOME/installer$ ./install.sh -r [RECIPE_NAME] setup`
 - Build and initialize the platform
-```HYBRIS_HOME/installer$ ./install.sh -r [RECIPE_NAME] initialize```
+  `HYBRIS_HOME/installer$ ./install.sh -r [RECIPE_NAME] initialize`
 - Start a commerce suite instance
-```HYBRIS_HOME/installer$ ./install.sh -r [RECIPE_NAME] start```
-  
-## Installing on [SAP Commerce Cloud](https://help.sap.com/viewer/product/SAP_COMMERCE_CLOUD_PUBLIC_CLOUD/v2105/en-US)
-Follow the instructions below to install and deploy the Connector on SAP Commerce Cloud. The sample manifest.json included in the Connector serves as guide for the installation. Adapt your  manifest.json file to include Checkout.com extensions.  
-The public, private and shared keys are included as properties in the manifest as placeholder. Add your keys as properties in the SAP Commerce Cloud environments.  
+  `HYBRIS_HOME/installer$ ./install.sh -r [RECIPE_NAME] start`
+
+## Installing on [SAP Commerce Cloud](https://help.sap.com/viewer/product/SAP_COMMERCE_CLOUD_PUBLIC_CLOUD/v2211/en-US)
+
+Follow the instructions below to install and deploy the Connector on SAP Commerce Cloud. The sample manifest.json included in the Connector serves as guide for the installation. Adapt your manifest.json file to include Checkout.com extensions.  
+The public, private and shared keys are included as properties in the manifest as placeholder. Add your keys as properties in the SAP Commerce Cloud environments.
 
 Follow [this guideline](https://help.sap.com/viewer/1be46286b36a4aa48205be5a96240672/v2105/en-US/1ee068bcce7845b8ab4ed9cdd54577fb.html) to prepare the repository for the deployment onto SAP Commerce Cloud. Include the Connector extensions in the folder `core-customize`.
 
-# Spartacus Frontend
-Spartacus is a lean, Angular-based JavaScript storefront for SAP Commerce Cloud. Spartacus talks to SAP Commerce Cloud exclusively through the Commerce REST API (OCC). The Connector for SAP Commerce Cloud supports the Spartacus frontend. Check out details and release notes in the Checkout.com repository for Spartacus.  
+# SAP Commerce Composable Frontend
+
+SAP Commerce Composable is a lean, Angular-based JavaScript storefront for SAP Commerce Cloud. SAP Commerce Composable talks to SAP Commerce Cloud exclusively through the Commerce REST API (OCC). The Connector for SAP Commerce Cloud supports the SAP Commerce Composable frontend. Check out details and release notes in the Checkout.com repository for SAP Commerce Composable.
 
 # Release Notes
-- Flow integration available
+
+- Flow integration available in Accelerator Storefront & SAP Composable Storefront
 - Compatibility to 2211.50 SAP Commerce Version
 - Checkout.comJava SDK version 7.3.1
 
 # Support
+
 Contact your Checkout.com team if you have any question, technical problem or feature request for the SAP Commerce Cloud Connector.
 
 # Contribution to this Connector
+
 ## Our Pledge
 
 In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, sex characteristics, gender identity and expression,  level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
+our community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
 ## Our Standards
 
 Examples of behavior that contributes to creating a positive environment include:
 
-* Using welcoming and inclusive language
-* Being respectful of differing viewpoints and experiences
-* Gracefully accepting constructive criticism
-* Focusing on what is best for the community
-* Showing empathy towards other community members
+- Using welcoming and inclusive language
+- Being respectful of differing viewpoints and experiences
+- Gracefully accepting constructive criticism
+- Focusing on what is best for the community
+- Showing empathy towards other community members
 
 Examples of unacceptable behavior by participants include:
 
-* The use of sexualized language or imagery and unwelcome sexual attention or advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or electronic
- address, without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a professional setting
+- The use of sexualized language or imagery and unwelcome sexual attention or advances
+- Trolling, insulting/derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical or electronic
+  address, without explicit permission
+- Other conduct which could reasonably be considered inappropriate in a professional setting
 
 ## Our Responsibilities
 
@@ -136,6 +146,7 @@ This Code of Conduct is adapted from the [Contributor Covenant][homepage], versi
 For answers to common questions about this code of conduct, see https://www.contributor-covenant.org/faq
 
 # License
+
 This repository is open source and available under the MIT license.
 
 Copyright (c) 2020 Checkout.com

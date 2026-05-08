@@ -1,17 +1,22 @@
 package com.checkout.hybris.addon.controllers.pages.checkout.steps;
 
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.FLOW_ENABLED_MODEL_ATTRIBUTE_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.REDIRECT_TO_CHECKOUT_PAYMENT_METHOD_FORM;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.checkout.hybris.addon.constants.CheckoutaddonConstants;
 import com.checkout.hybris.addon.controllers.CheckoutaddonControllerConstants;
 import com.checkout.hybris.addon.forms.PaymentDetailsForm;
 import com.checkout.hybris.core.model.CheckoutComCreditCardPaymentInfoModel;
+import com.checkout.hybris.facades.flow.CheckoutComFlowConfigurationFacade;
 import de.hybris.platform.acceleratorstorefrontcommons.annotations.PreValidateCheckoutStep;
 import de.hybris.platform.acceleratorstorefrontcommons.annotations.RequireHardLogIn;
+import de.hybris.platform.acceleratorstorefrontcommons.checkout.steps.CheckoutStep;
 import de.hybris.platform.acceleratorstorefrontcommons.controllers.util.GlobalMessages;
 import de.hybris.platform.acceleratorstorefrontcommons.forms.AddressForm;
 import de.hybris.platform.cms2.exceptions.CMSItemNotFoundException;
 import de.hybris.platform.commercefacades.user.data.AddressData;
 import de.hybris.platform.servicelayer.config.ConfigurationService;
-import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -19,14 +24,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-
-import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.REDIRECT_TO_CHECKOUT_PAYMENT_METHOD_FORM;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 @Controller
 @RequestMapping(value = "/checkout/multi/checkout-com")
@@ -42,6 +48,8 @@ public class CheckoutComChoosePaymentAndBillingCheckoutStepController extends Ch
 
     @Resource
     protected ConfigurationService configurationService;
+    @Resource
+    protected CheckoutComFlowConfigurationFacade checkoutComFlowConfigurationFacade;
 
     /**
      * {@inheritDoc}
@@ -57,11 +65,14 @@ public class CheckoutComChoosePaymentAndBillingCheckoutStepController extends Ch
             GlobalMessages.addErrorMessage(model, "declined");
         }
 
+        final boolean flowEnabled = checkoutComFlowConfigurationFacade.isFlowEnabled();
+        model.addAttribute(FLOW_ENABLED_MODEL_ATTRIBUTE_KEY, flowEnabled);
+
         setupAddPaymentPage(model, CHOOSE_PAYMENT_METHOD, CHECKOUTCOM_PAYMENT_METHOD_AND_BILLING_CHECKOUT_STEP_PAGE);
         setupPaymentDetailsForm(model);
-        setCheckoutStepLinksForModel(model, getCheckoutStep(CHOOSE_PAYMENT_METHOD));
+        superSetCheckoutStepLinksForModel(model, superGetCheckoutStep(CHOOSE_PAYMENT_METHOD));
 
-        return getViewForPage(model);
+        return superGetViewForPage(model);
     }
 
     /**
@@ -100,6 +111,9 @@ public class CheckoutComChoosePaymentAndBillingCheckoutStepController extends Ch
                                     final BindingResult bindingResult)
             throws CMSItemNotFoundException {
 
+        final boolean flowEnabled = checkoutComFlowConfigurationFacade.isFlowEnabled();
+        model.addAttribute(FLOW_ENABLED_MODEL_ATTRIBUTE_KEY, flowEnabled);
+
         if (addGlobalErrors(model, bindingResult)) {
             model.addAttribute(PAYMENT_DETAILS_FORM, paymentDetailsForm);
             model.addAttribute(SELECTED_COUNTRY_CODE_MODEL_ATTRIBUTE, getPaymentFormCountryIsoCode(paymentDetailsForm));
@@ -127,8 +141,7 @@ public class CheckoutComChoosePaymentAndBillingCheckoutStepController extends Ch
     @RequireHardLogIn
     @ResponseBody
     public ResponseEntity<Void> setPaymentToken(final Model model,
-                                                @Valid
-                                                final PaymentDetailsForm paymentDetailsForm,
+                                                @Valid final PaymentDetailsForm paymentDetailsForm,
                                                 final BindingResult bindingResult) {
 
 
@@ -183,6 +196,8 @@ public class CheckoutComChoosePaymentAndBillingCheckoutStepController extends Ch
         setupPaymentDetailsForm(model);
         model.addAttribute(SELECTED_COUNTRY_CODE_MODEL_ATTRIBUTE, countryIsoCode);
         model.addAttribute(SELECTED_PAYMENT_METHOD_MODEL_ATTRIBUTE, selectedPaymentMethod);
+        final boolean flowEnabled = checkoutComFlowConfigurationFacade.isFlowEnabled();
+        model.addAttribute(FLOW_ENABLED_MODEL_ATTRIBUTE_KEY, flowEnabled);
 
         return configurationService.getConfiguration().getString(CheckoutaddonConstants.CHECKOUT_ADDON_PREFIX) +
                 CheckoutaddonControllerConstants.Views.Fragments.CheckoutPaymentFrames.CheckoutComPaymentButtonsPage;
@@ -207,16 +222,28 @@ public class CheckoutComChoosePaymentAndBillingCheckoutStepController extends Ch
      * @return the country iso code
      */
     protected Object getPaymentFormCountryIsoCode(final PaymentDetailsForm paymentDetailsForm) {
-        return paymentDetailsForm != null && paymentDetailsForm.getBillingAddress() != null && StringUtils.isNotBlank(paymentDetailsForm.getBillingAddress().getCountryIso()) ? paymentDetailsForm.getBillingAddress().getCountryIso() : null;
+        return paymentDetailsForm != null && paymentDetailsForm.getBillingAddress() != null && isNotBlank(paymentDetailsForm.getBillingAddress().getCountryIso()) ? paymentDetailsForm.getBillingAddress().getCountryIso() : null;
     }
 
     @Override
     public String back(final RedirectAttributes redirectAttributes) {
-        return getCheckoutStep(CHOOSE_PAYMENT_METHOD).previousStep();
+        return superGetCheckoutStep(CHOOSE_PAYMENT_METHOD).previousStep();
     }
 
     @Override
     public String next(final RedirectAttributes redirectAttributes) {
-        return getCheckoutStep(CHOOSE_PAYMENT_METHOD).nextStep();
+        return superGetCheckoutStep(CHOOSE_PAYMENT_METHOD).nextStep();
+    }
+
+    protected CheckoutStep superGetCheckoutStep(final String currentController) {
+        return super.getCheckoutStep(currentController);
+    }
+
+    protected void superSetCheckoutStepLinksForModel (final Model model, final CheckoutStep checkoutStep) {
+       super.setCheckoutStepLinksForModel(model, checkoutStep);
+    }
+
+    protected String superGetViewForPage(final Model model) {
+        return super.getViewForPage(model);
     }
 }

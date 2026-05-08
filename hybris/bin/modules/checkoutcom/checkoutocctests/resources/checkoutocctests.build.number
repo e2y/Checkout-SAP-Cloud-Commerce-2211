@@ -1,6 +1,6 @@
 #Ant properties
-#Mon Apr 20 14:52:19 GMT 2026
-builddate=20260420 1452
+#Fri May 08 13:40:57 GMT 2026
+builddate=20260508 1340
 description=checkoutocctests
 group.id=de.hybris.platform
 module.name=platform-module
