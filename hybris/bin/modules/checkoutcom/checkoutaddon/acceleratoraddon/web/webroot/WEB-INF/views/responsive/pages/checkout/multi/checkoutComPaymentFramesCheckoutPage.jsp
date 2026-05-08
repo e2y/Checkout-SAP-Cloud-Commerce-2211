@@ -48,12 +48,14 @@
                                 </ycommerce:testId>
                             </div>
                         </div>
-                        <div id="buttons-container" class="form-actions">
-                            <button class="btn btn-primary btn-block checkout-next" tabindex="20"
-                                    id="submitPaymentForm">
-                                <spring:theme code="checkout.multi.paymentMethod.continue"/>
-                            </button>
-                        </div>
+                        <c:if test="${flowEnabled ne true}">
+                            <div id="buttons-container" class="form-actions">
+                                <button class="btn btn-primary btn-block checkout-next" tabindex="20"
+                                        id="submitPaymentForm">
+                                    <spring:theme code="checkout.multi.paymentMethod.continue"/>
+                                </button>
+                            </div>
+                        </c:if>
                     </ycommerce:testId>
                 </jsp:body>
 

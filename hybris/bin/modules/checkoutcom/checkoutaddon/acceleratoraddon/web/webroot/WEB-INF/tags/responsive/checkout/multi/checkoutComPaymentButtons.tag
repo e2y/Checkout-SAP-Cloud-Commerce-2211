@@ -26,6 +26,22 @@
     </c:otherwise>
 </c:choose>
 
-<chko-multi-checkout:paymentButtons requestCountryCode="${countryCode}"
-                                    requestCurrencyCode="${cartData.totalPrice.currencyIso}"
-                                    paymentDetailsForm="${paymentDetailsForm}"/>
+<c:choose>
+    <c:when test="${flowEnabled eq true}">
+        <input
+            style="display:none"
+            id="paymentMethod_CARD"
+            name="paymentMethod"
+            class="available-true"
+            data-redirect="false"
+            data-required="false"
+            type="radio"
+            value="CARD" checked
+        />
+    </c:when>
+    <c:otherwise>
+        <chko-multi-checkout:paymentButtons requestCountryCode="${countryCode}"
+                                            requestCurrencyCode="${cartData.totalPrice.currencyIso}"
+                                            paymentDetailsForm="${paymentDetailsForm}"/>
+    </c:otherwise>
+</c:choose>

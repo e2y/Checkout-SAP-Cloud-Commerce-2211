@@ -13,6 +13,9 @@ public final class CheckoutaddonWebConstants {
     public static final String FLOW_ENABLED_MODEL_ATTRIBUTE_KEY = "flowEnabled";
     public static final String FLOW_UI_CONFIGURATION_MODEL_ATTRIBUTE_KEY = "flowUIConfiguration";
     public static final String FLOW_PAYMENT_SESSION_ATTRIBUTE_KEY = "flowPaymentSession";
+    public static final String FLOW_ENVIRONMENT_ATTRIBUTE_KEY = "environment";
+    public static final String FLOW_SUCCESS_REDIRECT_URL_KEY = "flowSuccessRedirectUrl";
+    public static final String FLOW_FAILURE_REDIRECT_URL_KEY = "flowFailureRedirectUrl";
     public static final String REDIRECT_TO_CHOOSE_PAYMENT_METHOD = "redirect:/checkout/multi/checkout-com/choose-payment-method";
     public static final String REDIRECT_TO_CHECKOUT_PAYMENT_METHOD_FORM = "redirect:/checkout/multi/checkout-com/payment/payment-method";
 

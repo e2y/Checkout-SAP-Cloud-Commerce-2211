@@ -1,17 +1,29 @@
 package com.checkout.hybris.addon.controllers.pages.checkout.steps;
 
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.FLOW_ENABLED_MODEL_ATTRIBUTE_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.FLOW_ENVIRONMENT_ATTRIBUTE_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.FLOW_FAILURE_REDIRECT_URL_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.FLOW_PAYMENT_SESSION_ATTRIBUTE_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.FLOW_SUCCESS_REDIRECT_URL_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.FLOW_UI_CONFIGURATION_MODEL_ATTRIBUTE_KEY;
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.PAYMENT_METHOD_MODEL_ATTRIBUTE_KEY;
+
 import com.checkout.hybris.addon.converters.CheckoutComMappedPaymentDataFormReverseConverter;
 import com.checkout.hybris.addon.forms.PaymentDataForm;
 import com.checkout.hybris.core.payment.enums.CheckoutComPaymentType;
 import com.checkout.hybris.core.payment.resolvers.CheckoutComPaymentTypeResolver;
+import com.checkout.hybris.facades.beans.CheckoutComFlowUIConfigurationData;
 import com.checkout.hybris.facades.flow.CheckoutComFlowConfigurationFacade;
 import com.checkout.hybris.facades.flow.CheckoutComFlowPaymentSessionFacade;
 import com.checkout.hybris.facades.merchant.CheckoutComMerchantConfigurationFacade;
 import com.checkout.hybris.facades.payment.attributes.mapper.CheckoutComPaymentAttributesStrategyMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.hybris.platform.acceleratorstorefrontcommons.annotations.PreValidateCheckoutStep;
 import de.hybris.platform.acceleratorstorefrontcommons.annotations.RequireHardLogIn;
 import de.hybris.platform.acceleratorstorefrontcommons.controllers.util.GlobalMessages;
 import de.hybris.platform.cms2.exceptions.CMSItemNotFoundException;
+import de.hybris.platform.site.BaseSiteService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Controller;
@@ -24,8 +36,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.Resource;
-
-import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.*;
 
 /**
  * Web controller to handle a Payment checkout step
@@ -56,6 +66,10 @@ public class CheckoutComPaymentMethodCheckoutStepController extends CheckoutComA
     protected CheckoutComFlowConfigurationFacade checkoutComFlowConfigurationFacade;
     @Resource
     protected CheckoutComFlowPaymentSessionFacade checkoutComFlowPaymentSessionFacade;
+    @Resource(name = "baseSiteService")
+    private BaseSiteService baseSiteService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Returns the Checkout.com payment details form
@@ -72,7 +86,7 @@ public class CheckoutComPaymentMethodCheckoutStepController extends CheckoutComA
         if (getCheckoutFacade().hasCheckoutCart()) {
             model.addAttribute(PAYMENT_DATA_FORM, new PaymentDataForm());
             setUpPaymentMethodStep(model);
-            return getViewForPage(model);
+            return superGetViewForPage(model);
         } else {
             return REDIRECT_URL_CART;
         }
@@ -99,7 +113,7 @@ public class CheckoutComPaymentMethodCheckoutStepController extends CheckoutComA
             bindingResult.getAllErrors().forEach(error -> GlobalMessages.addErrorMessage(model, error.getCode()));
             model.addAttribute(PAYMENT_DATA_FORM, paymentDataForm);
             setUpPaymentMethodStep(model);
-            return getViewForPage(model);
+            return superGetViewForPage(model);
         }
 
         final CheckoutComPaymentType paymentType = checkoutComPaymentTypeResolver.resolvePaymentMethod((String) paymentDataForm.getFormAttributes().get(PAYMENT_TYPE_FORM_KEY));
@@ -115,7 +129,7 @@ public class CheckoutComPaymentMethodCheckoutStepController extends CheckoutComA
      * @param model the model
      * @throws CMSItemNotFoundException
      */
-    private void setUpPaymentMethodStep(final Model model) throws CMSItemNotFoundException {
+    protected void setUpPaymentMethodStep(final Model model) throws CMSItemNotFoundException {
         model.addAttribute(BILLING_ADDRESS, checkoutComAddressFacade.getCartBillingAddress());
         model.addAttribute(PUBLIC_KEY, checkoutComMerchantConfigurationFacade.getCheckoutComMerchantPublicKey());
         final String currentPaymentMethodType = checkoutFlowFacade.getCurrentPaymentMethodType();
@@ -123,15 +137,35 @@ public class CheckoutComPaymentMethodCheckoutStepController extends CheckoutComA
         boolean flowEnabled = checkoutComFlowConfigurationFacade.isFlowEnabled();
         model.addAttribute(FLOW_ENABLED_MODEL_ATTRIBUTE_KEY, flowEnabled);
         if (flowEnabled) {
-            model.addAttribute(FLOW_UI_CONFIGURATION_MODEL_ATTRIBUTE_KEY, checkoutComFlowConfigurationFacade.getCheckoutComFlowUIConfigurationData());
+            try {
+                final CheckoutComFlowUIConfigurationData checkoutComFlowUIConfigurationData = checkoutComFlowConfigurationFacade.getCheckoutComFlowUIConfigurationData();
+                if (checkoutComFlowUIConfigurationData != null) {
+                    final String flowConfigString = objectMapper.writeValueAsString(checkoutComFlowUIConfigurationData);
+                    model.addAttribute(FLOW_UI_CONFIGURATION_MODEL_ATTRIBUTE_KEY, flowConfigString);
+                }
+            } catch (JsonProcessingException e) {
+                LOG.error("Error converting Checkout.com flow UI configuration data to JSON string", e);
+            }
+
             model.addAttribute(FLOW_PAYMENT_SESSION_ATTRIBUTE_KEY, checkoutComFlowPaymentSessionFacade.createPaymentSession());
+            model.addAttribute(FLOW_ENVIRONMENT_ATTRIBUTE_KEY, checkoutComMerchantConfigurationFacade.getCheckoutComMerchantEnvironment());
+            model.addAttribute(FLOW_SUCCESS_REDIRECT_URL_KEY, baseSiteService.getCurrentBaseSite().getCheckoutComSuccessRedirectUrl());
+            model.addAttribute(FLOW_FAILURE_REDIRECT_URL_KEY, baseSiteService.getCurrentBaseSite().getCheckoutComFailureRedirectUrl());
         }
 
         final CheckoutComPaymentType checkoutComPaymentType = checkoutComPaymentTypeResolver.resolvePaymentMethod(currentPaymentMethodType);
         checkoutComPaymentAttributesStrategyMapper.findStrategy(checkoutComPaymentType)
                 .ifPresent(checkoutComPaymentAttributeStrategy -> checkoutComPaymentAttributeStrategy.addPaymentAttributeToModel(model));
 
-        setupAddPaymentPage(model, PAYMENT_METHOD, CHECKOUTCOM_PAYMENT_FRAMES_PAGE);
+        superSetupAddPaymentPage(model, PAYMENT_METHOD, CHECKOUTCOM_PAYMENT_FRAMES_PAGE);
+    }
+
+    protected void superSetupAddPaymentPage(final Model model, final String paymentStep, final String page) throws CMSItemNotFoundException {
+        super.setupAddPaymentPage(model, paymentStep, page);
+    }
+
+    protected String superGetViewForPage(final Model model) {
+        return super.getViewForPage(model);
     }
 
     @Override

@@ -1,7 +1,11 @@
 package com.checkout.hybris.addon.controllers.payment;
 
+import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.REDIRECT_TO_CHOOSE_PAYMENT_METHOD;
+
 import com.checkout.hybris.core.payment.exception.CheckoutComPaymentIntegrationException;
 import com.checkout.hybris.facades.accelerator.CheckoutComCheckoutFlowFacade;
+import com.checkout.hybris.facades.flow.CheckoutComFlowConfigurationFacade;
+import com.checkout.hybris.facades.flow.CheckoutComFlowPaymentInfoFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentFacade;
 import com.checkout.hybris.facades.payment.CheckoutComPaymentInfoFacade;
 import com.checkout.payments.response.GetPaymentResponse;
@@ -10,7 +14,7 @@ import de.hybris.platform.acceleratorstorefrontcommons.controllers.pages.Abstrac
 import de.hybris.platform.acceleratorstorefrontcommons.controllers.util.GlobalMessages;
 import de.hybris.platform.commercefacades.order.data.OrderData;
 import de.hybris.platform.order.InvalidCartException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Controller;
@@ -21,8 +25,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
-
-import static com.checkout.hybris.addon.constants.CheckoutaddonWebConstants.REDIRECT_TO_CHOOSE_PAYMENT_METHOD;
 
 /**
  * Controller to handle payments redirect responses
@@ -41,6 +43,10 @@ public class CheckoutComPaymentRedirectResponseController extends AbstractChecko
     protected CheckoutComCheckoutFlowFacade checkoutFlowFacade;
     @Resource
     protected CheckoutComPaymentInfoFacade checkoutComPaymentInfoFacade;
+    @Resource
+    protected CheckoutComFlowConfigurationFacade checkoutComFlowConfigurationFacade;
+    @Resource(name = "checkoutComFlowPaymentInfoFacade")
+    protected CheckoutComFlowPaymentInfoFacade checkoutComFlowPaymentInfoFacade;
 
     /**
      * Handles the checkout.com redirect after the 3d secure in case of success. Places the order if everything is fine and redirects
@@ -81,7 +87,13 @@ public class CheckoutComPaymentRedirectResponseController extends AbstractChecko
             return REDIRECT_PREFIX + "/";
         }
 
-        paymentDetails.ifPresent(responseDetails -> checkoutComPaymentInfoFacade.processPaymentDetails(paymentDetails.get()));
+        paymentDetails.ifPresent(responseDetails -> {
+            if (checkoutComFlowConfigurationFacade.isFlowEnabled()) {
+                checkoutComFlowPaymentInfoFacade.addPaymentInfoToCart(responseDetails);
+            } else {
+                checkoutComPaymentInfoFacade.processPaymentDetails(responseDetails);
+            }
+        });
 
         final OrderData orderData;
         try {
@@ -92,7 +104,7 @@ public class CheckoutComPaymentRedirectResponseController extends AbstractChecko
             return redirectToChoosePaymentMethodStep();
         }
 
-        return redirectToOrderConfirmationPage(orderData);
+        return superRedirectToOrderConfirmationPage(orderData);
     }
 
     /**
@@ -131,5 +143,9 @@ public class CheckoutComPaymentRedirectResponseController extends AbstractChecko
     protected String redirectToChoosePaymentMethodStep() {
         checkoutFlowFacade.removePaymentInfoFromSessionCart();
         return REDIRECT_TO_CHOOSE_PAYMENT_METHOD;
+    }
+
+    protected String superRedirectToOrderConfirmationPage(final OrderData orderData) {
+        return super.redirectToOrderConfirmationPage(orderData);
     }
 }

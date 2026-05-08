@@ -76,15 +76,14 @@ form#payment-form .icon-error {
   right: 0;
 }
 form#payment-form .frame--activated {
-    border-radius: 0;
-    border: solid 1px #cccccc;
-    color: #19212b;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-    -o-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-    flex: 1;
-    height: 38px;
+  border-radius: 0;
+  border: solid 1px #cccccc;
+  color: #19212b;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -o-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  flex: 1;
 }
 form#payment-form .date-and-code > div {
   flex: 1;
@@ -291,7 +290,6 @@ button#submitKlarnaForm {
   font-family: monospace;
   letter-spacing: -0.08rem;
   -webkit-appearance: none;
-  width: 100%;
 }
 .expiry-date-frame {
   width: 100%;
@@ -307,4 +305,124 @@ button#submitKlarnaForm {
   background: transparent;
   padding: 0;
   border: 0 none;
+}
+.checkout-paymentmethod {
+  position: relative;
+}
+.checkout-paymentmethod .ldrgif {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.place-order-plaid-button {
+  display: flex;
+  justify-content: flex-end;
+}
+.accounts-playidLink {
+  border: 1px solid lightgray;
+  padding: 5px 15px;
+}
+.btn.achPayment {
+  margin: 30px 0;
+}
+.checkoutCom-flow button,
+.checkoutCom-flow hr,
+.checkoutCom-flow input {
+  overflow: visible;
+}
+.checkoutCom-flow progress,
+.checkoutCom-flow sub,
+.checkoutCom-flow sup {
+  vertical-align: baseline;
+}
+.checkoutCom-flow [type=checkbox],
+.checkoutCom-flow [type=radio],
+.checkoutCom-flow legend {
+  box-sizing: border-box;
+  padding: 0;
+}
+.checkoutCom-flow details,
+.checkoutCom-flow main {
+  display: block;
+}
+.checkoutCom-flow h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+.checkoutCom-flow hr {
+  box-sizing: content-box;
+  height: 0;
+}
+.checkoutCom-flow code,
+.checkoutCom-flow kbd,
+.checkoutCom-flow pre,
+.checkoutCom-flow samp {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+.checkoutCom-flow a {
+  background-color: transparent;
+}
+.checkoutCom-flow abbr[title] {
+  border-bottom: none;
+  text-decoration: underline;
+  text-decoration: underline dotted;
+}
+.checkoutCom-flow summary {
+  display: list-item;
+}
+.checkoutCom-flow [hidden],
+.checkoutCom-flow template {
+  display: none;
+}
+.checkoutCom-flow .toast {
+  visibility: hidden;
+  min-width: 250px;
+  margin-left: -125px;
+  color: #fff;
+  text-align: center;
+  border-radius: 2px;
+  padding: 16px;
+  position: fixed;
+  z-index: 1;
+  left: 50%;
+  bottom: 0;
+  font-family: monospace;
+  display: inline-flex;
+  line-height: 12px;
+  opacity: 0;
+}
+.checkoutCom-flow .toast.success {
+  background-color: mediumseagreen;
+}
+.checkoutCom-flow .toast.failed {
+  background-color: indianred;
+}
+.checkoutCom-flow .toast span {
+  margin-left: 12px;
+  margin-top: 2px;
+}
+.checkoutCom-flow .toast.show {
+  visibility: visible;
+  -webkit-animation: fadein 5s;
+  animation: fadein 5s;
+}
+@keyframes fadein {
+  0% {
+    bottom: 0;
+    opacity: 0;
+  }
+  16.667% {
+    bottom: 30px;
+    opacity: 1;
+  }
+  83.333% {
+    bottom: 30px;
+    opacity: 1;
+  }
+  100% {
+    bottom: 0;
+    opacity: 0;
+  }
 }
